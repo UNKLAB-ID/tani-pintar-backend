@@ -1,4 +1,4 @@
-exclude: '^docs/|/migrations/|devcontainer.json'
+exclude: "^docs/|/migrations/|devcontainer.json"
 default_stages: [pre-commit]
 
 default_language_version:
@@ -21,10 +21,10 @@ repos:
       - id: detect-private-key
 
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: '1.22.2'
+    rev: "1.22.2"
     hooks:
       - id: django-upgrade
-        args: ['--target-version', '4.2']
+        args: ["--target-version", "4.2"]
 
   # Run the Ruff linter.
   - repo: https://github.com/astral-sh/ruff-pre-commit
