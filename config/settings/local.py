@@ -14,7 +14,11 @@ SECRET_KEY = env(
     default="tZanCpw8AGbGYdy6oxAyaUrory7XpE7VNMcT4i8eB7D2rzaG3GF7yn0OGXSW8t0b",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]  # noqa: S104
+ALLOWED_HOSTS = ["cloudworkstations.dev", "localhost", "0.0.0.0", "127.0.0.1"]  # noqa: S104
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://8000-idx-tani-pintar-backend-1735536156532.cluster-nx3nmmkbnfe54q3dd4pfbgilpc.cloudworkstations.dev",
+]
 
 # CACHES
 # ------------------------------------------------------------------------------
