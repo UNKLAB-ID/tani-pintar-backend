@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
@@ -60,6 +61,17 @@ class ConfirmRegistrationView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = User.objects.get(username=serializer.validated_data.get("email"))
+
+        # Bypass verification code for development
+        if settings.DEBUG and serializer.validated_data.get("code") == "0000":
+            user.is_active = True
+            user.save()
+
+            return Response(
+                {"message": "User activated successfully"},
+                status=status.HTTP_200_OK,
+            )
+
         verification_code = VerificationCode.objects.filter(
             user=user,
             code=serializer.validated_data.get("code"),
