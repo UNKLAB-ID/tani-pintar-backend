@@ -58,31 +58,10 @@ class RegisterTests(TestCase):
         assert response.json().get("email")[0] == "Email already exists"
 
     def test_register_confirmation(self):
-        id_card = SimpleUploadedFile(
-            "test_id_card.jpg",
-            b"dummy image content",
-            content_type="image/jpeg",
-        )
-
-        data = {
-            "name": "Arter Tendean",
-            "email": "arter@animemoe.us",
-            "phone_number": "123456789",
-            "id_card_file": id_card,
-            "password": "Password123!",
-        }
-
-        response = self.client.post(self.url, data, format="json")
-        assert response.status_code == status.HTTP_201_CREATED
-        assert (
-            User.objects.filter(username=data.get("email")).exists() is True
-        ), "User should be created"
-        assert (
-            Profile.objects.filter(email=data.get("email")).exists() is True
-        ), "Profile should be created"
+        self.test_register_success()
 
         verification_code = VerificationCode.objects.filter(
-            user__username=data.get("email"),
+            user__username="arter@animemoe.us",
         ).last()
         assert verification_code is not None, "Verification code should be created"
 
