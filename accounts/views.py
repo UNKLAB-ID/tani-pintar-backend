@@ -2,11 +2,14 @@ from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
+from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
 
 from core.users.models import User
 
 from .models import Profile
+from .models import VerificationCode
+from .serializers import ConfirmRegistrationSerializer
 from .serializers import RegisterSerializer
 
 
@@ -40,4 +43,34 @@ class RegisterView(CreateAPIView):
         return Response(
             {"message": "User registered successfully"},
             status=status.HTTP_201_CREATED,
+        )
+
+
+class ConfirmRegistrationView(UpdateAPIView):
+    serializer_class = ConfirmRegistrationSerializer
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = User.objects.get(username=serializer.validated_data.get("email"))
+        verification_code = VerificationCode.objects.filter(
+            user=user,
+            code=serializer.validated_data.get("code"),
+        ).last()
+
+        if not verification_code or verification_code.is_expired:
+            return Response(
+                {"message": "Invalid code"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.is_active = True
+        user.save()
+
+        return Response(
+            {"message": "User activated successfully"},
+            status=status.HTTP_200_OK,
         )
