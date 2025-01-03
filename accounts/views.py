@@ -25,8 +25,11 @@ class RegisterView(CreateAPIView):
 
         with transaction.atomic():
             user = User.objects.create_user(
+                name=serializer.validated_data.get("name"),
+                email=serializer.validated_data.get("email"),
                 username=serializer.validated_data.get("email"),
                 password=serializer.validated_data.get("password"),
+                is_active=False,
             )
 
             Profile.objects.create(
