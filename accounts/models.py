@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 
 from core.users.models import User
 
@@ -63,7 +64,6 @@ class Profile(models.Model):
         return VerificationCode.objects.create(user=self.user)
 
 
-# Suggested code may be subject to a license. Learn more: ~LicenseLog:1734729812.
 class VerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=4)
@@ -77,6 +77,10 @@ class VerificationCode(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.create_expired_at()
+
+        if not self.code:
+            self.code = get_random_string(length=4)
+
         return super().save(*args, **kwargs)
 
     @property
