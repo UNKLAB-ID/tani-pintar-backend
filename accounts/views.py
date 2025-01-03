@@ -32,13 +32,14 @@ class RegisterView(CreateAPIView):
                 password=serializer.validated_data.get("password"),
             )
 
-            Profile.objects.create(
+            profile = Profile.objects.create(
                 user=user,
                 full_name=serializer.validated_data.get("name"),
                 email=serializer.validated_data.get("email"),
                 phone_number=serializer.validated_data.get("phone_number"),
                 id_card_file=serializer.validated_data.get("id_card_file"),
             )
+            profile.generate_verification_code()
 
         return Response(
             {"message": "User registered successfully"},

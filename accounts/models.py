@@ -59,6 +59,9 @@ class Profile(models.Model):
             f"{self.full_name} | {self.profile_type} | {self.id_card_validation_status}"
         )
 
+    def generate_verification_code(self):
+        return VerificationCode.objects.create(user=self.user)
+
 
 # Suggested code may be subject to a license. Learn more: ~LicenseLog:1734729812.
 class VerificationCode(models.Model):
