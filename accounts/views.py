@@ -1,10 +1,10 @@
-from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.users.models import User
 
@@ -62,16 +62,6 @@ class ConfirmRegistrationView(UpdateAPIView):
 
         user = User.objects.get(username=serializer.validated_data.get("email"))
 
-        # Bypass verification code for development
-        if settings.DEBUG and serializer.validated_data.get("code") == "0000":
-            user.is_active = True
-            user.save()
-
-            return Response(
-                {"message": "User activated successfully"},
-                status=status.HTTP_200_OK,
-            )
-
         verification_code = VerificationCode.objects.filter(
             user=user,
             code=serializer.validated_data.get("code"),
@@ -86,7 +76,11 @@ class ConfirmRegistrationView(UpdateAPIView):
         user.is_active = True
         user.save()
 
+        token = RefreshToken.for_user(user)
         return Response(
-            {"message": "User activated successfully"},
+            {
+                "message": "User activated successfully",
+                "data": {"access": str(token.access_token), "refresh": str(token)},
+            },
             status=status.HTTP_200_OK,
         )

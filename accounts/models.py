@@ -1,7 +1,10 @@
+import requests
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
+from accounts import tasks
 from core.users.models import User
 
 
@@ -61,7 +64,8 @@ class Profile(models.Model):
         )
 
     def generate_verification_code(self):
-        return VerificationCode.objects.create(user=self.user)
+        verification_code = VerificationCode.objects.create(user=self.user)
+        tasks.send_verification_code.delay(verification_code.id)
 
 
 class VerificationCode(models.Model):
@@ -89,3 +93,23 @@ class VerificationCode(models.Model):
 
     def create_expired_at(self):
         self.expired_at = timezone.localtime() + timezone.timedelta(minutes=30)
+
+    def send_discord_webhook_notification(self) -> bool:
+        webhook_url = settings.REGISTRATION_CODE_DISCORD_WEBHOOK_URL
+        embed = {
+            "title": "Verification Code Notification",
+            "description": f"Registration code for: **{self.user.username}**",
+            "fields": [
+                {
+                    "name": "Verification Code",
+                    "value": f"`{self.code}`",
+                    "inline": False,
+                },
+            ],
+            "color": 0x7289DA,
+        }
+
+        payload = {"embeds": [embed]}
+        response = requests.post(webhook_url, json=payload, timeout=10)
+
+        return response.ok
