@@ -350,3 +350,9 @@ SPECTACULAR_SETTINGS = {
 }
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+# Accounts
+REGISTRATION_CODE_DISCORD_WEBHOOK_URL = env(
+    "REGISTRATION_CODE_DISCORD_WEBHOOK_URL",
+    default="",
+)

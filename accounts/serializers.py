@@ -9,7 +9,6 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     id_card_file = serializers.FileField(required=True)
     phone_number = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
 
     def validate_email(self, value):
         if User.objects.filter(username=value).exists():
