@@ -2,6 +2,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.generics import CreateAPIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -10,7 +11,9 @@ from core.users.models import User
 
 from .models import Profile
 from .models import VerificationCode
+from .serializers import ConfirmLoginSerializer
 from .serializers import ConfirmRegistrationSerializer
+from .serializers import LoginSerializer
 from .serializers import RegisterSerializer
 
 
@@ -51,6 +54,23 @@ class RegisterView(CreateAPIView):
         )
 
 
+class LoginView(GenericAPIView):
+    serializer_class = LoginSerializer
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        profile = Profile.objects.filter(
+            email=serializer.validated_data.get("email"),
+        ).last()
+        profile.generate_login_code()
+
+        return Response({"message": "Login code sent successfully"})
+
+
 class ConfirmRegistrationView(UpdateAPIView):
     serializer_class = ConfirmRegistrationSerializer
     authentication_classes = []
@@ -82,5 +102,23 @@ class ConfirmRegistrationView(UpdateAPIView):
                 "message": "User activated successfully",
                 "data": {"access": str(token.access_token), "refresh": str(token)},
             },
+            status=status.HTTP_200_OK,
+        )
+
+
+class ConfirmLoginView(GenericAPIView):
+    serializer_class = ConfirmLoginSerializer
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = User.objects.get(username=serializer.validated_data.get("email"))
+
+        token = RefreshToken.for_user(user)
+        return Response(
+            {"access": str(token.access_token), "refresh": str(token)},
             status=status.HTTP_200_OK,
         )

@@ -67,6 +67,10 @@ class Profile(models.Model):
         verification_code = VerificationCode.objects.create(user=self.user)
         tasks.send_verification_code.delay(verification_code.id)
 
+    def generate_login_code(self):
+        login_code = LoginCode.objects.create(user=self.user)
+        tasks.send_login_code.delay(login_code.id)
+
 
 class VerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -102,6 +106,53 @@ class VerificationCode(models.Model):
             "fields": [
                 {
                     "name": "Verification Code",
+                    "value": f"`{self.code}`",
+                    "inline": False,
+                },
+            ],
+            "color": 0x7289DA,
+        }
+
+        payload = {"embeds": [embed]}
+        response = requests.post(webhook_url, json=payload, timeout=10)
+
+        return response.ok
+
+
+class LoginCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=4)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    expired_at = models.DateTimeField(blank=True)
+
+    def __str__(self):
+        return f"{self.user} | {self.code}"
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.create_expired_at()
+
+        if not self.code:
+            self.code = get_random_string(length=4)
+
+        return super().save(*args, **kwargs)
+
+    @property
+    def is_expired(self):
+        return self.expired_at < timezone.localtime()
+
+    def create_expired_at(self):
+        self.expired_at = timezone.localtime() + timezone.timedelta(minutes=10)
+
+    def send_discord_webhook_notification(self) -> bool:
+        webhook_url = settings.LOGIN_CODE_DISCORD_WEBHOOK_URL
+        embed = {
+            "title": "Login Code Notification",
+            "description": f"Login code for: **{self.user.username}**",
+            "fields": [
+                {
+                    "name": "Login Code",
                     "value": f"`{self.code}`",
                     "inline": False,
                 },
