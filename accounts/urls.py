@@ -10,6 +10,8 @@ urlpatterns = [
         views.ConfirmRegistrationView.as_view(),
         name="confirm-registration",
     ),
+    path("login/", views.LoginView.as_view(), name="login"),
+    path("login/confirm", views.ConfirmLoginView.as_view(), name="confirm-login"),
 ]
 
 app_name = "accounts"
