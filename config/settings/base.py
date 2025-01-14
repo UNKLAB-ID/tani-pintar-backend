@@ -90,7 +90,7 @@ LOCAL_APPS = [
     "core.users",
     "tani",
     "accounts",
-    # Your stuff: custom apps go here
+    "social_media",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
