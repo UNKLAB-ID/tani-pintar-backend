@@ -1,10 +1,12 @@
 from django.http import HttpResponse
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
+from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .models import Post
+from .serializers import PostDetailSerializer
 from .serializers import PostSerializer
 
 
@@ -29,3 +31,13 @@ class PostListView(ListAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [SearchFilter]
     search_fields = ["content", "user__username"]
+
+
+class PostDetailView(RetrieveDestroyAPIView):
+    queryset = Post.objects.select_related("user").prefetch_related(
+        "postimage_set",
+        "comments",
+        "likes",
+    )
+    serializer_class = PostDetailSerializer
+    lookup_field = "slug"
