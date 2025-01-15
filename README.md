@@ -8,6 +8,10 @@ Behold My Awesome Project!
 
 License: MIT
 
+## Postman
+
+- https://www.postman.com/dark-shuttle-853516/tani-pintar/
+
 ## Settings
 
 Moved to [settings](https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html).
