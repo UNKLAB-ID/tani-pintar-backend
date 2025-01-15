@@ -16,10 +16,14 @@ class PostCommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PostComment
-        fields = ("user", "content", "created_at", "updated_at", "parent")
-
-    def get_views_count(self, obj):
-        return 10
+        fields = (
+            "id",
+            "user",
+            "content",
+            "created_at",
+            "updated_at",
+            "parent",
+        )
 
 
 class PostSerializer(serializers.ModelSerializer):
