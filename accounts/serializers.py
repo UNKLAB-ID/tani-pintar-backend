@@ -1,7 +1,4 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import LoginCode
 from accounts.models import Profile
@@ -93,22 +90,5 @@ class ConfirmLoginSerializer(serializers.Serializer):
 
         if login_code.is_expired:
             raise serializers.ValidationError({"code": "Code is expired"})
-
-        return data
-
-
-class RefreshTokenSerializer(TokenRefreshSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-
-        try:
-            refresh = RefreshToken(attrs["refresh"])
-
-            new_refresh = RefreshToken.for_user(refresh.user)
-
-            data["refresh"] = str(new_refresh)
-        except Exception:  # noqa: BLE001
-            msg = "Refresh token is invalid or expired."
-            raise ValidationError(msg)  # noqa: B904
 
         return data
