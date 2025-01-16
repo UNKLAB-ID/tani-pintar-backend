@@ -5,6 +5,9 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.users.models import User
@@ -122,3 +125,36 @@ class ConfirmLoginView(GenericAPIView):
             {"access": str(token.access_token), "refresh": str(token)},
             status=status.HTTP_200_OK,
         )
+
+
+class RefreshTokenView(APIView):
+    """
+    Takes a refresh token and returns new access and refresh tokens
+    """
+
+    serializer_class = TokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get("refresh")
+
+        if not refresh_token:
+            return Response(
+                {"error": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Verify and create new tokens
+            token = RefreshToken(refresh_token)
+            data = {
+                "access": str(token.access_token),
+                "refresh": str(token),
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except TokenError:
+            return Response(
+                {"error": "Invalid or expired refresh token"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
