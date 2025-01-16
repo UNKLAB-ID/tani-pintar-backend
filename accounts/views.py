@@ -132,6 +132,9 @@ class RefreshTokenView(APIView):
     Takes a refresh token and returns new access and refresh tokens
     """
 
+    authentication_classes = []
+    permission_classes = []
+
     serializer_class = TokenRefreshSerializer
 
     def post(self, request, *args, **kwargs):
