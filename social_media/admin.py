@@ -6,12 +6,19 @@ from .models import PostImage
 from .models import PostView
 
 
+class PostImageInline(admin.TabularInline):
+    model = PostImage
+    extra = 0
+    fields = ("image",)
+
+
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = (
         "slug",
         "user",
         "content_summary",
+        "images_count",
         "likes_count",
         "comments_count",
         "views_count",
@@ -19,6 +26,7 @@ class PostAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    inlines = [PostImageInline]
     search_fields = ("user__username", "content")
     readonly_fields = ("slug", "created_at", "updated_at")
     list_filter = ("created_at", "updated_at")
@@ -26,6 +34,9 @@ class PostAdmin(admin.ModelAdmin):
 
     def content_summary(self, obj):
         return obj.content[:50]
+
+    def images_count(self, obj):
+        return obj.postimage_set.count()
 
     def views_count(self, obj):
         return obj.views.count()
@@ -36,9 +47,6 @@ class PostAdmin(admin.ModelAdmin):
     def comments_count(self, obj):
         return obj.comments.count()
 
-    @admin.display(
-        description="Shared Count",
-    )
     def shared_count(self, obj):
         return obj.shared_count
 
