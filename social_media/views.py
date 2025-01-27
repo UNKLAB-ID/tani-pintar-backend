@@ -1,14 +1,16 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import ListAPIView
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from .models import Post
 from .models import PostComment
+from .serializers import CreatePostSerializer
 from .serializers import PostCommentSerializer
 from .serializers import PostDetailSerializer
 from .serializers import PostSerializer
@@ -30,8 +32,7 @@ def index(request):
     return HttpResponse(":)")
 
 
-class PostListView(ListAPIView):
-    serializer_class = PostSerializer
+class PostListView(ListCreateAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
         "comments",
@@ -40,6 +41,19 @@ class PostListView(ListAPIView):
     pagination_class = PostPageNumberPagination
     filter_backends = [SearchFilter]
     search_fields = ["content", "user__username"]
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreatePostSerializer
+        return PostSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        post = serializer.save()
+
+        return Response(PostDetailSerializer(post).data, status=status.HTTP_201_CREATED)
 
 
 class PostDetailView(RetrieveDestroyAPIView):
