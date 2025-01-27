@@ -5,6 +5,9 @@ Behold My Awesome Project!
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![codecov](https://codecov.io/gh/UNKLAB-ID/tani-pintar-backend/graph/badge.svg?token=RK0JWR3994)](https://codecov.io/gh/UNKLAB-ID/tani-pintar-backend)
+<img src="https://uptime.unklab.id/api/badge/6/status" />
+<img src="https://uptime.unklab.id/api/badge/6/uptime" />
+<img src="https://uptime.unklab.id/api/badge/6/avg-response" />
 
 License: MIT
 
