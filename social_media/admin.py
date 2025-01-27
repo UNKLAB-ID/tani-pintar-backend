@@ -26,6 +26,7 @@ class PostAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    autocomplete_fields = ("user",)
     inlines = [PostImageInline]
     search_fields = ("user__username", "content")
     readonly_fields = ("slug", "created_at", "updated_at")

@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView
-from rest_framework.generics import RetrieveDestroyAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -14,6 +14,7 @@ from .serializers import CreatePostSerializer
 from .serializers import PostCommentSerializer
 from .serializers import PostDetailSerializer
 from .serializers import PostSerializer
+from .serializers import UpdatePostSerializer
 
 
 class PostPageNumberPagination(PageNumberPagination):
@@ -56,7 +57,7 @@ class PostListView(ListCreateAPIView):
         return Response(PostDetailSerializer(post).data, status=status.HTTP_201_CREATED)
 
 
-class PostDetailView(RetrieveDestroyAPIView):
+class PostDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
         "comments",
@@ -64,6 +65,11 @@ class PostDetailView(RetrieveDestroyAPIView):
     )
     serializer_class = PostDetailSerializer
     lookup_field = "slug"
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return UpdatePostSerializer
+        return PostDetailSerializer
 
 
 class PostCommentListView(ListCreateAPIView):
