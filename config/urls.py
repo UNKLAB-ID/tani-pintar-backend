@@ -23,6 +23,8 @@ urlpatterns = [
     path("accounts/", include("accounts.urls", namespace="accounts")),
     # Social Media
     path("social-media/", include("social_media.urls", namespace="social-media")),
+    # Health check
+    path("health-check/", include("health_check.urls")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
