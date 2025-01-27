@@ -34,7 +34,7 @@ def index(request):
     return HttpResponse(":)")
 
 
-class PostListView(ListCreateAPIView):
+class ListCreatePostView(ListCreateAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
         "comments",
