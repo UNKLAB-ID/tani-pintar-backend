@@ -153,3 +153,53 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     def get_comments_count(self, obj):
         return obj.comments.count()
+
+
+class UpdatePostSerializer(serializers.ModelSerializer):
+    images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
+    views_count = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = (
+            "slug",
+            "content",
+            "images",
+            "views_count",
+            "likes_count",
+            "comments_count",
+            "shared_count",
+            "created_at",
+            "updated_at",
+            "user",
+        )
+        read_only_fields = (
+            "slug",
+            "images",
+            "views_count",
+            "likes_count",
+            "comments_count",
+            "shared_count",
+            "created_at",
+            "updated_at",
+            "user",
+        )
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    def get_views_count(self, obj):
+        return obj.views.count()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    def validate(self, data):
+        user = self.context.get("request").user
+        if user != self.instance.user:
+            msg = "You can only update your own posts."
+            raise serializers.ValidationError(msg)
+        return data
