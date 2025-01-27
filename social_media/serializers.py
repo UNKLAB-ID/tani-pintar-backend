@@ -1,8 +1,34 @@
 from rest_framework import serializers
 
+from accounts.models import Profile
+from core.users.models import User
+
 from .models import Post
 from .models import PostComment
 from .models import PostImage
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "phone_number",
+            "profile_type",
+            "id_card_validation_status",
+            "created_at",
+            "updated_at",
+        )
+
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ("id", "username", "date_joined", "profile")
 
 
 class PostImageSerializer(serializers.ModelSerializer):
@@ -12,17 +38,17 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 
 class PostCommentSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()
+    user = UserSerializer()
 
     class Meta:
         model = PostComment
         fields = (
             "id",
-            "user",
             "content",
             "created_at",
             "updated_at",
             "parent",
+            "user",
         )
 
 
@@ -68,6 +94,7 @@ class PostSerializer(serializers.ModelSerializer):
     views_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    user = UserSerializer()
 
     class Meta:
         model = Post
@@ -81,6 +108,7 @@ class PostSerializer(serializers.ModelSerializer):
             "shared_count",
             "created_at",
             "updated_at",
+            "user",
         )
 
     def get_likes_count(self, obj):
@@ -98,6 +126,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     views_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
+    user = UserSerializer()
 
     class Meta:
         model = Post
@@ -111,6 +140,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "shared_count",
             "created_at",
             "updated_at",
+            "user",
         )
 
     def get_likes_count(self, obj):
