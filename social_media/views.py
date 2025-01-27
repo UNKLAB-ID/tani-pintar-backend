@@ -58,7 +58,7 @@ class PostListView(ListCreateAPIView):
         return Response(PostDetailSerializer(post).data, status=status.HTTP_201_CREATED)
 
 
-class PostDetailView(RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
         "comments",

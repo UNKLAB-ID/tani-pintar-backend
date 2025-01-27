@@ -2,12 +2,12 @@ from django.urls import path
 
 from . import views
 from .views import PostCommentListView
-from .views import PostDetailView
 from .views import PostListView
+from .views import RetrieveUpdateDestroyPostView
 
 urlpatterns = [
     path("posts/", PostListView.as_view(), name="post"),
-    path("posts/<slug:slug>", PostDetailView.as_view(), name="post"),
+    path("posts/<slug:slug>", RetrieveUpdateDestroyPostView.as_view(), name="post"),
     path(
         "posts/<str:post_slug>/comments/",
         PostCommentListView.as_view(),
