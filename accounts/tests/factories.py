@@ -15,15 +15,9 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     full_name = factory.LazyAttribute(lambda o: o.user.username)
     email = factory.LazyAttribute(lambda o: o.user.email)
     phone_number = factory.Faker("phone_number", locale="id_ID")
-    profile_type = factory.Faker(
-        "random_element",
-        elements=Profile.PROFILE_TYPE_CHOICES,
-    )
+    profile_type = Profile.FARMER
     id_card_file = factory.django.FileField(
         filename="id_card_example.jpg",
         size=1024,
-    )  # Contoh file ID Card
-    id_card_validation_status = factory.Faker(
-        "random_element",
-        elements=Profile.ID_CARD_STATUS_CHOICES,
     )
+    id_card_validation_status = Profile.PENDING

@@ -10,7 +10,7 @@ from accounts.models import Profile
 from accounts.tests.factories import ProfileFactory
 
 
-class CreatePostTest(TestCase):
+class TestCreatePost(TestCase):
     def setUp(self):
         self.url = reverse("social-media:post")
         self.profile = ProfileFactory(profile_type=Profile.FARMER)
