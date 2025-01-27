@@ -1,4 +1,4 @@
-# Tani Pintar
+# Tani Pintar Backend
 
 Behold My Awesome Project!
 
