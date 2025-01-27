@@ -22,7 +22,7 @@ urlpatterns = [
     # Account management
     path("accounts/", include("accounts.urls", namespace="accounts")),
     # Social Media
-    path("social-media/", include("social_media.urls", namespace="social_media")),
+    path("social-media/", include("social_media.urls", namespace="social-media")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
