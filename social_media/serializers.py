@@ -26,6 +26,43 @@ class PostCommentSerializer(serializers.ModelSerializer):
         )
 
 
+class CreatePostSerializer(serializers.ModelSerializer):
+    MAX_IMAGES = 10  # Maximum number of images that can be uploaded
+
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False,
+    )
+
+    class Meta:
+        model = Post
+        fields = (
+            "content",
+            "images",
+        )
+
+    def validate_images(self, value):
+        if len(value) > self.MAX_IMAGES:
+            msg = "You can only upload a maximum of 10 images."
+            raise serializers.ValidationError(
+                msg,
+            )
+        return value
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        images = validated_data.pop("images", [])
+
+        post = Post.objects.create(user=user, **validated_data)
+        post_images = [PostImage(post=post, image=image) for image in images]
+
+        if post_images:
+            PostImage.objects.bulk_create(post_images)
+
+        return post
+
+
 class PostSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
     views_count = serializers.SerializerMethodField()
