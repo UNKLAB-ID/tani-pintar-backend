@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
@@ -33,7 +34,7 @@ def index(request):
     return HttpResponse(":)")
 
 
-class PostListView(ListCreateAPIView):
+class ListCreatePostView(ListCreateAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
         "comments",
@@ -57,7 +58,7 @@ class PostListView(ListCreateAPIView):
         return Response(PostDetailSerializer(post).data, status=status.HTTP_201_CREATED)
 
 
-class PostDetailView(RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
         "comments",
@@ -70,6 +71,12 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
         if self.request.method in ["PUT", "PATCH"]:
             return UpdatePostSerializer
         return PostDetailSerializer
+
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            msg = "You do not have permission to delete this post."
+            raise PermissionDenied(msg)
+        super().perform_destroy(instance)
 
 
 class PostCommentListView(ListCreateAPIView):
