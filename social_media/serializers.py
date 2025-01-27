@@ -55,6 +55,7 @@ class PostCommentSerializer(serializers.ModelSerializer):
 class CreatePostSerializer(serializers.ModelSerializer):
     MAX_IMAGES = 10  # Maximum number of images that can be uploaded
 
+    user = UserSerializer(read_only=True)
     images = serializers.ListField(
         child=serializers.ImageField(),
         write_only=True,
@@ -66,6 +67,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
         fields = (
             "content",
             "images",
+            "user",
         )
 
     def validate_images(self, value):
