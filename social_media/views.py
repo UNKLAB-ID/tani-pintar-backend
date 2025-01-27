@@ -64,13 +64,21 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
         "comments",
         "likes",
     )
-    serializer_class = PostDetailSerializer
     lookup_field = "slug"
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
             return UpdatePostSerializer
         return PostDetailSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+
+        if request.user.is_authenticated:
+            post = self.get_object()
+            post.create_log_view_background(request.user)
+
+        return response
 
     def perform_destroy(self, instance):
         if instance.user != self.request.user:

@@ -36,6 +36,15 @@ class Post(models.Model):
                     break
         super().save(*args, **kwargs)
 
+    def create_log_view(self, user):
+        _, created = PostView.objects.get_or_create(post=self, user=user)
+        return created
+
+    def create_log_view_background(self, user):
+        from social_media.tasks import create_post_log_view
+
+        create_post_log_view.delay(self.id, user.id)
+
 
 class PostImage(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
