@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
@@ -63,3 +64,19 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
             reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+    def test_post_views_count(self):
+        # Test that the views count is incremented
+        self.client.get(
+            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+        )
+        self.client.force_login(self.user_2)
+        self.client.get(
+            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+        )
+
+        response = self.client.get(
+            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+        )
+        assert response.json().get("views_count") == 2  # noqa: PLR2004
