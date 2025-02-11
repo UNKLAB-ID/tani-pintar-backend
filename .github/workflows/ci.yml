@@ -43,6 +43,7 @@ jobs:
 
       - name: Update Environment Variable
         run: |
+          rm -f .envs/.local/.tidb
           echo "${{ secrets.TIDB }}" >> .envs/.local/.tidb
           cat .envs/.local/.tidb
 
