@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # mysqlclient dependencies
   default-libmysqlclient-dev \
   build-essential \
-  pkg-config \
+  pkg-config
 
 
 # Requirements are installed here to ensure they will be cached.
