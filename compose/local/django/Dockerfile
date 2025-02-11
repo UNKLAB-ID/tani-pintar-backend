@@ -11,7 +11,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential \
   # psycopg dependencies
-  libpq-dev
+  libpq-dev \
+  # mysqlclient dependencies
+  default-libmysqlclient-dev \
+  build-essential \
+  pkg-config
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
@@ -50,6 +54,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # psycopg dependencies
   libpq-dev  \
   wait-for-it \
+  # mysqlclient dependencies
+  default-libmysqlclient-dev \
+  build-essential \
+  pkg-config \
   # Translations dependencies
   gettext \
   # cleaning up unused files
