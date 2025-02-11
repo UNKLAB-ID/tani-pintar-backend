@@ -1,6 +1,4 @@
 volumes:
-  core_local_postgres_data: {}
-  core_local_postgres_data_backups: {}
   core_local_redis_data: {}
 
 services:
@@ -16,7 +14,6 @@ services:
       - .:/app:z
     env_file:
       - ./.envs/.local/.django
-      - ./.envs/.local/.postgres
       - ./.envs/.local/.tidb
     ports:
       - '8000:8000'
@@ -35,7 +32,6 @@ services:
     container_name: core_local_celeryworker
     depends_on:
       - redis
-      - postgres
     ports: []
     command: /start-celeryworker
 
@@ -45,7 +41,6 @@ services:
     container_name: core_local_celerybeat
     depends_on:
       - redis
-      - postgres
     ports: []
     command: /start-celerybeat
 
