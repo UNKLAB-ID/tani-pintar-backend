@@ -50,6 +50,9 @@ jobs:
       - name: Build the Stack
         run: docker compose -f docker-compose.local.yml build django
 
+      - name: Reset TiDB Database
+        run: docker compose -f docker-compose.local.yml run --rm django python manage.py runscript reset_tidb
+
       # - name: Build the docs
       #   run: docker compose -f docker-compose.docs.yml build docs
 
