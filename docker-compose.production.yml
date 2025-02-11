@@ -1,7 +1,4 @@
 volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
   production_django_media: {}
 
   production_redis_data: {}
@@ -16,23 +13,10 @@ services:
     volumes:
       - production_django_media:/app/core/media
     depends_on:
-      - postgres
       - redis
     env_file:
       - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
     command: /start
-
-  postgres:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: core_production_postgres
-    volumes:
-      - production_postgres_data:/var/lib/postgresql/data
-      - production_postgres_data_backups:/backups
-    env_file:
-      - ./.envs/.production/.postgres
 
   redis:
     image: docker.io/redis:6

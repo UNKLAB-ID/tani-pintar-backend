@@ -47,10 +47,30 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # DATABASES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
-DATABASES = {"default": env.db("DATABASE_URL")}
+# DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES = {
+    "default": {
+        "ENGINE": "django_tidb",
+        "NAME": env.str("TIDB_NAME", default=""),
+        "USER": env.str("TIDB_USER", default=""),
+        "PASSWORD": env.str("TIDB_PASSWORD", default=""),
+        "HOST": env.str(
+            "TIDB_HOST",
+            default="gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
+        ),
+        "PORT": env.str("TIDB_PORT", default="4000"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "ssl_mode": "VERIFY_IDENTITY",
+            # 'ssl': {'ca': '<CA_PATH>'}
+            "init_command": "SET @@tidb_allow_remove_auto_inc = 1",
+        },
+    },
+}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django_tidb.fields.BigAutoRandomField"
 
 # URLS
 # ------------------------------------------------------------------------------

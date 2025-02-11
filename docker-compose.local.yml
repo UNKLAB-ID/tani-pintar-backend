@@ -1,6 +1,4 @@
 volumes:
-  core_local_postgres_data: {}
-  core_local_postgres_data_backups: {}
   core_local_redis_data: {}
 
 services:
@@ -11,28 +9,15 @@ services:
     image: core_local_django
     container_name: core_local_django
     depends_on:
-      - postgres
       - redis
     volumes:
       - .:/app:z
     env_file:
       - ./.envs/.local/.django
-      - ./.envs/.local/.postgres
+      - ./.envs/.local/.tidb
     ports:
       - '8000:8000'
     command: /start
-
-  postgres:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: core_production_postgres
-    container_name: core_local_postgres
-    volumes:
-      - core_local_postgres_data:/var/lib/postgresql/data
-      - core_local_postgres_data_backups:/backups
-    env_file:
-      - ./.envs/.local/.postgres
 
   redis:
     image: docker.io/redis:6
@@ -41,14 +26,12 @@ services:
     volumes:
       - core_local_redis_data:/data
 
-
   celeryworker:
     <<: *django
     image: core_local_celeryworker
     container_name: core_local_celeryworker
     depends_on:
       - redis
-      - postgres
     ports: []
     command: /start-celeryworker
 
@@ -58,7 +41,6 @@ services:
     container_name: core_local_celerybeat
     depends_on:
       - redis
-      - postgres
     ports: []
     command: /start-celerybeat
 
