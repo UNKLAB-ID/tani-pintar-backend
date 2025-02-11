@@ -16,6 +16,7 @@ services:
       - redis
     env_file:
       - ./.envs/.production/.django
+      - ./.envs/.production/.tidb
     command: /start
 
   redis:
