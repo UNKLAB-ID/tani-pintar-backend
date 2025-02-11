@@ -63,6 +63,7 @@ DATABASES = {
             "charset": "utf8mb4",
             "ssl_mode": "VERIFY_IDENTITY",
             # 'ssl': {'ca': '<CA_PATH>'}
+            "init_command": "SET @@tidb_allow_remove_auto_inc = 1",
         },
     },
 }
