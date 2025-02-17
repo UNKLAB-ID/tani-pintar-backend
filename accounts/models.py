@@ -71,6 +71,49 @@ class Profile(models.Model):
         login_code = LoginCode.objects.create(user=self.user)
         tasks.send_login_code.delay(login_code.id)
 
+    def follow(self, profile_to_follow):
+        if self != profile_to_follow:
+            Follow.objects.get_or_create(follower=self, following=profile_to_follow)
+
+    def unfollow(self, profile_to_unfollow):
+        Follow.objects.filter(follower=self, following=profile_to_unfollow).delete()
+
+    def is_following(self, profile):
+        return self.following.filter(following=profile).exists()
+
+    def get_followers_count(self):
+        return self.followers.count()
+
+    def get_following_count(self):
+        return self.following.count()
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="following",  # Profile.following.all() gets all profiles user follows  # noqa: E501
+    )
+    following = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="followers",  # Profile.followers.all() gets all followers of profile  # noqa: E501
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("follower", "following")  # Prevent duplicate follows
+        # Ensure user can't follow themselves
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(follower=models.F("following")),
+                name="cannot_follow_self",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.follower.full_name} follows {self.following.full_name}"
+
 
 class VerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

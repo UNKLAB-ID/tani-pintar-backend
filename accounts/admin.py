@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .models import Follow
 from .models import LoginCode
 from .models import Profile
 from .models import VerificationCode
@@ -18,6 +19,12 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("created_at", "updated_at")
     search_fields = ("full_name", "email", "phone_number")
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ["follower", "following", "created_at"]
+    readonly_fields = ["created_at"]
 
 
 @admin.register(VerificationCode)
