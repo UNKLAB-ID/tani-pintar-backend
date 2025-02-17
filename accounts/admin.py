@@ -10,6 +10,7 @@ from .models import VerificationCode
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         "full_name",
+        "get_follow",
         "email",
         "phone_number",
         "profile_type",
@@ -17,8 +18,14 @@ class ProfileAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("get_follow", "created_at", "updated_at")
     search_fields = ("full_name", "email", "phone_number")
+
+    @admin.display(
+        description="Follower/Following",
+    )
+    def get_follow(self, obj):
+        return f"{obj.get_followers_count()}/{obj.get_following_count()}"
 
 
 @admin.register(Follow)
