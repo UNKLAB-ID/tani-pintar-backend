@@ -10,11 +10,11 @@ from .models import VerificationCode
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         "full_name",
-        "get_follow",
         "email",
         "phone_number",
         "profile_type",
         "id_card_validation_status",
+        "get_follow",
         "created_at",
         "updated_at",
     )
