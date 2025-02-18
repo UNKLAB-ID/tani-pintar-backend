@@ -100,6 +100,7 @@ THIRD_PARTY_APPS = [
     "allauth.mfa",
     "allauth.socialaccount",
     "django_celery_beat",
+    "django_filters",
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
@@ -122,6 +123,7 @@ LOCAL_APPS = [
     "core.users",
     "tani",
     "accounts",
+    "location",
     "social_media",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -368,6 +370,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
 
 
