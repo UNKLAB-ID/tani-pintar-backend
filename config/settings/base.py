@@ -122,6 +122,7 @@ LOCAL_APPS = [
     "core.users",
     "tani",
     "accounts",
+    "location",
     "social_media",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
