@@ -73,3 +73,40 @@ class ProfileModelTest(TestCase):
             user=self.profile_1.user,
         ).exists()
         assert is_login_code_exist, "Should return `true`"
+
+    def test_follow_user(self):
+        # Follow another profile using profile_1
+        self.profile_1.follow(self.profile_2)
+        self.profile_1.follow(self.profile_3)
+        self.profile_1.follow(self.profile_4)
+        self.profile_1.follow(self.profile_5)
+
+        # Get following count
+        assert (
+            self.profile_1.get_following_count() == 4  # noqa: PLR2004
+        ), "Profile should have to follow 4 accounts"
+
+        # Get follower count
+        assert (
+            self.profile_1.get_followers_count() == 0
+        ), "Profile should have 0 follower"
+
+        # Create 4 followers for profile_1
+        self.profile_2.follow(self.profile_1)
+        self.profile_3.follow(self.profile_1)
+        self.profile_4.follow(self.profile_1)
+        self.profile_5.follow(self.profile_1)
+
+        # Get profile_1 follower count
+        assert (
+            self.profile_1.get_followers_count() == 4  # noqa: PLR2004
+        ), "Profile should have 4 followers"
+
+        # Test unfollow
+        assert self.profile_1.is_following(
+            self.profile_2,
+        ), "`profile_1` should have to follow `profile_2"
+        self.profile_1.unfollow(self.profile_2)
+        assert not self.profile_1.is_following(
+            self.profile_2,
+        ), "`profile_1` should have to follow `profile_2"
