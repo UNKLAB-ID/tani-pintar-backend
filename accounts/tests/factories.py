@@ -14,6 +14,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     full_name = factory.LazyAttribute(lambda o: o.user.username)
     headline = factory.Faker("sentence")
+    farmer_community = factory.Faker("sentence")
     email = factory.LazyAttribute(lambda o: o.user.email)
     phone_number = factory.Faker("phone_number", locale="id_ID")
     profile_type = Profile.FARMER
