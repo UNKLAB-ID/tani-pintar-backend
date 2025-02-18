@@ -39,7 +39,7 @@ class CountryDetailAPIView(RetrieveAPIView):
 class ProvinceListAPIView(ListAPIView):
     serializer_class = ProvinceSerializer
     pagination_class = LocationPagination
-    queryset = Province.objects.all().order_by("-name")
+    queryset = Province.objects.all().order_by("-name").prefetch_related("country")
     permission_classes = [AllowAny]
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
     search_fields = ["name"]
