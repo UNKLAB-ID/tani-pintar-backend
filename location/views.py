@@ -1,6 +1,7 @@
 from rest_framework.filters import OrderingFilter
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 
@@ -22,3 +23,10 @@ class CountryListAPIView(ListAPIView):
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name", "code"]
     ordering_fields = ["-name"]
+
+
+class CountryDetailAPIView(RetrieveAPIView):
+    serializer_class = CountrySerializer
+    permission_classes = [AllowAny]
+    queryset = Country.objects.all()
+    lookup_field = "name"
