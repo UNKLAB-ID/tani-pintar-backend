@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
+from location.models import City
 from location.models import Country
 from location.models import Province
 
@@ -15,4 +16,12 @@ class ProvinceSerializer(ModelSerializer):
 
     class Meta:
         model = Province
+        fields = "__all__"
+
+
+class CitySerializer(ModelSerializer):
+    province = ProvinceSerializer()
+
+    class Meta:
+        model = City
         fields = "__all__"
