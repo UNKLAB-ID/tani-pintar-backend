@@ -18,6 +18,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    autocomplete_fields = ["country", "city"]
     readonly_fields = ("get_follow", "created_at", "updated_at")
     search_fields = ("full_name", "email", "phone_number")
 

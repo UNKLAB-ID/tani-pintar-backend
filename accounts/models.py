@@ -6,6 +6,8 @@ from django.utils.crypto import get_random_string
 
 from accounts import tasks
 from core.users.models import User
+from location.models import City
+from location.models import Country
 
 
 class Profile(models.Model):
@@ -44,6 +46,18 @@ class Profile(models.Model):
     full_name = models.CharField(max_length=255, blank=False)
     headline = models.CharField(max_length=255, default="")
     farmer_community = models.CharField(max_length=255, default="")
+    country = models.ForeignKey(
+        Country,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     email = models.EmailField(unique=True, max_length=255, blank=False)
     phone_number = models.CharField(max_length=20, unique=True, blank=False)
     profile_type = models.CharField(
