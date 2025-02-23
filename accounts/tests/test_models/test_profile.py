@@ -20,6 +20,7 @@ class ProfileModelTest(TestCase):
                 self.profile_1,
                 self.profile_1.user,
                 self.profile_1.full_name,
+                self.profile_1.about,
                 self.profile_1.headline,
                 self.profile_1.farmer_community,
                 self.profile_1.email,
@@ -27,6 +28,9 @@ class ProfileModelTest(TestCase):
                 self.profile_1.profile_type,
                 self.profile_1.id_card_file,
                 self.profile_1.id_card_validation_status,
+                self.profile_1.profile_picture_url,
+                self.profile_1.thumbnail_profile_picture_url,
+                self.profile_1.cover_picture_url,
             ],
         )
         assert all(
