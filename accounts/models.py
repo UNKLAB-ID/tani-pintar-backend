@@ -6,6 +6,8 @@ from django.utils.crypto import get_random_string
 
 from accounts import tasks
 from core.users.models import User
+from location.models import City
+from location.models import Country
 
 
 class Profile(models.Model):
@@ -42,6 +44,22 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     full_name = models.CharField(max_length=255, blank=False)
+    about = models.TextField(max_length=500, default="", blank=True)
+    headline = models.CharField(max_length=255, default="", blank=True)
+    farmer_community = models.CharField(max_length=255, default="", blank=True)
+    country = models.ForeignKey(
+        Country,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
     email = models.EmailField(unique=True, max_length=255, blank=False)
     phone_number = models.CharField(max_length=20, unique=True, blank=False)
     profile_type = models.CharField(
@@ -49,6 +67,14 @@ class Profile(models.Model):
         default=FARMER,
         max_length=25,
     )
+
+    profile_picture_url = models.ImageField(upload_to="profile-pictures", blank=True)
+    thumbnail_profile_picture_url = models.ImageField(
+        upload_to="thumbnail-pictures",
+        blank=True,
+    )
+    cover_picture_url = models.ImageField(upload_to="cover-pictures", blank=True)
+
     id_card_file = models.FileField(upload_to="id-card-images/")
     id_card_validation_status = models.CharField(
         choices=ID_CARD_STATUS_CHOICES,
@@ -70,6 +96,49 @@ class Profile(models.Model):
     def generate_login_code(self):
         login_code = LoginCode.objects.create(user=self.user)
         tasks.send_login_code.delay(login_code.id)
+
+    def follow(self, profile_to_follow):
+        if self != profile_to_follow:
+            Follow.objects.get_or_create(follower=self, following=profile_to_follow)
+
+    def unfollow(self, profile_to_unfollow):
+        Follow.objects.filter(follower=self, following=profile_to_unfollow).delete()
+
+    def is_following(self, profile):
+        return self.following.filter(following=profile).exists()
+
+    def get_followers_count(self):
+        return self.followers.count()
+
+    def get_following_count(self):
+        return self.following.count()
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="following",  # Profile.following.all() gets all profiles user follows  # noqa: E501
+    )
+    following = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="followers",  # Profile.followers.all() gets all followers of profile  # noqa: E501
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("follower", "following")  # Prevent duplicate follows
+        # Ensure user can't follow themselves
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(follower=models.F("following")),
+                name="cannot_follow_self",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.follower.full_name} follows {self.following.full_name}"
 
 
 class VerificationCode(models.Model):

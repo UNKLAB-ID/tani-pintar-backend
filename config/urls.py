@@ -21,6 +21,8 @@ urlpatterns = [
     # ...
     # Account management
     path("accounts/", include("accounts.urls", namespace="accounts")),
+    # Location
+    path("location/", include("location.urls", namespace="location")),
     # Social Media
     path("social-media/", include("social_media.urls", namespace="social-media")),
     # Health check
