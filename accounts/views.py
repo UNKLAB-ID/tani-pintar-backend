@@ -173,6 +173,13 @@ class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        profile = Profile.objects.prefetch_related("user").get(user=request.user)
+        try:
+            profile = Profile.objects.prefetch_related("user").get(user=request.user)
+        except Profile.DoesNotExist:
+            return Response(
+                {"message": "Profile not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         serializer = self.serializer_class(profile)
         return Response(serializer.data)
