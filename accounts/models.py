@@ -44,6 +44,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     full_name = models.CharField(max_length=255, blank=False)
+    about = models.TextField(max_length=500, default="", blank=True)
     headline = models.CharField(max_length=255, default="", blank=True)
     farmer_community = models.CharField(max_length=255, default="", blank=True)
     country = models.ForeignKey(
@@ -66,6 +67,14 @@ class Profile(models.Model):
         default=FARMER,
         max_length=25,
     )
+
+    profile_picture_url = models.ImageField(upload_to="profile-pictures", blank=True)
+    thumbnail_profile_picture_url = models.ImageField(
+        upload_to="thumbnail-pictures",
+        blank=True,
+    )
+    cover_picture_url = models.ImageField(upload_to="cover-pictures", blank=True)
+
     id_card_file = models.FileField(upload_to="id-card-images/")
     id_card_validation_status = models.CharField(
         choices=ID_CARD_STATUS_CHOICES,
