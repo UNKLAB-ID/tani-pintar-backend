@@ -11,5 +11,5 @@ sentry-sdk==2.20.0  # https://github.com/getsentry/sentry-python
 django-anymail==12.0  # https://github.com/anymail/django-anymail
 
 # Storages
-django-storages==1.14.4
+django-storages==1.14.5
 boto3==1.36.20
