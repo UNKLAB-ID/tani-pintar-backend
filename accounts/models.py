@@ -44,8 +44,8 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     full_name = models.CharField(max_length=255, blank=False)
-    headline = models.CharField(max_length=255, default="")
-    farmer_community = models.CharField(max_length=255, default="")
+    headline = models.CharField(max_length=255, default="", blank=True)
+    farmer_community = models.CharField(max_length=255, default="", blank=True)
     country = models.ForeignKey(
         Country,
         on_delete=models.SET_NULL,
@@ -58,6 +58,7 @@ class Profile(models.Model):
         null=True,
         blank=True,
     )
+
     email = models.EmailField(unique=True, max_length=255, blank=False)
     phone_number = models.CharField(max_length=20, unique=True, blank=False)
     profile_type = models.CharField(
