@@ -1,15 +1,19 @@
 from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from accounts.serializers import ProfileSerializer
 from core.users.models import User
 
 from .models import Profile
@@ -161,3 +165,21 @@ class RefreshTokenView(APIView):
                 {"error": "Invalid or expired refresh token"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+
+
+class ProfileView(APIView):
+    serializer_class = ProfileSerializer
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            profile = Profile.objects.prefetch_related("user").get(user=request.user)
+        except Profile.DoesNotExist:
+            return Response(
+                {"message": "Profile not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = self.serializer_class(profile)
+        return Response(serializer.data)

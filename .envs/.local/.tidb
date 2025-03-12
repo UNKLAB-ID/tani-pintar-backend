@@ -1,5 +1,5 @@
 TIDB_HOST=gateway01.ap-southeast-1.prod.aws.tidbcloud.com
 TIDB_PORT=4000
-TIDB_NAME=Database
-TIDB_USER=User
-TIDB_PASSWORD=Password
+TIDB_NAME=dev_tani_pintar
+TIDB_USER=43gPBHCQiKcLrKn.root
+TIDB_PASSWORD=O9NVd8qAVRMxBMAB
