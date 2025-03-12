@@ -23,6 +23,7 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["example.com"])
 CSRF_TRUSTED_ORIGINS = [
     "https://tanipintar.unklab.id",
     "https://dev-api.taniverse.id",
+    "https://dev.api.taniverse.id",
 ]
 
 # DATABASES
