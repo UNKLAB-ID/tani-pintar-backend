@@ -41,12 +41,6 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
 
-      - name: Update Environment Variable
-        run: |
-          rm -f .envs/.local/.tidb
-          echo "${{ secrets.TIDB }}" >> .envs/.local/.tidb
-          cat .envs/.local/.tidb
-
       - name: Build the Stack
         run: docker compose -f docker-compose.local.yml build django
 
