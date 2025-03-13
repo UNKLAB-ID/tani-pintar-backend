@@ -174,7 +174,7 @@ class ProfileView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            profile = Profile.objects.prefetch_related("user").get(user=request.user)
+            profile = Profile.objects.select_related("user").get(user=request.user)
         except Profile.DoesNotExist:
             return Response(
                 {"message": "Profile not found"},

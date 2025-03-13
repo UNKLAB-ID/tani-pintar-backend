@@ -102,13 +102,13 @@ class ProfileUserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     user = ProfileUserSerializer()
-    following = serializers.SerializerMethodField()
-    followers = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
 
-    def get_following(self, obj):
+    def get_following_count(self, obj):
         return obj.following.count()
 
-    def get_followers(self, obj):
+    def get_followers_count(self, obj):
         return obj.followers.count()
 
     class Meta:
@@ -129,8 +129,8 @@ class ProfileSerializer(serializers.ModelSerializer):
             "profile_picture_url",
             "thumbnail_profile_picture_url",
             "cover_picture_url",
-            "followers",
-            "following",
+            "followers_count",
+            "following_count",
             "created_at",
             "updated_at",
         ]
