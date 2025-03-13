@@ -99,7 +99,7 @@ THIRD_PARTY_APPS = [
     # "health_check.contrib.s3boto3_storage",
     "health_check.contrib.redis",
     "hijack",
-    'hijack.contrib.admin'
+    "hijack.contrib.admin",
 ]
 
 LOCAL_APPS = [
@@ -166,7 +166,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    'hijack.middleware.HijackUserMiddleware',
+    "hijack.middleware.HijackUserMiddleware",
 ]
 
 # STATIC
