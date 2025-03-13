@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from accounts.models import LoginCode, Profile
+from accounts.models import LoginCode
+from accounts.models import Profile
 from core.users.models import User
 
 

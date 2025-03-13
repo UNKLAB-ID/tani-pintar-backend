@@ -2,7 +2,9 @@ from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.generics import CreateAPIView, GenericAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView
+from rest_framework.generics import GenericAPIView
+from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,13 +16,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.serializers import ProfileSerializer
 from core.users.models import User
 
-from .models import Profile, VerificationCode
-from .serializers import (
-    ConfirmLoginSerializer,
-    ConfirmRegistrationSerializer,
-    LoginSerializer,
-    RegisterSerializer,
-)
+from .models import Profile
+from .models import VerificationCode
+from .serializers import ConfirmLoginSerializer
+from .serializers import ConfirmRegistrationSerializer
+from .serializers import LoginSerializer
+from .serializers import RegisterSerializer
 
 
 def index(request):
