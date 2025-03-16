@@ -1,7 +1,8 @@
 volumes:
-  production_django_media: {}
-
-  production_redis_data: {}
+  tani_pintar_production_django_media: {}
+  tani_pintar_production_postgres_data: {}
+  tani_pintar_production_postgres_data_backups: {}
+  tani_pintar_production_redis_data: {}
 
 services:
   django: &django
@@ -9,45 +10,57 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
 
-    image: core_production_django
+    image: tani_pintar_production_django
     volumes:
-      - production_django_media:/app/core/media
+      - tani_pintar_production_django_media:/app/core/media
     depends_on:
+      - postgres
       - redis
     env_file:
       - ./.envs/.production/.django
-      - ./.envs/.production/.tidb
+      - ./.envs/.production/.postgres
     command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: tani_pintar_production_postgres
+    volumes:
+      - tani_pintar_production_postgres_data:/var/lib/postgresql/data
+      - tani_pintar_production_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.production/.postgres
 
   redis:
     image: docker.io/redis:6
 
     volumes:
-      - production_redis_data:/data
+      - tani_pintar_production_redis_data:/data
 
   celeryworker:
     <<: *django
-    image: core_production_celeryworker
+    image: tani_pintar_production_celeryworker
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    image: core_production_celerybeat
+    image: tani_pintar_production_celerybeat
     command: /start-celerybeat
 
   flower:
     <<: *django
-    image: core_production_flower
+    image: tani_pintar_production_flower
     command: /start-flower
 
   nginx:
     build:
       context: .
       dockerfile: ./compose/production/nginx/Dockerfile
-    image: core_production_nginx
+    image: tani_pintar_production_nginx
     depends_on:
       - django
     volumes:
-      - production_django_media:/usr/share/nginx/media:ro
+      - tani_pintar_production_django_media:/usr/share/nginx/media:ro
     ports:
       - 64000:80

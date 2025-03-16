@@ -1,7 +1,7 @@
 # ==== pytest ====
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--ds=config.settings.test --create-db --import-mode=importlib"
+addopts = "--ds=config.settings.test --reuse-db --import-mode=importlib"
 python_files = [
     "tests.py",
     "test_*.py",
@@ -127,6 +127,7 @@ ignore = [
           # of types for comparison.
           # Deactivated because it can make the code slow:
           # https://github.com/astral-sh/ruff/issues/7871
+  "EXE002"
 ]
 # The fixes in extend-unsafe-fixes will require
 # provide the `--unsafe-fixes` flag when fixing.

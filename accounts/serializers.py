@@ -92,3 +92,45 @@ class ConfirmLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({"code": "Code is expired"})
 
         return data
+
+
+class ProfileUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email"]
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    user = ProfileUserSerializer()
+    following_count = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+
+    def get_following_count(self, obj):
+        return obj.following.count()
+
+    def get_followers_count(self, obj):
+        return obj.followers.count()
+
+    class Meta:
+        model = Profile
+        fields = [
+            "id",
+            "user",
+            "full_name",
+            "headline",
+            "farmer_community",
+            "country",
+            "city",
+            "email",
+            "phone_number",
+            "profile_type",
+            "id_card_file",
+            "id_card_validation_status",
+            "profile_picture_url",
+            "thumbnail_profile_picture_url",
+            "cover_picture_url",
+            "followers_count",
+            "following_count",
+            "created_at",
+            "updated_at",
+        ]
