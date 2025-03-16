@@ -29,10 +29,6 @@ drf-spectacular==0.28.0  # https://github.com/tfranzel/drf-spectacular
 # Django Monitoring
 django-health-check==3.18.3  # https://github.com/revsys/django-health-check
 
-# MySQL Client
-mysqlclient==2.2.7  # https://github.com/PyMySQL/mysqlclient
-## TiDB
-django-tidb~=4.2.0  # https://github.com/pingcap/django-tidb
 
 # Custom
 pytest-cov==6.0.0
