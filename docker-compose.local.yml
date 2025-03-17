@@ -1,15 +1,15 @@
 volumes:
-  core_local_redis_data: {}
-  core_local_postgres_data: {}
-  core_local_postgres_data_backups: {}
+  tani_pintar_local_redis_data: {}
+  tani_pintar_local_postgres_data: {}
+  tani_pintar_local_postgres_data_backups: {}
 
 services:
   django: &django
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
-    image: core_local_django
-    container_name: core_local_django
+    image: tani_pintar_local_django
+    container_name: tani_pintar_local_django
     depends_on:
       - postgres
       - redis
@@ -27,25 +27,25 @@ services:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
-    image: core_production_postgres
-    container_name: core_local_postgres
+    image: tani_pintar_production_postgres
+    container_name: tani_pintar_local_postgres
     volumes:
-      - core_local_postgres_data:/var/lib/postgresql/data
-      - core_local_postgres_data_backups:/backups
+      - tani_pintar_local_postgres_data:/var/lib/postgresql/data
+      - tani_pintar_local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
 
   redis:
     image: docker.io/redis:6
-    container_name: core_local_redis
+    container_name: tani_pintar_local_redis
 
     volumes:
-      - core_local_redis_data:/data
+      - tani_pintar_local_redis_data:/data
 
   celeryworker:
     <<: *django
-    image: core_local_celeryworker
-    container_name: core_local_celeryworker
+    image: tani_pintar_local_celeryworker
+    container_name: tani_pintar_local_celeryworker
     depends_on:
       - redis
       - postgres
@@ -54,8 +54,8 @@ services:
 
   celerybeat:
     <<: *django
-    image: core_local_celerybeat
-    container_name: core_local_celerybeat
+    image: tani_pintar_local_celerybeat
+    container_name: tani_pintar_local_celerybeat
     depends_on:
       - redis
       - postgres
@@ -64,8 +64,8 @@ services:
 
   flower:
     <<: *django
-    image: core_local_flower
-    container_name: core_local_flower
+    image: tani_pintar_local_flower
+    container_name: tani_pintar_local_flower
     ports:
       - "5555:5555"
     command: /start-flower
