@@ -25,6 +25,8 @@ urlpatterns = [
     path("location/", include("location.urls", namespace="location")),
     # Social Media
     path("social-media/", include("social_media.urls", namespace="social-media")),
+    # ThinkFlow
+    path("thinkflow/", include("thinkflow.urls", namespace="thinkflow")),
     # Health check
     path("health-check/", include("health_check.urls")),
     # Media files

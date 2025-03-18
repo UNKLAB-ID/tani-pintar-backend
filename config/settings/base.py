@@ -106,6 +106,7 @@ LOCAL_APPS = [
     "accounts",
     "location",
     "social_media",
+    "thinkflow",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
