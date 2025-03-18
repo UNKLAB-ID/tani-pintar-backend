@@ -22,6 +22,15 @@ class PlantDiseaseAnalysis(TypedDict):
 
 
 class PlantDiseaseChecker:
+    """
+    A utility class for analyzing plant diseases from images using OpenAI's GPT-4o model.
+
+    This class provides methods to analyze images from different sources:
+    - URL
+    - Base64-encoded string
+    - Django file field
+    """  # noqa: E501
+
     # Class variable for the prompt text
     ANALYSIS_PROMPT: str = "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar"  # noqa: E501
 
@@ -73,6 +82,9 @@ class PlantDiseaseChecker:
 
     def __init__(self) -> None:
         """Initialize the PlantDiseaseChecker with OpenAI client."""
+        if not settings.OPENAI_PLANT_DISEASE_API_KEY:
+            msg = "OpenAI API key is not configured"
+            raise ValueError(msg)
         self.openai: OpenAI = OpenAI(
             api_key=settings.OPENAI_PLANT_DISEASE_API_KEY,
         )
@@ -117,6 +129,10 @@ class PlantDiseaseChecker:
         Returns:
             Response: Analysis results from the OpenAI API
         """
+        # Validate base64 string
+        if not image_base64:
+            msg = "Empty base64 string provided"
+            raise ValueError(msg)
         return self.openai.responses.create(
             model="gpt-4o",
             input=[
@@ -147,17 +163,14 @@ class PlantDiseaseChecker:
         Returns:
             Response: Analysis results from the OpenAI API
         """
-        # Make sure the file is open
-        image_field.open()
-
-        # Read the file content
-        image_content = image_field.read()
-
-        # Close the file
-        image_field.close()
-
-        # Convert to base64
-        image_base64 = base64.b64encode(image_content).decode("utf-8")
-
-        # Use the base64 analyze method
-        return self.analyze_base64(image_base64)
+        # Add try-except blocks to handle potential errors
+        try:
+            image_field.open()
+            image_content = image_field.read()
+            image_field.close()
+            image_base64 = base64.b64encode(image_content).decode("utf-8")
+            return self.analyze_base64(image_base64)
+        except Exception as e:  # noqa: BLE001
+            # Log the error and/or raise a custom exception
+            msg = f"Failed to process image: {e!s}"
+            raise ValueError(msg)  # noqa: B904
