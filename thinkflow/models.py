@@ -56,6 +56,11 @@ class PlantDisease(models.Model):
     output_tokens = models.PositiveIntegerField(default=0)
     total_tokens = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Plant Disease Analysis"
+        verbose_name_plural = "Plant Disease Analyses"
+
     def __str__(self):
         return f"{self.uuid} - {self.disease_name}"
 
