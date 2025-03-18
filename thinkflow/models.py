@@ -33,4 +33,4 @@ class PlantDisease(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.uuid
+        return f"{self.uuid}"

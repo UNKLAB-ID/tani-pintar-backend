@@ -387,3 +387,9 @@ LOGIN_CODE_DISCORD_WEBHOOK_URL = env(
     "LOGIN_CODE_DISCORD_WEBHOOK_URL",
     default="",
 )
+
+# OpenAI API Key
+OPENAI_PLANT_DISEASE_API_KEY = env("OPENAI_PLANT_DISEASE_API_KEY", default="")
+if not OPENAI_PLANT_DISEASE_API_KEY:
+    msg = "OPENAI_PLANT_DISEASE_API_KEY is required"
+    raise ValueError(msg)
