@@ -5,6 +5,54 @@ from openai import OpenAI
 
 
 class PlantDiseaseChecker:
+    # Class variable for the prompt text
+    ANALYSIS_PROMPT = "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar"  # noqa: E501
+    # Class variable for the JSON schema format
+    ANALYSIS_SCHEMA = {
+        "format": {
+            "type": "json_schema",
+            "name": "plant_disease_analysis",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "disease_name": {"type": "string"},
+                    "confidence": {"type": "number"},
+                    "symptoms": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"],
+                    },
+                    "treatment_recommendations": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    "preventive_measures": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    "mini_article": {
+                        "type": "string",
+                        "description": "A concise, informative article about the disease",  # noqa: E501
+                    },
+                },
+                "required": [
+                    "disease_name",
+                    "confidence",
+                    "symptoms",
+                    "severity",
+                    "treatment_recommendations",
+                    "preventive_measures",
+                    "mini_article",
+                ],
+                "additionalProperties": False,
+            },
+            "strict": True,
+        },
+    }
+
     def __init__(self):
         self.openai = OpenAI(
             api_key=settings.OPENAI_PLANT_DISEASE_API_KEY,
@@ -28,7 +76,7 @@ class PlantDiseaseChecker:
                     "content": [
                         {
                             "type": "input_text",
-                            "text": "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar",  # noqa: E501
+                            "text": self.ANALYSIS_PROMPT,
                         },
                         {
                             "type": "input_image",
@@ -37,50 +85,7 @@ class PlantDiseaseChecker:
                     ],
                 },
             ],
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "plant_disease_analysis",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "disease_name": {"type": "string"},
-                            "confidence": {"type": "number"},
-                            "symptoms": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "severity": {
-                                "type": "string",
-                                "enum": ["low", "medium", "high", "critical"],
-                            },
-                            "treatment_recommendations": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "preventive_measures": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "mini_article": {
-                                "type": "string",
-                                "description": "A concise, informative article about the disease",  # noqa: E501
-                            },
-                        },
-                        "required": [
-                            "disease_name",
-                            "confidence",
-                            "symptoms",
-                            "severity",
-                            "treatment_recommendations",
-                            "preventive_measures",
-                            "mini_article",
-                        ],
-                        "additionalProperties": False,
-                    },
-                    "strict": True,
-                },
-            },
+            text=self.ANALYSIS_SCHEMA,
         )
 
     def analyze_base64(self, image_base64):
@@ -101,7 +106,7 @@ class PlantDiseaseChecker:
                     "content": [
                         {
                             "type": "input_text",
-                            "text": "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar",  # noqa: E501
+                            "text": self.ANALYSIS_PROMPT,
                         },
                         {
                             "type": "input_image",
@@ -110,50 +115,7 @@ class PlantDiseaseChecker:
                     ],
                 },
             ],
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "plant_disease_analysis",
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "disease_name": {"type": "string"},
-                            "confidence": {"type": "number"},
-                            "symptoms": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "severity": {
-                                "type": "string",
-                                "enum": ["low", "medium", "high", "critical"],
-                            },
-                            "treatment_recommendations": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "preventive_measures": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "mini_article": {
-                                "type": "string",
-                                "description": "A concise, informative article about the disease",  # noqa: E501
-                            },
-                        },
-                        "required": [
-                            "disease_name",
-                            "confidence",
-                            "symptoms",
-                            "severity",
-                            "treatment_recommendations",
-                            "preventive_measures",
-                            "mini_article",
-                        ],
-                        "additionalProperties": False,
-                    },
-                    "strict": True,
-                },
-            },
+            text=self.ANALYSIS_SCHEMA,
         )
 
     def analyze_by_image_field(self, image_field):
