@@ -2,9 +2,15 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from thinkflow.serializers import CreatePlantDiseaseSerializer
 from thinkflow.serializers import GetPlantDiseaseSerializer
+
+
+# Custom throttle class
+class AnonDayRateThrottle(AnonRateThrottle):
+    rate = "20/day"
 
 
 def index(request):
@@ -14,6 +20,7 @@ def index(request):
 class PlantDiseaseAnalyzerView(GenericAPIView):
     authentication_classes = []
     permission_classes = []
+    throttle_classes = [AnonDayRateThrottle]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
