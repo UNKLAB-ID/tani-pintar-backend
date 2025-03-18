@@ -8,7 +8,6 @@ class PlantDiseaseAdmin(admin.ModelAdmin):
     list_display = (
         "uuid",
         "user",
-        "details",
         "created_at",
     )
     search_fields = ("uuid", "user__name", "user__email")
