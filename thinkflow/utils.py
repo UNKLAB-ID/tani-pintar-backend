@@ -1,14 +1,32 @@
 import base64
+from typing import Any
+from typing import Literal
+from typing import TypedDict
 
 from django.conf import settings
+from django.db.models.fields.files import FieldFile
 from openai import OpenAI
+from openai.types.responses import Response
+
+
+class PlantDiseaseAnalysis(TypedDict):
+    """Type definition for plant disease analysis results."""
+
+    disease_name: str
+    confidence: float
+    symptoms: list[str]
+    severity: Literal["low", "medium", "high", "critical"]
+    treatment_recommendations: list[str]
+    preventive_measures: list[str]
+    mini_article: str
 
 
 class PlantDiseaseChecker:
     # Class variable for the prompt text
-    ANALYSIS_PROMPT = "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar"  # noqa: E501
+    ANALYSIS_PROMPT: str = "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar"  # noqa: E501
+
     # Class variable for the JSON schema format
-    ANALYSIS_SCHEMA = {
+    ANALYSIS_SCHEMA: dict[str, Any] = {
         "format": {
             "type": "json_schema",
             "name": "plant_disease_analysis",
@@ -53,12 +71,13 @@ class PlantDiseaseChecker:
         },
     }
 
-    def __init__(self):
-        self.openai = OpenAI(
+    def __init__(self) -> None:
+        """Initialize the PlantDiseaseChecker with OpenAI client."""
+        self.openai: OpenAI = OpenAI(
             api_key=settings.OPENAI_PLANT_DISEASE_API_KEY,
         )
 
-    def analyze_by_url(self, image_url):
+    def analyze_by_url(self, image_url: str) -> Response:
         """
         Analyze plant image and identify potential diseases.
 
@@ -66,7 +85,7 @@ class PlantDiseaseChecker:
             image_url: URL to the image to be analyzed
 
         Returns:
-            dict: Analysis results from the OpenAI API
+            Response: Analysis results from the OpenAI API
         """
         return self.openai.responses.create(
             model="gpt-4o",
@@ -88,7 +107,7 @@ class PlantDiseaseChecker:
             text=self.ANALYSIS_SCHEMA,
         )
 
-    def analyze_base64(self, image_base64):
+    def analyze_base64(self, image_base64: str) -> Response:
         """
         Analyze plant image from base64 string and identify potential diseases.
 
@@ -96,7 +115,7 @@ class PlantDiseaseChecker:
             image_base64: Base64 encoded image string
 
         Returns:
-            dict: Analysis results from the OpenAI API
+            Response: Analysis results from the OpenAI API
         """
         return self.openai.responses.create(
             model="gpt-4o",
@@ -118,15 +137,15 @@ class PlantDiseaseChecker:
             text=self.ANALYSIS_SCHEMA,
         )
 
-    def analyze_by_image_field(self, image_field):
+    def analyze_by_image_field(self, image_field: FieldFile) -> Response:
         """
-        Analyze plant disease from a Django ImageField.
+        Analyze plant disease from a Django ImageField or FileField.
 
         Args:
-            image_field: Django ImageField instance
+            image_field: Django ImageField or FileField instance
 
         Returns:
-            dict: Analysis results from the OpenAI API
+            Response: Analysis results from the OpenAI API
         """
         # Make sure the file is open
         image_field.open()
