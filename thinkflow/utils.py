@@ -20,43 +20,7 @@ class PlantDiseaseChecker:
         Returns:
             dict: Analysis results from the OpenAI API
         """
-        response = self.openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments.",  # noqa: E501
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": image_url,
-                            },
-                        },
-                    ],
-                },
-            ],
-        )
-
-        return {
-            "analysis": response.choices[0].message.content,
-            "raw_response": response,
-        }
-
-    def analyze_base64(self, image_base64):
-        """
-        Analyze plant image from base64 string and identify potential diseases.
-
-        Args:
-            image_base64: Base64 encoded image string
-
-        Returns:
-            dict: Analysis results from the OpenAI API
-        """
-        response = self.openai.responses.create(
+        return self.openai.responses.create(
             model="gpt-4o",
             input=[
                 {
@@ -64,12 +28,11 @@ class PlantDiseaseChecker:
                     "content": [
                         {
                             "type": "input_text",
-                            "text": "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia",  # noqa: E501
+                            "text": "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar",  # noqa: E501
                         },
                         {
                             "type": "input_image",
-                            # "image": {"url": f"data:image/jpeg;base64,{image_base64}"},  # noqa: E501, ERA001
-                            "image_url": "https://asset-2.tstatic.net/bangka/foto/bank/images/biduri_20171021_081119.jpg",
+                            "image_url": image_url,
                         },
                     ],
                 },
@@ -120,9 +83,78 @@ class PlantDiseaseChecker:
             },
         )
 
-        # print(response.output_text)  # noqa: ERA001
-        # print(json.dumps(json.loads(response.output_text), indent=4))  # noqa: ERA001
-        return response  # noqa: RET504
+    def analyze_base64(self, image_base64):
+        """
+        Analyze plant image from base64 string and identify potential diseases.
+
+        Args:
+            image_base64: Base64 encoded image string
+
+        Returns:
+            dict: Analysis results from the OpenAI API
+        """
+        return self.openai.responses.create(
+            model="gpt-4o",
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": "Analyze this plant image and identify any diseases or issues. Describe the symptoms visible, the potential disease name, severity level, and recommended treatments. Response in Bahasa Indonesia with correct grammar",  # noqa: E501
+                        },
+                        {
+                            "type": "input_image",
+                            "image_url": f"data:image/jpeg;base64,{image_base64}",
+                        },
+                    ],
+                },
+            ],
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "plant_disease_analysis",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "disease_name": {"type": "string"},
+                            "confidence": {"type": "number"},
+                            "symptoms": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "severity": {
+                                "type": "string",
+                                "enum": ["low", "medium", "high", "critical"],
+                            },
+                            "treatment_recommendations": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "preventive_measures": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "mini_article": {
+                                "type": "string",
+                                "description": "A concise, informative article about the disease",  # noqa: E501
+                            },
+                        },
+                        "required": [
+                            "disease_name",
+                            "confidence",
+                            "symptoms",
+                            "severity",
+                            "treatment_recommendations",
+                            "preventive_measures",
+                            "mini_article",
+                        ],
+                        "additionalProperties": False,
+                    },
+                    "strict": True,
+                },
+            },
+        )
 
     def analyze_by_image_field(self, image_field):
         """
