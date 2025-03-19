@@ -106,6 +106,7 @@ LOCAL_APPS = [
     "accounts",
     "location",
     "social_media",
+    "thinkflow",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -387,3 +388,9 @@ LOGIN_CODE_DISCORD_WEBHOOK_URL = env(
     "LOGIN_CODE_DISCORD_WEBHOOK_URL",
     default="",
 )
+
+# OpenAI API Key
+OPENAI_PLANT_DISEASE_API_KEY = env("OPENAI_PLANT_DISEASE_API_KEY", default="")
+# if not OPENAI_PLANT_DISEASE_API_KEY:
+#     msg = "OPENAI_PLANT_DISEASE_API_KEY is required"
+#     raise ValueError(msg)
