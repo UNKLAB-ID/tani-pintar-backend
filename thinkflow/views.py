@@ -20,7 +20,6 @@ def index(request):
 class PlantDiseaseAnalyzerView(GenericAPIView):
     authentication_classes = []
     permission_classes = []
-    throttle_classes = [AnonDayRateThrottle]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
