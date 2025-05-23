@@ -156,7 +156,7 @@ class VerificationCode(models.Model):
             self.create_expired_at()
 
         if not self.code:
-            self.code = get_random_string(length=4)
+            self.code = get_random_string(length=4, allowed_chars="0123456789")
 
         return super().save(*args, **kwargs)
 
@@ -203,7 +203,7 @@ class LoginCode(models.Model):
             self.create_expired_at()
 
         if not self.code:
-            self.code = get_random_string(length=4)
+            self.code = get_random_string(length=4, allowed_chars="0123456789")
 
         return super().save(*args, **kwargs)
 
