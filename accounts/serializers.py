@@ -44,10 +44,10 @@ class ConfirmRegistrationSerializer(serializers.Serializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    phone_number = serializers.CharField(required=True)
 
-    def validate_email(self, value):
-        profile = Profile.objects.filter(email=value)
+    def validate_ephone_number(self, value):
+        profile = Profile.objects.filter(phone_number=value)
 
         if not profile.exists():
             msg = "User not found"

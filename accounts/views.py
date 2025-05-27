@@ -71,7 +71,7 @@ class LoginView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         profile = Profile.objects.filter(
-            email=serializer.validated_data.get("email"),
+            phone_number=serializer.validated_data.get("phone_number"),
         ).last()
         profile.generate_login_code()
 
