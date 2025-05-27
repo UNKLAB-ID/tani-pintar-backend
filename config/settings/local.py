@@ -18,7 +18,7 @@ ALLOWED_HOSTS = ["cloudworkstations.dev", "localhost", "0.0.0.0", "127.0.0.1"]  
 
 CSRF_TRUSTED_ORIGINS = [
     "https://8000-idx-tani-pintar-backend-1735536156532.cluster-nx3nmmkbnfe54q3dd4pfbgilpc.cloudworkstations.dev",
-    "https://8000-firebase-tani-pintar-backendgit-1748227150875.cluster-ubrd2huk7jh6otbgyei4h62ope.cloudworkstations.dev"
+    "https://8000-firebase-tani-pintar-backendgit-1748227150875.cluster-ubrd2huk7jh6otbgyei4h62ope.cloudworkstations.dev",
 ]
 
 # CACHES
