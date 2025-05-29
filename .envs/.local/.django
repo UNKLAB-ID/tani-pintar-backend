@@ -1,20 +1,28 @@
 # General
+
 # ------------------------------------------------------------------------------
+
 USE_DOCKER=yes
 IPYTHONDIR=/app/.ipython
+
 # Redis
+
 # ------------------------------------------------------------------------------
+
 REDIS_URL=redis://redis:6379/0
 
 # Celery
+
 # ------------------------------------------------------------------------------
 
 # Flower
+
 CELERY_FLOWER_USER=debug
 CELERY_FLOWER_PASSWORD=debug
 
-REGISTRATION_CODE_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1326443028532957204/7djiT9Mnge8Cg-LECg_xGSsm1v0wVJ0RMqI9u1fnqUqH8f5gGg7M5KIMI1mPv57HQkbz
-LOGIN_CODE_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1327142265667457096/Ku7dLVROUwkE4VV_mRiZ536Ypr1aCSGGIM4RE2GerrmYX9KYL8cDV5IsCvvIiFzCvpOq
+REGISTRATION_CODE_DISCORD_WEBHOOK_URL=hahaha
+LOGIN_CODE_DISCORD_WEBHOOK_URL=hahaha
 
 # OpenAI
+
 OPENAI_PLANT_DISEASE_API_KEY=ARTERTENDEAN
