@@ -41,7 +41,7 @@ class RegisterView(CreateAPIView):
             user = User.objects.create_user(
                 name=serializer.validated_data.get("name"),
                 email=serializer.validated_data.get("email"),
-                username=serializer.validated_data.get("email"),
+                username=serializer.validated_data.get("phone_number"),
                 password=serializer.validated_data.get("password"),
                 is_active=False,
             )
@@ -70,9 +70,10 @@ class LoginView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        profile = Profile.objects.filter(
-            phone_number=serializer.validated_data.get("phone_number"),
+        user = User.objects.filter(
+            username=serializer.validated_data.get("phone_number"),
         ).last()
+        profile = Profile.objects.filter(user=user).last()
         profile.generate_login_code()
 
         return Response({"message": "Login code sent successfully"})
@@ -87,7 +88,7 @@ class ConfirmRegistrationView(UpdateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = User.objects.get(username=serializer.validated_data.get("email"))
+        user = User.objects.get(username=serializer.validated_data.get("phone_number"))
 
         verification_code = VerificationCode.objects.filter(
             user=user,
@@ -122,7 +123,7 @@ class ConfirmLoginView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = User.objects.get(username=serializer.validated_data.get("email"))
+        user = User.objects.get(username=serializer.validated_data.get("phone_number"))
 
         token = RefreshToken.for_user(user)
         return Response(

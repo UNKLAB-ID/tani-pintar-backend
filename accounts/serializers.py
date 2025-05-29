@@ -12,14 +12,14 @@ class RegisterSerializer(serializers.Serializer):
     phone_number = serializers.CharField(required=True)
 
     def validate_email(self, value):
-        if User.objects.filter(username=value).exists():
+        if Profile.objects.filter(email=value).exists():
             msg = "Email already exists"
             raise serializers.ValidationError(msg)
 
         return value
 
     def validate_phone_number(self, value):
-        if Profile.objects.filter(phone_number=value).exists():
+        if User.objects.filter(username=value).exists():
             msg = "Phone number already exists"
             raise serializers.ValidationError(msg)
 
@@ -27,13 +27,13 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class ConfirmRegistrationSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    phone_number = serializers.CharField(required=True)
     code = serializers.CharField(required=True)
 
-    def validate_email(self, value):
+    def validate_phone_number(self, value):
         user = User.objects.filter(username=value)
         if not user.exists():
-            msg = "Email does not exist"
+            msg = "Phone number does not exist"
             raise serializers.ValidationError(msg)
 
         if user.first().is_active:
@@ -46,14 +46,14 @@ class ConfirmRegistrationSerializer(serializers.Serializer):
 class LoginSerializer(serializers.Serializer):
     phone_number = serializers.CharField(required=True)
 
-    def validate_ephone_number(self, value):
-        profile = Profile.objects.filter(phone_number=value)
+    def validate_phone_number(self, value):
+        user = User.objects.filter(username=value)
 
-        if not profile.exists():
+        if not user.exists():
             msg = "User not found"
             raise serializers.ValidationError(msg)
 
-        if profile.last().user and not profile.last().user.is_active:
+        if user.last() and not user.last().is_active:
             msg = "User is not active"
             raise serializers.ValidationError(msg)
 
@@ -61,24 +61,24 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ConfirmLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    phone_number = serializers.CharField(required=True)
     code = serializers.CharField(required=True)
 
-    def validate_email(self, value):
-        profile = Profile.objects.filter(email=value)
+    def validate_phone_number(self, value):
+        user = User.objects.filter(username=value)
 
-        if not profile.exists():
+        if not user.exists():
             msg = "User not found"
             raise serializers.ValidationError(msg)
 
-        if profile.last().user and not profile.last().user.is_active:
+        if user.last() and not user.last().is_active:
             msg = "User is not active"
             raise serializers.ValidationError(msg)
 
         return value
 
     def validate(self, data):
-        user = User.objects.filter(username=data["email"]).first()
+        user = User.objects.filter(username=data["phone_number"]).first()
         login_code = (
             LoginCode.objects.filter(user=user, code=data["code"]).last()
             if LoginCode.objects.filter(user=user, code=data["code"]).exists()
