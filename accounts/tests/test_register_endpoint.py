@@ -30,7 +30,7 @@ class RegisterTests(TestCase):
         response = self.client.post(self.url, data, format="json")
         assert response.status_code == status.HTTP_201_CREATED
         assert (
-            User.objects.filter(username=data.get("email")).exists() is True
+            User.objects.filter(username=data.get("phone_number")).exists() is True
         ), "User should be created"
         assert (
             Profile.objects.filter(email=data.get("email")).exists() is True
@@ -61,11 +61,11 @@ class RegisterTests(TestCase):
         self.test_register_success()
 
         verification_code = VerificationCode.objects.filter(
-            user__username="arter@animemoe.us",
+            user__username="123456789",
         ).last()
         assert verification_code is not None, "Verification code should be created"
 
-        data = {"email": "arter@animemoe.us", "code": verification_code.code}
+        data = {"phone_number": "123456789", "code": verification_code.code}
         response = self.client.post(
             reverse("accounts:confirm-registration"),
             data,
@@ -73,5 +73,5 @@ class RegisterTests(TestCase):
         )
 
         assert response.status_code == status.HTTP_200_OK
-        user = User.objects.get(username=data.get("email"))
+        user = User.objects.get(username=data.get("phone_number"))
         assert user.is_active is True, "User should be activated"
