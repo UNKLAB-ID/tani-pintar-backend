@@ -33,5 +33,5 @@ django-health-check==3.18.3  # https://github.com/revsys/django-health-check
 openai==1.77.0  # https://pypi.org/project/openai/
 
 # Custom
-pytest-cov==6.0.0
+pytest-cov==6.2.0
 pydantic==2.11.4
