@@ -22,3 +22,14 @@ class TestGetPostListView(TestCase):
         assert len(posts.get("results")) == 15, "Should return 15 posts"  # noqa: PLR2004
         for post in posts.get("results"):
             assert len(post.get("images")) == 3, "Each post should contain 3 images"  # noqa: PLR2004
+
+    def test_get_post_list_unauthenticated(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+        posts = response.json()
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), "Should allow unauthenticated GET requests"
+        assert len(posts.get("results")) == 15, (  # noqa: PLR2004
+            "Should return 15 posts for unauthenticated user"
+        )
