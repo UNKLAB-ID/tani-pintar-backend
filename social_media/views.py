@@ -44,6 +44,8 @@ class ListCreatePostView(ListCreateAPIView):
     filter_backends = [SearchFilter]
     search_fields = ["content", "user__username"]
 
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get_serializer_class(self):
         if self.request.method == "POST":
             return CreatePostSerializer
