@@ -14,6 +14,11 @@ urlpatterns = [
     path("login/", views.LoginView.as_view(), name="login"),
     path("login/confirm", views.ConfirmLoginView.as_view(), name="confirm-login"),
     path("profile/", views.ProfileView.as_view(), name="profile"),
+    path(
+        "profile/<int:profile_id>/",
+        views.ProfileDetailAPIView.as_view(),
+        name="profile-detail-by-id",
+    ),
 ]
 
 app_name = "accounts"
