@@ -204,7 +204,10 @@ sentry_sdk.init(
 # -------------------------------------------------------------------------------
 # Tools that generate code samples can use SERVERS to point to the correct domain
 SPECTACULAR_SETTINGS["SERVERS"] = [
-    {"url": "https://dev.api.taniverse.is", "description": "Taniverse Developmet Server"},
+    {
+        "url": "https://dev.api.taniverse.is",
+        "description": "Taniverse Developmet Server",
+    },
 ]
 # Your stuff...
 # ------------------------------------------------------------------------------
