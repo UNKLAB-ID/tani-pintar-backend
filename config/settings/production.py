@@ -206,7 +206,7 @@ sentry_sdk.init(
 SPECTACULAR_SETTINGS["SERVERS"] = [
     {
         "url": "https://dev.api.taniverse.is",
-        "description": "Taniverse Developmet Server",
+        "description": "Taniverse Development Server",
     },
 ]
 # Your stuff...
