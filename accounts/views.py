@@ -5,6 +5,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -184,3 +185,12 @@ class ProfileView(APIView):
 
         serializer = self.serializer_class(profile)
         return Response(serializer.data)
+
+
+class ProfileDetailAPIView(RetrieveAPIView):
+    queryset = Profile.objects.select_related("user").all()
+    serializer_class = ProfileSerializer
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = []  # No permission required to get specific user profile
+    lookup_field = "id"
+    lookup_url_kwarg = "profile_id"
