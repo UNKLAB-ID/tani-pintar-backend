@@ -5,7 +5,7 @@ from .models import Post
 
 
 class PostFilter(FilterSet):
-    """`
+    """
     Filter class for Post model to filter by user_id and profile_id.
     """
 
