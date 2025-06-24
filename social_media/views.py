@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
@@ -8,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from .filters import PostFilter
 from .models import Post
 from .models import PostComment
 from .serializers import CreatePostSerializer
@@ -36,15 +38,21 @@ class ListCreatePostView(ListCreateAPIView):
         "likes",
     )
     pagination_class = PostPageNumberPagination
-    filter_backends = [SearchFilter]
+    filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ["content"]
-
+    filterset_class = PostFilter
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
             return CreatePostSerializer
         return PostSerializer
+
+    def perform_create(self, serializer):
+        """
+        Set the user for the post when creating.
+        """
+        serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
