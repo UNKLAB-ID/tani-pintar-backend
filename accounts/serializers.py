@@ -134,3 +134,23 @@ class ProfileSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class SimpleProfileDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = [
+            "id",
+            "full_name",
+            "headline",
+            "farmer_community",
+            "country",
+            "city",
+            "email",
+            "phone_number",
+            "profile_type",
+            "id_card_file",
+            "profile_picture_url",
+            "thumbnail_profile_picture_url",
+            "cover_picture_url",
+        ]

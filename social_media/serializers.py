@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from accounts.models import Profile
+from accounts.serializers import SimpleProfileDetailSerializer
 from core.users.models import User
 
 from .models import Post
@@ -8,23 +8,8 @@ from .models import PostComment
 from .models import PostImage
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = (
-            "id",
-            "email",
-            "full_name",
-            "phone_number",
-            "profile_type",
-            "id_card_validation_status",
-            "created_at",
-            "updated_at",
-        )
-
-
 class UserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer()
+    profile = SimpleProfileDetailSerializer()
 
     class Meta:
         model = User
@@ -103,13 +88,13 @@ class PostSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
-            "images",
             "views_count",
             "likes_count",
             "comments_count",
             "shared_count",
             "created_at",
             "updated_at",
+            "images",
             "user",
         )
 

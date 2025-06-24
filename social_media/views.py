@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -30,10 +29,6 @@ class PostCommentPageNumberPagination(PageNumberPagination):
     max_page_size = 50
 
 
-def index(request):
-    return HttpResponse(":)")
-
-
 class ListCreatePostView(ListCreateAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
@@ -42,7 +37,7 @@ class ListCreatePostView(ListCreateAPIView):
     )
     pagination_class = PostPageNumberPagination
     filter_backends = [SearchFilter]
-    search_fields = ["content", "user__username"]
+    search_fields = ["content"]
 
     permission_classes = [IsAuthenticatedOrReadOnly]
 

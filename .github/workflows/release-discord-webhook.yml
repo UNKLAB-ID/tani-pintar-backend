@@ -1,4 +1,4 @@
-name: Release Webhook
+name: Release Discord Webhook
 
 on:
   release:
