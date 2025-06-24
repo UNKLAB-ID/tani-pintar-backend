@@ -1,5 +1,5 @@
-from accounts.tests.factories import ProfileFactory
+from social_media.tests.factories import PostFactory
 
 
 def run():
-    ProfileFactory.create_batch(10)
+    PostFactory.create_batch(50)
