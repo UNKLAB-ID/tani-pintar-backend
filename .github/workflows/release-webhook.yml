@@ -18,5 +18,5 @@ jobs:
           username: "Arter Ganteng"
           avatar_url: "https://avatars.githubusercontent.com/u/33395829"
           content: "||@everyone||"
-          footer_title: "Changelog"
           reduce_headings: true
+          remove_github_reference_links: true
