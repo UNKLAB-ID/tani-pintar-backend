@@ -88,13 +88,13 @@ class PostSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
-            "images",
             "views_count",
             "likes_count",
             "comments_count",
             "shared_count",
             "created_at",
             "updated_at",
+            "images",
             "user",
         )
 

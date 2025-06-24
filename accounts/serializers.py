@@ -137,13 +137,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class SimpleProfileDetailSerializer(serializers.ModelSerializer):
-    user = ProfileUserSerializer()
-
     class Meta:
         model = Profile
         fields = [
             "id",
-            "user",
             "full_name",
             "headline",
             "farmer_community",
