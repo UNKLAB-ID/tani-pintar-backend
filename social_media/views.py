@@ -5,30 +5,19 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from .filters import PostFilter
 from .models import Post
 from .models import PostComment
+from .paginations import PostCommentCursorPagination
+from .paginations import PostCursorPagination
 from .serializers import CreatePostSerializer
 from .serializers import PostCommentSerializer
 from .serializers import PostDetailSerializer
 from .serializers import PostSerializer
 from .serializers import UpdatePostSerializer
-
-
-class PostPageNumberPagination(PageNumberPagination):
-    page_size = 15
-    page_size_query_param = "page_size"
-    max_page_size = 50
-
-
-class PostCommentPageNumberPagination(PageNumberPagination):
-    page_size = 25
-    page_size_query_param = "page_size"
-    max_page_size = 50
 
 
 class ListCreatePostView(ListCreateAPIView):
@@ -37,7 +26,7 @@ class ListCreatePostView(ListCreateAPIView):
         "comments",
         "likes",
     )
-    pagination_class = PostPageNumberPagination
+    pagination_class = PostCursorPagination
     filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ["content"]
     filterset_class = PostFilter
@@ -94,7 +83,7 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
 
 class PostCommentListView(ListCreateAPIView):
     serializer_class = PostCommentSerializer
-    pagination_class = PostCommentPageNumberPagination
+    pagination_class = PostCommentCursorPagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):

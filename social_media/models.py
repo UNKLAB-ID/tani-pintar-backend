@@ -8,7 +8,7 @@ from core.users.models import User
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=15, unique=True)
-    content = models.TextField()
+    content = models.TextField(default="")
 
     likes = models.ManyToManyField(
         User,
