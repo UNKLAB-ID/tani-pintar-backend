@@ -20,8 +20,6 @@ from .serializers import PostSerializer
 from .serializers import UpdatePostSerializer
 
 
-
-
 class ListCreatePostView(ListCreateAPIView):
     queryset = Post.objects.select_related("user").prefetch_related(
         "postimage_set",
