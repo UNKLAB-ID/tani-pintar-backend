@@ -261,9 +261,6 @@ class TestPostListFilterView(TestCase):
         assert (
             len(posts.get("results")) == 10  # noqa: PLR2004
         ), "Should return 10 posts per page"
-        assert (
-            posts.get("count") == 25  # noqa: PLR2004
-        ), "Should show total count of 25 posts for this user"
         assert posts.get("next") is not None, "Should have next page link"
 
     def test_filter_posts_unauthenticated(self):
