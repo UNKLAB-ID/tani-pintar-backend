@@ -1,5 +1,5 @@
-from social_media.tests.factories import PostFactory
+from social_media.tasks import moderate_post_content
 
 
 def run():
-    PostFactory.create_batch(50)
+    moderate_post_content(58)
