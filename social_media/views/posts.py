@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -8,16 +7,13 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
-from .filters import PostFilter
-from .models import Post
-from .models import PostComment
-from .paginations import PostCommentCursorPagination
-from .paginations import PostCursorPagination
-from .serializers import CreatePostSerializer
-from .serializers import PostCommentSerializer
-from .serializers import PostDetailSerializer
-from .serializers import PostSerializer
-from .serializers import UpdatePostSerializer
+from social_media.filters import PostFilter
+from social_media.models import Post
+from social_media.paginations import PostCursorPagination
+from social_media.serializers import CreatePostSerializer
+from social_media.serializers import PostDetailSerializer
+from social_media.serializers import PostSerializer
+from social_media.serializers import UpdatePostSerializer
 
 
 class ListCreatePostView(ListCreateAPIView):
@@ -79,23 +75,3 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
             msg = "You do not have permission to delete this post."
             raise PermissionDenied(msg)
         super().perform_destroy(instance)
-
-
-class PostCommentListView(ListCreateAPIView):
-    serializer_class = PostCommentSerializer
-    pagination_class = PostCommentCursorPagination
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get_queryset(self):
-        post_slug = self.kwargs.get("post_slug")
-        return (
-            PostComment.objects.filter(post__slug=post_slug)
-            .select_related("user", "parent")
-            .prefetch_related("replies", "replies__user")
-            .order_by("created_at")
-        )
-
-    def perform_create(self, serializer):
-        post_slug = self.kwargs.get("post_slug")
-        post = get_object_or_404(Post, slug=post_slug)
-        serializer.save(user=self.request.user, post=post)
