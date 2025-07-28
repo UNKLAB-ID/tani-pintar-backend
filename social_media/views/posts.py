@@ -63,6 +63,7 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
         .exclude(is_potentially_harmful=True)
     )
     lookup_field = "slug"
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
