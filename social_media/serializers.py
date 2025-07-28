@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from accounts.serializers import SimpleProfileDetailSerializer
 from core.users.models import User
+from core.users.serializers import UserDetailSerializer
 
 from .models import Post
 from .models import PostComment
@@ -188,3 +189,19 @@ class UpdatePostSerializer(serializers.ModelSerializer):
             msg = "You can only update your own posts."
             raise serializers.ValidationError(msg)
         return data
+
+
+class PostListSerializer(serializers.ModelSerializer):
+    images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
+    user = UserDetailSerializer()
+
+    class Meta:
+        model = Post
+        fields = (
+            "slug",
+            "content",
+            "created_at",
+            "updated_at",
+            "images",
+            "user",
+        )
