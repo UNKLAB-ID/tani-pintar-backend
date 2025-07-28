@@ -17,10 +17,14 @@ from social_media.serializers import UpdatePostSerializer
 
 
 class ListCreatePostView(ListCreateAPIView):
-    queryset = Post.objects.select_related("user").prefetch_related(
-        "postimage_set",
-        "comments",
-        "likes",
+    queryset = (
+        Post.objects.select_related("user")
+        .prefetch_related(
+            "postimage_set",
+            "comments",
+            "likes",
+        )
+        .exclude(is_potentially_harmful=True)
     )
     pagination_class = PostCursorPagination
     filter_backends = [SearchFilter, DjangoFilterBackend]
@@ -49,12 +53,17 @@ class ListCreatePostView(ListCreateAPIView):
 
 
 class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
-    queryset = Post.objects.select_related("user").prefetch_related(
-        "postimage_set",
-        "comments",
-        "likes",
+    queryset = (
+        Post.objects.select_related("user")
+        .prefetch_related(
+            "postimage_set",
+            "comments",
+            "likes",
+        )
+        .exclude(is_potentially_harmful=True)
     )
     lookup_field = "slug"
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
