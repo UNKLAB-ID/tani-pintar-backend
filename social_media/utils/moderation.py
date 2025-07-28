@@ -40,7 +40,7 @@ class ContentModerator:
             bool: True if the content is flagged as potentially harmful, False otherwise.
         """  # noqa: E501
 
-        logger.info(f"Checking content for harmfulness: {content[:50]}...")  # noqa: G004
+        logger.info("Checking content for harmfulness: %s...", content[:50])  # noqa: G004
         try:
             response = self.openai.moderations.create(
                 input=content,
