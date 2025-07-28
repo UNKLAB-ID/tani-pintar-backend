@@ -18,6 +18,7 @@ class PostAdmin(admin.ModelAdmin):
         "slug",
         "user",
         "content_summary",
+        "is_potentially_harmful",
         "images_count",
         "likes_count",
         "comments_count",

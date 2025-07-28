@@ -18,6 +18,11 @@ class Post(models.Model):
     )
     shared_count = models.PositiveIntegerField(default=0)
 
+    is_potentially_harmful = models.BooleanField(
+        default=False,
+        help_text="Indicates if the post has been flagged as potentially harmful.",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 

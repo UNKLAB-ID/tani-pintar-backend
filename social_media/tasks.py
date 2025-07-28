@@ -1,7 +1,12 @@
+import logging
+
 from celery import shared_task
 
 from core.users.models import User
 from social_media.models import Post
+from social_media.utils.moderation import ContentModerator
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -22,3 +27,29 @@ def create_post_log_view(post_id: str, user_id: str):
     user = User.objects.get(id=user_id)
 
     return post.create_log_view(user)
+
+
+@shared_task
+def moderate_post_content(post_id: int):
+    try:
+        post = Post.objects.get(id=post_id)
+    except Exception:
+        logger.exception("Error moderating post %s", post_id)
+        raise
+
+    if not post.content.strip():
+        logger.info("Skipping moderation for empty post content: %s", post_id)
+        return {"skipped": True, "reason": "Empty content"}
+
+    moderator = ContentModerator()
+    is_harmful = moderator.is_potentially_harmful(post.content)
+
+    if is_harmful:
+        logger.info("Post %s flagged as potentially harmful", post_id)
+        post.is_potentially_harmful = True
+    else:
+        logger.info("Post %s is safe", post_id)
+        post.is_potentially_harmful = False
+
+    post.save(update_fields=["is_potentially_harmful", "updated_at"])
+    return is_harmful
