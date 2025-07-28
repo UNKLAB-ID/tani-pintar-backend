@@ -31,3 +31,17 @@ class CreatePostCommentSerializer(serializers.ModelSerializer):
             msg = "Content cannot be empty."
             raise serializers.ValidationError(msg)
         return value
+
+
+class UpdatePostCommentSerializer(serializers.ModelSerializer):
+    content = serializers.CharField(allow_blank=True)  # Allow blank for validation
+
+    class Meta:
+        model = PostComment
+        fields = ("content",)
+
+    def validate_content(self, value):
+        if not value or not value.strip():
+            msg = "Content cannot be empty."
+            raise serializers.ValidationError(msg)
+        return value

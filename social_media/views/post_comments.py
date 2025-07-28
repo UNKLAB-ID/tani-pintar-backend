@@ -1,6 +1,8 @@
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
@@ -9,6 +11,7 @@ from social_media.models import PostComment
 from social_media.paginations import PostCommentCursorPagination
 from social_media.serializers import PostCommentListSerializer
 from social_media.serializers.post_comments import CreatePostCommentSerializer
+from social_media.serializers.post_comments import UpdatePostCommentSerializer
 
 
 class PostCommentListView(ListCreateAPIView):
@@ -117,3 +120,40 @@ class PostCommentListView(ListCreateAPIView):
         post_slug = self.kwargs.get("post_slug")
         post = get_object_or_404(Post, slug=post_slug)
         serializer.save(user=self.request.user, post=post)
+
+
+class PostCommentUpdateView(UpdateAPIView):
+    """
+    API view for updating a specific comment.
+
+    Supports:
+    - PUT/PATCH: Update comment content
+
+    Features:
+    - Only allows comment owner to update their comment
+    - Validates that content is not empty
+    - Returns 404 if comment doesn't exist or user doesn't own it
+    """
+
+    serializer_class = UpdatePostCommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """
+        Retrieve comment instance ensuring only the owner can access it.
+
+        Returns:
+            PostComment: The comment instance if owned by the requesting user
+
+        Raises:
+            Http404: If comment doesn't exist or user doesn't own it
+        """
+        comment_id = self.kwargs.get("comment_id")
+        post_slug = self.kwargs.get("post_slug")
+
+        return get_object_or_404(
+            PostComment,
+            id=comment_id,
+            post__slug=post_slug,
+            user=self.request.user,
+        )
