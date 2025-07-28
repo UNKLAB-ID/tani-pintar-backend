@@ -9,7 +9,6 @@ from social_media.tests.factories import PostFactory
 
 class TestRetrieveUpdateDestroyPostView(TestCase):
     def setUp(self):
-        self.url = reverse("social-media:post")
         self.user = ProfileFactory().user
         self.user_2 = ProfileFactory().user
         self.client.force_login(self.user)

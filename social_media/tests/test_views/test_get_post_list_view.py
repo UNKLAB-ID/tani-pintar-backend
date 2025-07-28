@@ -10,7 +10,7 @@ from social_media.tests.factories import PostFactory
 
 class TestGetPostListView(TestCase):
     def setUp(self):
-        self.url = reverse("social-media:post")
+        self.url = reverse("social-media:posts")
         self.user = UserFactory()
         self.posts = PostFactory.create_batch(25)
         self.client.force_login(self.user)
@@ -41,7 +41,7 @@ class TestPostListFilterView(TestCase):
     """Test cases for filtering posts in the ListCreatePostView."""
 
     def setUp(self):
-        self.url = reverse("social-media:post")
+        self.url = reverse("social-media:posts")
         self.user = UserFactory()
 
         # Create test profiles with different types

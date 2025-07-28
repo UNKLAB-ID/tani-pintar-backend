@@ -114,7 +114,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     views_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
-    user = UserSerializer()
+    user = UserDetailSerializer()
 
     class Meta:
         model = Post
