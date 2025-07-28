@@ -11,25 +11,23 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=Post)
-def trigger_post_moderation(_sender, instance, created, **_kwargs):
+def trigger_post_moderation(sender, instance, created, update_fields=None, **_kwargs):
+    """Trigger post moderation on creation or content updates, avoiding infinite loops."""  # noqa: E501
     # Trigger moderation on post creation
     if created:
         logger.debug("Triggering moderation for new post %s", instance.id)
         transaction.on_commit(lambda: moderate_post_content.delay(instance.id))
         return
 
-    # For updates, compare current content with database value
-    try:
-        old_post = Post.objects.get(pk=instance.pk)
-        if old_post.content.strip() != instance.content.strip():
-            logger.debug(
-                "Triggering moderation for content change in post %s",
-                instance.id,
-            )
-            transaction.on_commit(lambda: moderate_post_content.delay(instance.id))
-    except Post.DoesNotExist:
-        # This shouldn't happen for updates, but handle gracefully
-        logger.warning(
-            "Post %s not found in database during update signal",
+    # Skip moderation if this save is from the moderation task itself
+    if update_fields and "is_potentially_harmful" in update_fields:
+        logger.debug(
+            "Skipping moderation for post %s - update from moderation task",
             instance.id,
         )
+        return
+
+    # Trigger moderation for post updates (content changes)
+    if instance and instance.content and instance.content.strip():
+        logger.debug("Post %s content updated, triggering moderation", instance.id)
+        transaction.on_commit(lambda: moderate_post_content.delay(instance.id))
