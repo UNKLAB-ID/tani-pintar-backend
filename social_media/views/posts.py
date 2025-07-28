@@ -12,7 +12,7 @@ from social_media.models import Post
 from social_media.paginations import PostCursorPagination
 from social_media.serializers import CreatePostSerializer
 from social_media.serializers import PostDetailSerializer
-from social_media.serializers import PostSerializer
+from social_media.serializers import PostListSerializer
 from social_media.serializers import UpdatePostSerializer
 
 
@@ -31,7 +31,7 @@ class ListCreatePostView(ListCreateAPIView):
     def get_serializer_class(self):
         if self.request.method == "POST":
             return CreatePostSerializer
-        return PostSerializer
+        return PostListSerializer
 
     def perform_create(self, serializer):
         """

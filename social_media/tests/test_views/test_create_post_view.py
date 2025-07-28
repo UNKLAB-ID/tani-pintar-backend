@@ -12,7 +12,7 @@ from accounts.tests.factories import ProfileFactory
 
 class TestCreatePost(TestCase):
     def setUp(self):
-        self.url = reverse("social-media:post")
+        self.url = reverse("social-media:posts")
         self.profile = ProfileFactory(profile_type=Profile.FARMER)
         self.user = self.profile.user
         self.client.force_login(self.user)
