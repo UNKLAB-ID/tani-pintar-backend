@@ -31,6 +31,26 @@ def create_post_log_view(post_id: str, user_id: str):
 
 @shared_task(bind=True, autoretry_for=(Exception,), max_retries=5, retry_backoff=True)
 def moderate_post_content(self, post_id: int):
+    """
+    Moderate post content for potentially harmful material.
+    This method retrieves a post by ID and uses a ContentModerator to analyze
+    the post content for potentially harmful material. Updates the post's
+    moderation status accordingly.
+    Args:
+        post_id (int): The ID of the post to moderate.
+    Returns:
+        dict or bool: Returns a dictionary with 'skipped' and 'reason' keys if
+                     content is empty, otherwise returns boolean indicating if
+                     content is harmful (True) or safe (False).
+    Raises:
+        Exception: Re-raises any exception that occurs during post retrieval
+                  after logging the error.
+    Note:
+        - Skips moderation for posts with empty or whitespace-only content
+        - Updates the post's 'is_potentially_harmful' and 'updated_at' fields
+        - Logs the moderation results for monitoring purposes
+    """
+
     try:
         post = Post.objects.get(id=post_id)
     except Exception:

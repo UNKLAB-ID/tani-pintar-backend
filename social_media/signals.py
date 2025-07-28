@@ -12,7 +12,21 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Post)
 def trigger_post_moderation(sender, instance, created, update_fields=None, **_kwargs):
-    """Trigger post moderation on creation or content updates, avoiding infinite loops."""  # noqa: E501
+    """
+    Handles post moderation triggering logic upon creation or content updates.
+    This function is intended to be used as a signal handler for post save events.
+    It triggers asynchronous moderation for new posts and for posts whose content has changed,
+    while avoiding infinite moderation loops by skipping updates originating from the moderation task itself.
+    Args:
+        sender: The model class sending the signal.
+        instance: The instance of the post being saved.
+        created (bool): Whether the instance was created (True) or updated (False).
+        update_fields (Optional[set]): The set of fields updated during save, if any.
+        **_kwargs: Additional keyword arguments.
+    Returns:
+        None
+    """  # noqa: E501
+
     # Trigger moderation on post creation
     if created:
         logger.debug("Triggering moderation for new post %s", instance.id)
