@@ -329,3 +329,134 @@ class TestPostCommentNestedReplies(TestCase):
         assert "email" in user_data
         assert "profile" in user_data
         assert user_data["id"] == self.user.id
+
+
+class TestPostCommentDeleteView(TestCase):
+    """Test cases for deleting comments via DELETE requests."""
+
+    def setUp(self):
+        self.profile = ProfileFactory(profile_type=Profile.FARMER)
+        self.user = self.profile.user
+        self.client.force_login(self.user)
+
+        # Create another user for unauthorized tests
+        self.other_profile = ProfileFactory(profile_type=Profile.FARMER)
+        self.other_user = self.other_profile.user
+
+        # Create a post and comment
+        self.post = PostFactory(user=self.user, content="Test post content")
+        self.comment = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Test comment to delete",
+        )
+        self.url = reverse(
+            "social-media:post-comment-update",
+            kwargs={"post_slug": self.post.slug, "comment_id": self.comment.id},
+        )
+
+    def test_delete_comment_success(self):
+        """Test successful comment deletion by owner"""
+        response = self.client.delete(self.url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify comment was deleted
+        assert not PostComment.objects.filter(id=self.comment.id).exists()
+
+    def test_delete_comment_unauthorized_user(self):
+        """Test that non-owners cannot delete comments"""
+        self.client.force_login(self.other_user)
+
+        response = self.client.delete(self.url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        # Comment should still exist
+        assert PostComment.objects.filter(id=self.comment.id).exists()
+
+    def test_delete_comment_unauthenticated(self):
+        """Test that unauthenticated users cannot delete comments"""
+        self.client.logout()
+
+        response = self.client.delete(self.url)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        # Comment should still exist
+        assert PostComment.objects.filter(id=self.comment.id).exists()
+
+    def test_delete_nonexistent_comment(self):
+        """Test deleting a comment that doesn't exist"""
+        url = reverse(
+            "social-media:post-comment-update",
+            kwargs={"post_slug": self.post.slug, "comment_id": 99999},
+        )
+
+        response = self.client.delete(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_comment_from_nonexistent_post(self):
+        """Test deleting comment with invalid post slug"""
+        url = reverse(
+            "social-media:post-comment-update",
+            kwargs={"post_slug": "nonexistent", "comment_id": self.comment.id},
+        )
+
+        response = self.client.delete(url)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        # Comment should still exist
+        assert PostComment.objects.filter(id=self.comment.id).exists()
+
+    def test_delete_reply_comment(self):
+        """Test deleting a reply comment"""
+        # Create a reply to the original comment
+        reply = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="This is a reply",
+            parent=self.comment,
+        )
+
+        reply_url = reverse(
+            "social-media:post-comment-update",
+            kwargs={"post_slug": self.post.slug, "comment_id": reply.id},
+        )
+
+        response = self.client.delete(reply_url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify reply was deleted but parent comment still exists
+        assert not PostComment.objects.filter(id=reply.id).exists()
+        assert PostComment.objects.filter(id=self.comment.id).exists()
+
+    def test_delete_parent_comment_with_replies(self):
+        """Test deleting a parent comment that has replies"""
+        # Create replies to the comment
+        reply1 = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Reply 1",
+            parent=self.comment,
+        )
+        reply2 = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Reply 2",
+            parent=self.comment,
+        )
+
+        response = self.client.delete(self.url)
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+        # Verify parent comment was deleted
+        assert not PostComment.objects.filter(id=self.comment.id).exists()
+
+        # Check what happens to replies (depends on model's on_delete behavior)
+        # Since parent is SET_NULL, replies should still exist with parent=None
+        reply1.refresh_from_db()
+        reply2.refresh_from_db()
+        assert reply1.parent is None
+        assert reply2.parent is None

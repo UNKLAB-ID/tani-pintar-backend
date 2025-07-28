@@ -1,7 +1,7 @@
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListCreateAPIView
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -122,16 +122,18 @@ class PostCommentListView(ListCreateAPIView):
         serializer.save(user=self.request.user, post=post)
 
 
-class PostCommentUpdateView(UpdateAPIView):
+class PostCommentUpdateView(RetrieveUpdateDestroyAPIView):
     """
-    API view for updating a specific comment.
+    API view for retrieving, updating, and deleting a specific comment.
 
     Supports:
+    - GET: Retrieve comment details
     - PUT/PATCH: Update comment content
+    - DELETE: Delete comment
 
     Features:
-    - Only allows comment owner to update their comment
-    - Validates that content is not empty
+    - Only allows comment owner to access their comment
+    - Validates that content is not empty on updates
     - Returns 404 if comment doesn't exist or user doesn't own it
     """
 
