@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from social_media.models import Post
 from social_media.models import PostComment
@@ -13,11 +14,23 @@ class PostCommentListView(ListCreateAPIView):
     pagination_class = PostCommentCursorPagination
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         post_slug = self.kwargs.get("post_slug")
 
-        if Post.objects.filter(slug=post_slug, is_potentially_harmful=True):
-            return PostComment.objects.none()
+        # Check if post is harmful before pagination to avoid cursor pagination bug
+        if Post.objects.filter(slug=post_slug, is_potentially_harmful=True).exists():
+            return Response(
+                {
+                    "results": [],
+                    "next": None,
+                    "previous": None,
+                },
+            )
+
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        post_slug = self.kwargs.get("post_slug")
 
         return (
             PostComment.objects.filter(post__slug=post_slug)
