@@ -29,8 +29,8 @@ def create_post_log_view(post_id: str, user_id: str):
     return post.create_log_view(user)
 
 
-@shared_task
-def moderate_post_content(post_id: int):
+@shared_task(bind=True, autoretry_for=(Exception,), max_retries=5, retry_backoff=True)
+def moderate_post_content(self, post_id: int):
     try:
         post = Post.objects.get(id=post_id)
     except Exception:
