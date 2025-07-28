@@ -17,3 +17,15 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             "parent",
             "user",
         )
+
+
+class CreatePostCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostComment
+        fields = ("content", "parent")
+
+    def validate_content(self, value):
+        if not value.strip():
+            msg = "Content cannot be empty."
+            raise serializers.ValidationError(msg)
+        return value

@@ -8,6 +8,7 @@ from social_media.models import Post
 from social_media.models import PostComment
 from social_media.paginations import PostCommentCursorPagination
 from social_media.serializers import PostCommentListSerializer
+from social_media.serializers.post_comments import CreatePostCommentSerializer
 
 
 class PostCommentListView(ListCreateAPIView):
@@ -28,6 +29,11 @@ class PostCommentListView(ListCreateAPIView):
     serializer_class = PostCommentListSerializer
     pagination_class = PostCommentCursorPagination
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreatePostCommentSerializer
+        return PostCommentListSerializer
 
     def list(self, request, *args, **kwargs):
         """
