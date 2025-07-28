@@ -3,10 +3,8 @@ from rest_framework import serializers
 from accounts.serializers import SimpleProfileDetailSerializer
 from core.users.models import User
 from core.users.serializers import UserDetailSerializer
-
-from .models import Post
-from .models import PostComment
-from .models import PostImage
+from social_media.models import Post
+from social_media.models import PostImage
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -21,21 +19,6 @@ class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
         fields = ("id", "image", "created_at")
-
-
-class PostCommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-
-    class Meta:
-        model = PostComment
-        fields = (
-            "id",
-            "content",
-            "created_at",
-            "updated_at",
-            "parent",
-            "user",
-        )
 
 
 class CreatePostSerializer(serializers.ModelSerializer):
