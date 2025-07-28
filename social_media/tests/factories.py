@@ -3,6 +3,7 @@ import factory
 from accounts.models import Profile
 from accounts.tests.factories import ProfileFactory
 from social_media.models import Post
+from social_media.models import PostComment
 from social_media.models import PostImage
 
 
@@ -34,3 +35,15 @@ class PostImageFactory(factory.django.DjangoModelFactory):
 
     post = factory.SubFactory(PostFactory)
     image = factory.django.ImageField(color="blue")  # Simulasi file gambar
+
+
+class PostCommentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = PostComment
+
+    post = factory.SubFactory(PostFactory)
+    user = factory.LazyAttribute(
+        lambda _: ProfileFactory(profile_type=Profile.FARMER).user,
+    )
+    content = factory.Faker("paragraph", nb_sentences=3)
+    parent = None
