@@ -176,6 +176,7 @@ class UpdatePostSerializer(serializers.ModelSerializer):
 
 class PostListSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
+    likes_count = serializers.SerializerMethodField()
     user = UserDetailSerializer()
 
     class Meta:
@@ -183,8 +184,12 @@ class PostListSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
+            "likes_count",
             "created_at",
             "updated_at",
             "images",
             "user",
         )
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
