@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import Post
 from .models import PostComment
 from .models import PostImage
+from .models import PostLike
 from .models import PostView
 
 
@@ -54,7 +55,7 @@ class PostAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        return queryset.select_related("user").prefetch_related("likes")
+        return queryset.select_related("user")
 
 
 @admin.register(PostImage)
@@ -84,3 +85,17 @@ class PostCommentAdmin(admin.ModelAdmin):
 @admin.register(PostView)
 class PostViewAdmin(admin.ModelAdmin):
     list_display = ("post", "user")
+
+
+@admin.register(PostLike)
+class PostLikeAdmin(admin.ModelAdmin):
+    list_display = ("user", "post", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "post__content")
+    readonly_fields = ("created_at",)
+    autocomplete_fields = ("user", "post")
+    ordering = ("-created_at",)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related("user", "post")

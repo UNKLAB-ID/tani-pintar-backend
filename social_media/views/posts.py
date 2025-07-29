@@ -22,7 +22,6 @@ class ListCreatePostView(ListCreateAPIView):
         .prefetch_related(
             "postimage_set",
             "comments",
-            "likes",
         )
         .exclude(is_potentially_harmful=True)
     )
@@ -58,7 +57,6 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
         .prefetch_related(
             "postimage_set",
             "comments",
-            "likes",
         )
         .exclude(is_potentially_harmful=True)
     )
