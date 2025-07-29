@@ -5,6 +5,7 @@ from rest_framework import status
 
 from accounts.tests.factories import ProfileFactory
 from social_media.tests.factories import PostFactory
+from social_media.tests.factories import PostLikeFactory
 
 
 class TestRetrieveUpdateDestroyPostView(TestCase):
@@ -24,6 +25,9 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
         assert response.json().get("content") is not None
         assert response.json().get("images") is not None
         assert response.json().get("user") is not None
+        assert (
+            "likes_count" in response.json()
+        ), "Post detail should contain likes_count field"
 
     def test_update_post(self):
         # Test that the user can update the post
@@ -34,6 +38,9 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json().get("content") == "New content"
+        assert (
+            "likes_count" in response.json()
+        ), "Post update response should contain likes_count field"
 
         # Test that another user cannot update the post
         self.client.force_login(self.user_2)
@@ -79,3 +86,59 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
             reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
         )
         assert response.json().get("views_count") == 2  # noqa: PLR2004
+
+    def test_post_detail_likes_count_accuracy(self):
+        """Test that likes_count field shows accurate count of likes in detail view."""
+        # Create a post with no likes
+        post_no_likes = PostFactory(user=self.user)
+
+        # Create a post with likes
+        post_with_likes = PostFactory(user=self.user)
+        PostLikeFactory.create_batch(3, post=post_with_likes)
+
+        # Test post with no likes
+        response = self.client.get(
+            reverse("social_media:post", kwargs={"slug": post_no_likes.slug}),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("likes_count") == 0
+
+        # Test post with likes
+        response = self.client.get(
+            reverse("social_media:post", kwargs={"slug": post_with_likes.slug}),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("likes_count") == 3  # noqa: PLR2004
+
+    def test_post_detail_likes_count_field_type(self):
+        """Test that likes_count field is returned as integer in detail view."""
+        post = PostFactory(user=self.user)
+        PostLikeFactory.create_batch(2, post=post)
+
+        response = self.client.get(
+            reverse("social_media:post", kwargs={"slug": post.slug}),
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        likes_count = response.json().get("likes_count")
+        assert isinstance(likes_count, int), "likes_count should be an integer"
+        assert likes_count >= 0, "likes_count should not be negative"
+        assert likes_count == 2  # noqa: PLR2004
+
+    def test_post_detail_likes_count_consistency_after_update(self):
+        """Test that likes_count remains consistent after post update."""
+        post = PostFactory(user=self.user)
+        PostLikeFactory.create_batch(2, post=post)
+
+        # Update the post content
+        response = self.client.put(
+            reverse("social_media:post", kwargs={"slug": post.slug}),
+            data={"content": "Updated content"},
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get("content") == "Updated content"
+        assert (
+            response.json().get("likes_count") == 2  # noqa: PLR2004
+        ), "likes_count should remain unchanged after update"
