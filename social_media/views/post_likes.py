@@ -7,11 +7,9 @@ from rest_framework.response import Response
 
 from social_media.models import Post
 from social_media.models import PostLike
-from social_media.serializers.post_likes import PostLikeSerializer
 
 
 class PostLikeCreateView(CreateAPIView):
-    serializer_class = PostLikeSerializer
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
