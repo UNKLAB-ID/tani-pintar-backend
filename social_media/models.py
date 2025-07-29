@@ -10,12 +10,6 @@ class Post(models.Model):
     slug = models.SlugField(max_length=15, unique=True)
     content = models.TextField(default="")
 
-    likes = models.ManyToManyField(
-        User,
-        related_name="liked_posts",
-        blank=True,
-        db_index=True,
-    )
     shared_count = models.PositiveIntegerField(default=0)
 
     is_potentially_harmful = models.BooleanField(
@@ -105,3 +99,18 @@ class PostView(models.Model):
 
     def __str__(self):
         return f"View by {self.user.username} on Post {self.post.id}"
+
+
+class PostLike(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["post", "user"], name="unique_post_like"),
+        ]
+
+    def __str__(self):
+        return f"User {self.user.username} liked Post {self.post.id}"
