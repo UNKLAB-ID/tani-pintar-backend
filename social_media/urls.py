@@ -4,6 +4,7 @@ from .views import ListCreatePostView
 from .views import PostCommentLikeCreateView
 from .views import PostCommentLikeDestroyView
 from .views import PostCommentListView
+from .views import PostCommentRepliesView
 from .views import PostCommentUpdateView
 from .views import PostLikeCreateView
 from .views import PostLikeDestroyView
@@ -27,6 +28,11 @@ urlpatterns = [
         "posts/<str:post_slug>/comments/<int:comment_id>/",
         PostCommentUpdateView.as_view(),
         name="post-comment-update",
+    ),
+    path(
+        "posts/<str:post_slug>/comments/<int:comment_id>/replies/",
+        PostCommentRepliesView.as_view(),
+        name="post-comment-replies",
     ),
     path(
         "posts/<str:post_slug>/comments/<int:comment_id>/like/",

@@ -620,3 +620,151 @@ class TestPostCommentDeleteView(TestCase):
         reply2.refresh_from_db()
         assert reply1.parent is None
         assert reply2.parent is None
+
+
+class TestPostCommentRepliesView(TestCase):
+    """Test cases for the PostCommentRepliesView (replies endpoint)."""
+
+    def setUp(self):
+        self.profile = ProfileFactory(profile_type=Profile.FARMER)
+        self.user = self.profile.user
+        self.client.force_login(self.user)
+
+        self.post = PostFactory(user=self.user)
+        self.parent_comment = PostCommentFactory(post=self.post, user=self.user)
+        self.url = reverse(
+            "social_media:post-comment-replies",
+            kwargs={
+                "post_slug": self.post.slug,
+                "comment_id": self.parent_comment.id,
+            },
+        )
+
+    def test_get_replies_empty_list(self):
+        """Test GET request for comment with no replies returns empty list"""
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
+
+    def test_get_replies_with_data(self):
+        """Test GET request returns replies for the parent comment"""
+        # Create replies to the parent comment
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="First reply",
+            parent=self.parent_comment,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Second reply",
+            parent=self.parent_comment,
+        )
+
+        # Create a reply to a different comment (should not appear)
+        other_comment = PostCommentFactory(post=self.post, user=self.user)
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Other reply",
+            parent=other_comment,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        replies = data["results"]
+
+        # Should only get replies for this specific parent comment
+        assert len(replies) == 2  # noqa: PLR2004
+        reply_contents = [reply["content"] for reply in replies]
+        assert "First reply" in reply_contents
+        assert "Second reply" in reply_contents
+        assert "Other reply" not in reply_contents
+
+        # Verify replies have correct parent
+        for reply in replies:
+            assert reply["parent"] == self.parent_comment.id
+
+    def test_get_replies_includes_has_replies_field(self):
+        """Test that replies include has_replies field"""
+        # Create a reply and a nested reply
+        reply = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=self.parent_comment,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=reply,  # Nested reply
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        replies = data["results"]
+
+        assert len(replies) == 1
+        reply_data = replies[0]
+        assert "has_replies" in reply_data
+        assert reply_data["has_replies"] is True  # Should have nested reply
+
+    def test_get_replies_nonexistent_comment(self):
+        """Test GET request for nonexistent parent comment returns empty"""
+        url = reverse(
+            "social_media:post-comment-replies",
+            kwargs={
+                "post_slug": self.post.slug,
+                "comment_id": 99999,  # Nonexistent comment ID
+            },
+        )
+
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
+
+    def test_get_replies_different_post(self):
+        """Test GET request with comment from different post returns empty"""
+        other_post = PostFactory()
+        other_comment = PostCommentFactory(post=other_post, user=self.user)
+
+        url = reverse(
+            "social_media:post-comment-replies",
+            kwargs={
+                "post_slug": self.post.slug,
+                "comment_id": other_comment.id,  # Comment from different post
+            },
+        )
+
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
+
+    def test_replies_from_harmful_post(self):
+        """Test that replies from harmful posts are not shown"""
+        # Make post harmful
+        self.post.is_potentially_harmful = True
+        self.post.save()
+
+        # Create reply
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=self.parent_comment,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
