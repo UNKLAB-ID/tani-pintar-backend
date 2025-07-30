@@ -99,7 +99,7 @@ class PostCommentListView(ListCreateAPIView):
                 post__is_potentially_harmful=False,
             )
             .select_related("user__profile", "parent")
-            .prefetch_related(replies_prefetch, "likes")
+            .prefetch_related(replies_prefetch, "likes__user")
             .order_by("created_at")
         )
 

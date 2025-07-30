@@ -170,6 +170,78 @@ class TestPostCommentListView(TestCase):
             assert isinstance(likes_count, int), "likes_count should be an integer"
             assert likes_count >= 0, "likes_count should not be negative"
 
+    def test_comment_list_contains_is_liked_field(self):
+        """Test that each comment in the list contains is_liked field."""
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["results"]) == 2  # noqa: PLR2004
+
+        for comment in data["results"]:
+            assert "is_liked" in comment, "Each comment should contain is_liked field"
+            assert isinstance(
+                comment["is_liked"],
+                bool,
+            ), "is_liked should be boolean"
+
+    def test_comment_is_liked_true_when_user_liked_comment(self):
+        """Test that is_liked returns True when current user has liked the comment."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # User likes the first comment
+        PostCommentLikeFactory(comment=self.comment1, user=self.user)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Create a mapping of comment IDs to their data for easier testing
+        comments_data = {comment["id"]: comment for comment in data["results"]}
+
+        # Verify is_liked status
+        assert comments_data[self.comment1.id]["is_liked"] is True
+        assert comments_data[self.comment2.id]["is_liked"] is False
+
+    def test_comment_is_liked_false_when_user_has_not_liked_comment(self):
+        """Test that is_liked returns False when current user has not liked the comment."""  # noqa: E501
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Another user likes the comment, but not the current user
+        other_profile = ProfileFactory(profile_type=Profile.FARMER)
+        other_user = other_profile.user
+        PostCommentLikeFactory(comment=self.comment1, user=other_user)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Current user should see is_liked as False even though others liked it
+        for comment in data["results"]:
+            assert comment["is_liked"] is False
+
+    def test_comment_is_liked_false_for_anonymous_users(self):
+        """Test that is_liked returns False for anonymous users."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Add some likes to the comments
+        PostCommentLikeFactory(comment=self.comment1, user=self.user)
+        PostCommentLikeFactory(comment=self.comment2, user=self.user)
+
+        # Logout user to become anonymous
+        self.client.logout()
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Anonymous user should see is_liked as False for all comments
+        for comment in data["results"]:
+            assert comment["is_liked"] is False
+
 
 class TestPostCommentCreateView(TestCase):
     """Test cases for creating comments via POST requests."""

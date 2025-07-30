@@ -7,6 +7,7 @@ from social_media.models import PostComment
 class PostCommentListSerializer(serializers.ModelSerializer):
     user = UserDetailSerializer(read_only=True)
     likes_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = PostComment
@@ -18,6 +19,7 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             "parent",
             "user",
             "likes_count",
+            "is_liked",
         )
 
     def get_likes_count(self, obj):
@@ -31,6 +33,23 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             int: Number of likes on the comment
         """
         return obj.likes.count()
+
+    def get_is_liked(self, obj):
+        """
+        Return whether the current authenticated user has liked this comment.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            bool: True if current user has liked the comment, False otherwise.
+                  Returns False for anonymous users.
+        """
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+
+        return obj.likes.filter(user=request.user).exists()
 
 
 class CreatePostCommentSerializer(serializers.ModelSerializer):
