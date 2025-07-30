@@ -23,6 +23,7 @@ class ListCreatePostView(ListCreateAPIView):
             "postimage_set",
             "comments",
             "likes",
+            "saved_posts",
         )
         .exclude(is_potentially_harmful=True)
     )
@@ -59,6 +60,7 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
             "postimage_set",
             "comments",
             "likes",
+            "saved_posts",
         )
         .exclude(is_potentially_harmful=True)
     )

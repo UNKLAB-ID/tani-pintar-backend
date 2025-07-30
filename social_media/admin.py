@@ -5,6 +5,7 @@ from .models import PostComment
 from .models import PostCommentLike
 from .models import PostImage
 from .models import PostLike
+from .models import PostSaved
 from .models import PostView
 
 
@@ -172,3 +173,17 @@ class PostCommentLikeAdmin(admin.ModelAdmin):
         """
         queryset = super().get_queryset(request)
         return queryset.select_related("user", "comment", "comment__post")
+
+
+@admin.register(PostSaved)
+class PostSavedAdmin(admin.ModelAdmin):
+    list_display = ("user", "post", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "post__content")
+    readonly_fields = ("created_at",)
+    autocomplete_fields = ("user", "post")
+    ordering = ("-created_at",)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related("user", "post")

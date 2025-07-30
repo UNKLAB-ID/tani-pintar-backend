@@ -7,6 +7,7 @@ from social_media.models import PostComment
 from social_media.models import PostCommentLike
 from social_media.models import PostImage
 from social_media.models import PostLike
+from social_media.models import PostSaved
 
 
 class PostFactory(factory.django.DjangoModelFactory):
@@ -88,6 +89,16 @@ class PostCommentLikeFactory(factory.django.DjangoModelFactory):
         model = PostCommentLike
 
     comment = factory.SubFactory(PostCommentFactory)
+    user = factory.LazyAttribute(
+        lambda _: ProfileFactory(profile_type=Profile.FARMER).user,
+    )
+
+
+class PostSavedFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = PostSaved
+
+    post = factory.SubFactory(PostFactory)
     user = factory.LazyAttribute(
         lambda _: ProfileFactory(profile_type=Profile.FARMER).user,
     )
