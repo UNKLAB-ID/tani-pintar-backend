@@ -8,6 +8,7 @@ class PostCommentListSerializer(serializers.ModelSerializer):
     user = UserDetailSerializer(read_only=True)
     likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    has_replies = serializers.SerializerMethodField()
 
     class Meta:
         model = PostComment
@@ -20,6 +21,7 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             "user",
             "likes_count",
             "is_liked",
+            "has_replies",
         )
 
     def get_likes_count(self, obj):
@@ -50,6 +52,26 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             return False
 
         return obj.likes.filter(user=request.user).exists()
+
+    def get_has_replies(self, obj):
+        """
+        Return whether this comment has any replies.
+
+        Uses the annotated 'has_replies' field from the queryset for optimal
+        performance. Falls back to a database query if annotation is not available.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            bool: True if comment has replies, False otherwise
+        """
+        # Use annotated field if available (from view's queryset)
+        if hasattr(obj, "has_replies"):
+            return obj.has_replies
+
+        # Fallback to database query if annotation not available
+        return obj.replies.exists()
 
 
 class CreatePostCommentSerializer(serializers.ModelSerializer):

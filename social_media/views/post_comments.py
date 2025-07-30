@@ -1,3 +1,5 @@
+from django.db.models import Exists
+from django.db.models import OuterRef
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListCreateAPIView
@@ -100,6 +102,11 @@ class PostCommentListView(ListCreateAPIView):
             )
             .select_related("user__profile", "parent")
             .prefetch_related(replies_prefetch, "likes__user")
+            .annotate(
+                has_replies=Exists(
+                    PostComment.objects.filter(parent=OuterRef("pk")),
+                ),
+            )
             .order_by("created_at")
         )
 

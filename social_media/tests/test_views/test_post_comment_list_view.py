@@ -437,6 +437,13 @@ class TestPostCommentNestedReplies(TestCase):
         assert "First reply" in contents
         assert "Second reply" in contents
 
+        # Verify has_replies field is properly set
+        for comment in comments:
+            if comment["content"] == "Parent comment":
+                assert comment["has_replies"] is True
+            else:  # Replies should not have replies
+                assert comment["has_replies"] is False
+
     def test_comment_user_serialization(self):
         """Test that comment user data is properly serialized"""
         PostCommentFactory(post=self.post, user=self.user)
@@ -455,6 +462,33 @@ class TestPostCommentNestedReplies(TestCase):
         assert "email" in user_data
         assert "profile" in user_data
         assert user_data["id"] == self.user.id
+
+    def test_has_replies_field_in_response(self):
+        """Test that has_replies field is included in comment responses"""
+        # Create a comment without replies
+        comment_no_replies = PostCommentFactory(post=self.post, user=self.user)
+
+        # Create a comment with replies
+        comment_with_replies = PostCommentFactory(post=self.post, user=self.user)
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=comment_with_replies,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        comments = data["results"]
+
+        # Verify has_replies field exists and has correct values
+        for comment in comments:
+            assert "has_replies" in comment
+            if comment["id"] == comment_with_replies.id:
+                assert comment["has_replies"] is True
+            elif comment["id"] == comment_no_replies.id:
+                assert comment["has_replies"] is False
 
 
 class TestPostCommentDeleteView(TestCase):
