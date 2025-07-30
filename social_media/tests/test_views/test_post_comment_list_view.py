@@ -116,6 +116,132 @@ class TestPostCommentListView(TestCase):
         data = response.json()
         assert data["results"] == []
 
+    def test_comment_list_contains_likes_count_field(self):
+        """Test that each comment in the list contains likes_count field."""
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["results"]) == 2  # noqa: PLR2004
+
+        for comment in data["results"]:
+            assert (
+                "likes_count" in comment
+            ), "Each comment should contain likes_count field"
+
+    def test_comment_list_likes_count_accuracy(self):
+        """Test that likes_count field shows accurate count of likes."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Create likes for the first comment
+        PostCommentLikeFactory(comment=self.comment1)
+        PostCommentLikeFactory(comment=self.comment1)
+        PostCommentLikeFactory(comment=self.comment1)
+
+        # Leave second comment with no likes
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Create a mapping of comment IDs to their data for easier testing
+        comments_data = {comment["id"]: comment for comment in data["results"]}
+
+        # Verify likes count
+        assert comments_data[self.comment1.id]["likes_count"] == 3  # noqa: PLR2004
+        assert comments_data[self.comment2.id]["likes_count"] == 0
+
+    def test_comment_list_likes_count_field_type(self):
+        """Test that likes_count field is returned as integer."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Add some likes to test non-zero values
+        PostCommentLikeFactory(comment=self.comment1)
+        PostCommentLikeFactory(comment=self.comment2)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        for comment in data["results"]:
+            likes_count = comment.get("likes_count")
+            assert isinstance(likes_count, int), "likes_count should be an integer"
+            assert likes_count >= 0, "likes_count should not be negative"
+
+    def test_comment_list_contains_is_liked_field(self):
+        """Test that each comment in the list contains is_liked field."""
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["results"]) == 2  # noqa: PLR2004
+
+        for comment in data["results"]:
+            assert "is_liked" in comment, "Each comment should contain is_liked field"
+            assert isinstance(
+                comment["is_liked"],
+                bool,
+            ), "is_liked should be boolean"
+
+    def test_comment_is_liked_true_when_user_liked_comment(self):
+        """Test that is_liked returns True when current user has liked the comment."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # User likes the first comment
+        PostCommentLikeFactory(comment=self.comment1, user=self.user)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Create a mapping of comment IDs to their data for easier testing
+        comments_data = {comment["id"]: comment for comment in data["results"]}
+
+        # Verify is_liked status
+        assert comments_data[self.comment1.id]["is_liked"] is True
+        assert comments_data[self.comment2.id]["is_liked"] is False
+
+    def test_comment_is_liked_false_when_user_has_not_liked_comment(self):
+        """Test that is_liked returns False when current user has not liked the comment."""  # noqa: E501
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Another user likes the comment, but not the current user
+        other_profile = ProfileFactory(profile_type=Profile.FARMER)
+        other_user = other_profile.user
+        PostCommentLikeFactory(comment=self.comment1, user=other_user)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Current user should see is_liked as False even though others liked it
+        for comment in data["results"]:
+            assert comment["is_liked"] is False
+
+    def test_comment_is_liked_false_for_anonymous_users(self):
+        """Test that is_liked returns False for anonymous users."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Add some likes to the comments
+        PostCommentLikeFactory(comment=self.comment1, user=self.user)
+        PostCommentLikeFactory(comment=self.comment2, user=self.user)
+
+        # Logout user to become anonymous
+        self.client.logout()
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Anonymous user should see is_liked as False for all comments
+        for comment in data["results"]:
+            assert comment["is_liked"] is False
+
 
 class TestPostCommentCreateView(TestCase):
     """Test cases for creating comments via POST requests."""
@@ -311,6 +437,13 @@ class TestPostCommentNestedReplies(TestCase):
         assert "First reply" in contents
         assert "Second reply" in contents
 
+        # Verify has_replies field is properly set
+        for comment in comments:
+            if comment["content"] == "Parent comment":
+                assert comment["has_replies"] is True
+            else:  # Replies should not have replies
+                assert comment["has_replies"] is False
+
     def test_comment_user_serialization(self):
         """Test that comment user data is properly serialized"""
         PostCommentFactory(post=self.post, user=self.user)
@@ -329,6 +462,33 @@ class TestPostCommentNestedReplies(TestCase):
         assert "email" in user_data
         assert "profile" in user_data
         assert user_data["id"] == self.user.id
+
+    def test_has_replies_field_in_response(self):
+        """Test that has_replies field is included in comment responses"""
+        # Create a comment without replies
+        comment_no_replies = PostCommentFactory(post=self.post, user=self.user)
+
+        # Create a comment with replies
+        comment_with_replies = PostCommentFactory(post=self.post, user=self.user)
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=comment_with_replies,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        comments = data["results"]
+
+        # Verify has_replies field exists and has correct values
+        for comment in comments:
+            assert "has_replies" in comment
+            if comment["id"] == comment_with_replies.id:
+                assert comment["has_replies"] is True
+            elif comment["id"] == comment_no_replies.id:
+                assert comment["has_replies"] is False
 
 
 class TestPostCommentDeleteView(TestCase):
@@ -460,3 +620,151 @@ class TestPostCommentDeleteView(TestCase):
         reply2.refresh_from_db()
         assert reply1.parent is None
         assert reply2.parent is None
+
+
+class TestPostCommentRepliesView(TestCase):
+    """Test cases for the PostCommentRepliesView (replies endpoint)."""
+
+    def setUp(self):
+        self.profile = ProfileFactory(profile_type=Profile.FARMER)
+        self.user = self.profile.user
+        self.client.force_login(self.user)
+
+        self.post = PostFactory(user=self.user)
+        self.parent_comment = PostCommentFactory(post=self.post, user=self.user)
+        self.url = reverse(
+            "social_media:post-comment-replies",
+            kwargs={
+                "post_slug": self.post.slug,
+                "comment_id": self.parent_comment.id,
+            },
+        )
+
+    def test_get_replies_empty_list(self):
+        """Test GET request for comment with no replies returns empty list"""
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
+
+    def test_get_replies_with_data(self):
+        """Test GET request returns replies for the parent comment"""
+        # Create replies to the parent comment
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="First reply",
+            parent=self.parent_comment,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Second reply",
+            parent=self.parent_comment,
+        )
+
+        # Create a reply to a different comment (should not appear)
+        other_comment = PostCommentFactory(post=self.post, user=self.user)
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            content="Other reply",
+            parent=other_comment,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        replies = data["results"]
+
+        # Should only get replies for this specific parent comment
+        assert len(replies) == 2  # noqa: PLR2004
+        reply_contents = [reply["content"] for reply in replies]
+        assert "First reply" in reply_contents
+        assert "Second reply" in reply_contents
+        assert "Other reply" not in reply_contents
+
+        # Verify replies have correct parent
+        for reply in replies:
+            assert reply["parent"] == self.parent_comment.id
+
+    def test_get_replies_includes_has_replies_field(self):
+        """Test that replies include has_replies field"""
+        # Create a reply and a nested reply
+        reply = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=self.parent_comment,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=reply,  # Nested reply
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        replies = data["results"]
+
+        assert len(replies) == 1
+        reply_data = replies[0]
+        assert "has_replies" in reply_data
+        assert reply_data["has_replies"] is True  # Should have nested reply
+
+    def test_get_replies_nonexistent_comment(self):
+        """Test GET request for nonexistent parent comment returns empty"""
+        url = reverse(
+            "social_media:post-comment-replies",
+            kwargs={
+                "post_slug": self.post.slug,
+                "comment_id": 99999,  # Nonexistent comment ID
+            },
+        )
+
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
+
+    def test_get_replies_different_post(self):
+        """Test GET request with comment from different post returns empty"""
+        other_post = PostFactory()
+        other_comment = PostCommentFactory(post=other_post, user=self.user)
+
+        url = reverse(
+            "social_media:post-comment-replies",
+            kwargs={
+                "post_slug": self.post.slug,
+                "comment_id": other_comment.id,  # Comment from different post
+            },
+        )
+
+        response = self.client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []
+
+    def test_replies_from_harmful_post(self):
+        """Test that replies from harmful posts are not shown"""
+        # Make post harmful
+        self.post.is_potentially_harmful = True
+        self.post.save()
+
+        # Create reply
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=self.parent_comment,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        assert data["results"] == []

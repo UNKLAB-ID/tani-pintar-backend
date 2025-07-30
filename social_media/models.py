@@ -114,3 +114,55 @@ class PostLike(models.Model):
 
     def __str__(self):
         return f"User {self.user.username} liked Post {self.post.id}"
+
+
+class PostCommentLike(models.Model):
+    """
+    Model representing a user's like on a post comment.
+
+    This model tracks when users like comments on posts, supporting social engagement
+    features for the commenting system. Each user can only like a comment once,
+    enforced by a unique constraint.
+
+    Attributes:
+        comment (ForeignKey): The comment being liked
+        user (ForeignKey): The user who liked the comment
+        created_at (DateTimeField): Timestamp when the like was created
+
+    Constraints:
+        - Unique constraint on (comment, user) to prevent duplicate likes
+        - Cascade delete when comment or user is deleted
+
+    Example:
+        # Create a like on a comment
+        like = PostCommentLike.objects.create(comment=comment, user=user)
+
+        # Check if user liked a comment
+        liked = PostCommentLike.objects.filter(comment=comment, user=user).exists()
+    """
+
+    comment = models.ForeignKey(
+        PostComment,
+        on_delete=models.CASCADE,
+        related_name="likes",
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["comment", "user"],
+                name="unique_comment_like",
+            ),
+        ]
+
+    def __str__(self):
+        """
+        Return string representation of the comment like.
+
+        Returns:
+            str: Formatted string showing user and comment information
+        """
+        return f"User {self.user.username} liked Comment {self.comment.id}"

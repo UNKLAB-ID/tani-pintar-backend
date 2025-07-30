@@ -1,5 +1,8 @@
+from django.db.models import Exists
+from django.db.models import OuterRef
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
+from rest_framework.generics import ListAPIView
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -99,7 +102,12 @@ class PostCommentListView(ListCreateAPIView):
                 post__is_potentially_harmful=False,
             )
             .select_related("user__profile", "parent")
-            .prefetch_related(replies_prefetch)
+            .prefetch_related(replies_prefetch, "likes__user")
+            .annotate(
+                has_replies=Exists(
+                    PostComment.objects.filter(parent=OuterRef("pk")),
+                ),
+            )
             .order_by("created_at")
         )
 
@@ -158,4 +166,104 @@ class PostCommentUpdateView(RetrieveUpdateDestroyAPIView):
             id=comment_id,
             post__slug=post_slug,
             user=self.request.user,
+        )
+
+
+class PostCommentRepliesView(ListAPIView):
+    """
+    API view for listing replies to a specific comment.
+
+    Supports:
+    - GET: List replies for a specific comment with cursor-based pagination
+
+    Features:
+    - Filters out replies from potentially harmful posts
+    - Optimized queryset with prefetching to avoid N+1 queries
+    - Supports nested replies with proper relationship loading
+    - Cursor pagination for efficient large dataset handling
+    """
+
+    serializer_class = PostCommentListSerializer
+    pagination_class = PostCommentCursorPagination
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override list method to handle potentially harmful posts.
+
+        Returns empty result set for harmful posts to prevent displaying
+        inappropriate content while maintaining consistent pagination response format.
+        This check is performed before pagination to avoid cursor pagination bugs.
+
+        Args:
+            request: HTTP request object
+            *args: Variable length argument list
+            **kwargs: Arbitrary keyword arguments containing post_slug and comment_id
+
+        Returns:
+            Response: Empty paginated response for harmful posts,
+                     otherwise standard paginated reply list
+        """
+        post_slug = self.kwargs.get("post_slug")
+        comment_id = self.kwargs.get("comment_id")
+
+        # Check if post is harmful or parent comment doesn't exist
+        if (
+            Post.objects.filter(slug=post_slug, is_potentially_harmful=True).exists()
+            or not PostComment.objects.filter(
+                id=comment_id,
+                post__slug=post_slug,
+                post__is_potentially_harmful=False,
+            ).exists()
+        ):
+            return Response(
+                {
+                    "results": [],
+                    "next": None,
+                    "previous": None,
+                },
+            )
+
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        """
+        Build optimized queryset for comment replies with performance enhancements.
+
+        Applies multiple database optimizations:
+        - Filters replies by parent comment ID and post slug
+        - Excludes replies from harmful posts
+        - Uses select_related for user profiles to avoid N+1 queries
+        - Uses prefetch_related for nested replies and likes optimization
+        - Orders by creation time for consistent pagination
+
+        Returns:
+            QuerySet: Optimized PostComment queryset with all necessary relationships
+                     preloaded for efficient serialization
+        """
+        post_slug = self.kwargs.get("post_slug")
+        comment_id = self.kwargs.get("comment_id")
+
+        # Optimized prefetch for nested replies with their users and profiles
+        replies_prefetch = Prefetch(
+            "replies",
+            queryset=PostComment.objects.select_related("user__profile").order_by(
+                "created_at",
+            ),
+        )
+
+        return (
+            PostComment.objects.filter(
+                parent_id=comment_id,
+                post__slug=post_slug,
+                post__is_potentially_harmful=False,
+            )
+            .select_related("user__profile", "parent")
+            .prefetch_related(replies_prefetch, "likes__user")
+            .annotate(
+                has_replies=Exists(
+                    PostComment.objects.filter(parent=OuterRef("pk")),
+                ),
+            )
+            .order_by("created_at")
         )

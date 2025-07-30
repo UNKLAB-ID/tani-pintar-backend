@@ -174,13 +174,6 @@ class UpdatePostSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         return obj.comments.count()
 
-    def validate(self, data):
-        user = self.context.get("request").user
-        if user != self.instance.user:
-            msg = "You can only update your own posts."
-            raise serializers.ValidationError(msg)
-        return data
-
 
 class PostListSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True, source="postimage_set")

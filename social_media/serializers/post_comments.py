@@ -6,6 +6,9 @@ from social_media.models import PostComment
 
 class PostCommentListSerializer(serializers.ModelSerializer):
     user = UserDetailSerializer(read_only=True)
+    likes_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    has_replies = serializers.SerializerMethodField()
 
     class Meta:
         model = PostComment
@@ -16,7 +19,59 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             "updated_at",
             "parent",
             "user",
+            "likes_count",
+            "is_liked",
+            "has_replies",
         )
+
+    def get_likes_count(self, obj):
+        """
+        Return the number of likes for this comment.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            int: Number of likes on the comment
+        """
+        return obj.likes.count()
+
+    def get_is_liked(self, obj):
+        """
+        Return whether the current authenticated user has liked this comment.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            bool: True if current user has liked the comment, False otherwise.
+                  Returns False for anonymous users.
+        """
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+
+        return obj.likes.filter(user=request.user).exists()
+
+    def get_has_replies(self, obj):
+        """
+        Return whether this comment has any replies.
+
+        Uses the annotated 'has_replies' field from the queryset for optimal
+        performance. Falls back to a database query if annotation is not available.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            bool: True if comment has replies, False otherwise
+        """
+        # Use annotated field if available (from view's queryset)
+        if hasattr(obj, "has_replies"):
+            return obj.has_replies
+
+        # Fallback to database query if annotation not available
+        return obj.replies.exists()
 
 
 class CreatePostCommentSerializer(serializers.ModelSerializer):

@@ -4,6 +4,7 @@ from accounts.models import Profile
 from accounts.tests.factories import ProfileFactory
 from social_media.models import Post
 from social_media.models import PostComment
+from social_media.models import PostCommentLike
 from social_media.models import PostImage
 from social_media.models import PostLike
 
@@ -55,6 +56,38 @@ class PostLikeFactory(factory.django.DjangoModelFactory):
         model = PostLike
 
     post = factory.SubFactory(PostFactory)
+    user = factory.LazyAttribute(
+        lambda _: ProfileFactory(profile_type=Profile.FARMER).user,
+    )
+
+
+class PostCommentLikeFactory(factory.django.DjangoModelFactory):
+    """
+    Factory for creating PostCommentLike instances in tests.
+
+    Creates a like on a post comment with a randomly generated user and comment.
+    Useful for testing comment like functionality, user interactions, and
+    social engagement features.
+
+    Attributes:
+        comment: A PostComment instance (created via SubFactory)
+        user: A User instance with FARMER profile (created via LazyAttribute)
+
+    Example:
+        # Create a comment like
+        like = PostCommentLikeFactory()
+
+        # Create like for specific comment
+        like = PostCommentLikeFactory(comment=my_comment)
+
+        # Create like by specific user
+        like = PostCommentLikeFactory(user=my_user)
+    """
+
+    class Meta:
+        model = PostCommentLike
+
+    comment = factory.SubFactory(PostCommentFactory)
     user = factory.LazyAttribute(
         lambda _: ProfileFactory(profile_type=Profile.FARMER).user,
     )
