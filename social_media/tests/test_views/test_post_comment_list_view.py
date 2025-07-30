@@ -116,6 +116,60 @@ class TestPostCommentListView(TestCase):
         data = response.json()
         assert data["results"] == []
 
+    def test_comment_list_contains_likes_count_field(self):
+        """Test that each comment in the list contains likes_count field."""
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["results"]) == 2  # noqa: PLR2004
+
+        for comment in data["results"]:
+            assert (
+                "likes_count" in comment
+            ), "Each comment should contain likes_count field"
+
+    def test_comment_list_likes_count_accuracy(self):
+        """Test that likes_count field shows accurate count of likes."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Create likes for the first comment
+        PostCommentLikeFactory(comment=self.comment1)
+        PostCommentLikeFactory(comment=self.comment1)
+        PostCommentLikeFactory(comment=self.comment1)
+
+        # Leave second comment with no likes
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Create a mapping of comment IDs to their data for easier testing
+        comments_data = {comment["id"]: comment for comment in data["results"]}
+
+        # Verify likes count
+        assert comments_data[self.comment1.id]["likes_count"] == 3  # noqa: PLR2004
+        assert comments_data[self.comment2.id]["likes_count"] == 0
+
+    def test_comment_list_likes_count_field_type(self):
+        """Test that likes_count field is returned as integer."""
+        from social_media.tests.factories import PostCommentLikeFactory
+
+        # Add some likes to test non-zero values
+        PostCommentLikeFactory(comment=self.comment1)
+        PostCommentLikeFactory(comment=self.comment2)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        for comment in data["results"]:
+            likes_count = comment.get("likes_count")
+            assert isinstance(likes_count, int), "likes_count should be an integer"
+            assert likes_count >= 0, "likes_count should not be negative"
+
 
 class TestPostCommentCreateView(TestCase):
     """Test cases for creating comments via POST requests."""

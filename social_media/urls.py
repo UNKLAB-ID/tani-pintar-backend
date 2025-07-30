@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import ListCreatePostView
+from .views import PostCommentLikeCreateView
+from .views import PostCommentLikeDestroyView
 from .views import PostCommentListView
 from .views import PostCommentUpdateView
 from .views import PostLikeCreateView
@@ -25,6 +27,16 @@ urlpatterns = [
         "posts/<str:post_slug>/comments/<int:comment_id>/",
         PostCommentUpdateView.as_view(),
         name="post-comment-update",
+    ),
+    path(
+        "posts/<str:post_slug>/comments/<int:comment_id>/like/",
+        PostCommentLikeCreateView.as_view(),
+        name="post-comment-like",
+    ),
+    path(
+        "posts/<str:post_slug>/comments/<int:comment_id>/unlike/",
+        PostCommentLikeDestroyView.as_view(),
+        name="post-comment-unlike",
     ),
 ]
 

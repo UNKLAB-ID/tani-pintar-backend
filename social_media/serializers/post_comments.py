@@ -6,6 +6,7 @@ from social_media.models import PostComment
 
 class PostCommentListSerializer(serializers.ModelSerializer):
     user = UserDetailSerializer(read_only=True)
+    likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = PostComment
@@ -16,7 +17,20 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             "updated_at",
             "parent",
             "user",
+            "likes_count",
         )
+
+    def get_likes_count(self, obj):
+        """
+        Return the number of likes for this comment.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            int: Number of likes on the comment
+        """
+        return obj.likes.count()
 
 
 class CreatePostCommentSerializer(serializers.ModelSerializer):
