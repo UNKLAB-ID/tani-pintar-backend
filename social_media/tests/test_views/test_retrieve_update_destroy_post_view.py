@@ -52,7 +52,7 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
             data={"content": "New content"},
             content_type="application/json",
         )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_destroy_post(self):
         # Test that the user can delete the post

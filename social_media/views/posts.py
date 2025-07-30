@@ -79,6 +79,12 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
 
         return response
 
+    def perform_update(self, serializer):
+        if serializer.instance.user != self.request.user:
+            msg = "You do not have permission to update this post."
+            raise PermissionDenied(msg)
+        super().perform_update(serializer)
+
     def perform_destroy(self, instance):
         if instance.user != self.request.user:
             msg = "You do not have permission to delete this post."
