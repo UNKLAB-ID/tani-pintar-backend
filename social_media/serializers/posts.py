@@ -186,6 +186,7 @@ class UpdatePostSerializer(serializers.ModelSerializer):
 class PostListSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
     likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     user = UserDetailSerializer()
@@ -196,6 +197,7 @@ class PostListSerializer(serializers.ModelSerializer):
             "slug",
             "content",
             "likes_count",
+            "comments_count",
             "is_liked",
             "is_saved",
             "created_at",
@@ -206,6 +208,9 @@ class PostListSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return obj.likes.count()
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
 
     def get_is_liked(self, obj):
         request = self.context.get("request")
