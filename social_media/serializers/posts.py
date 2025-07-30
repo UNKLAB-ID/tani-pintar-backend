@@ -97,6 +97,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     views_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     user = UserDetailSerializer()
 
@@ -109,6 +110,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "views_count",
             "likes_count",
             "is_liked",
+            "is_saved",
             "comments_count",
             "shared_count",
             "created_at",
@@ -129,6 +131,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
+        return False
+
+    def get_is_saved(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.saved_posts.filter(user=request.user).exists()
         return False
 
 
@@ -178,7 +186,9 @@ class UpdatePostSerializer(serializers.ModelSerializer):
 class PostListSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
     likes_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
     user = UserDetailSerializer()
 
     class Meta:
@@ -187,7 +197,9 @@ class PostListSerializer(serializers.ModelSerializer):
             "slug",
             "content",
             "likes_count",
+            "comments_count",
             "is_liked",
+            "is_saved",
             "created_at",
             "updated_at",
             "images",
@@ -197,8 +209,17 @@ class PostListSerializer(serializers.ModelSerializer):
     def get_likes_count(self, obj):
         return obj.likes.count()
 
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
     def get_is_liked(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.likes.filter(user=request.user).exists()
+        return False
+
+    def get_is_saved(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.saved_posts.filter(user=request.user).exists()
         return False
