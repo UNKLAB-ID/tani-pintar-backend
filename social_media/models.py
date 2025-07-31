@@ -27,11 +27,27 @@ class PostQuerySet(models.QuerySet):
             # User has no profile or profile doesn't exist, can only see public posts
             return self.filter(privacy=Post.PUBLIC)
 
-        # Optimized single query to get friend user IDs (mutual followers)
-        # This joins the following relationships to find users who follow each other
-        friend_user_ids = user_profile.following.filter(
-            following__followers__follower=user_profile,
-        ).values_list("following__user_id", flat=True)
+        # Get friend user IDs (mutual followers)
+        # Find users where both follow each other
+        from accounts.models import Follow
+
+        # Get profiles this user follows
+        following_profiles = Follow.objects.filter(
+            follower=user_profile,
+        ).values_list("following", flat=True)
+
+        # Get profiles that follow this user back (mutual followers = friends)
+        friend_profile_ids = Follow.objects.filter(
+            follower__in=following_profiles,
+            following=user_profile,
+        ).values_list("follower", flat=True)
+
+        # Convert profile IDs to user IDs
+        from accounts.models import Profile
+
+        friend_user_ids = Profile.objects.filter(
+            id__in=friend_profile_ids,
+        ).values_list("user_id", flat=True)
 
         return self.filter(
             Q(privacy=Post.PUBLIC)  # Public posts

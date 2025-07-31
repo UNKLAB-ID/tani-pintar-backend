@@ -119,13 +119,11 @@ class Profile(models.Model):
         """
         if self == other_profile:
             return False
-        # Optimized single query to check mutual following relationship
-        return Follow.objects.filter(
-            follower=self,
-            following=other_profile,
-            following__followers__follower=other_profile,
-            following__followers__following=self,
-        ).exists()
+        # Check if both follow each other (mutual followers = friends)
+        return (
+            Follow.objects.filter(follower=self, following=other_profile).exists()
+            and Follow.objects.filter(follower=other_profile, following=self).exists()
+        )
 
 
 class Follow(models.Model):
