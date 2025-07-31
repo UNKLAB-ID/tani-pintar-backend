@@ -242,6 +242,56 @@ class TestPostCommentListView(TestCase):
         for comment in data["results"]:
             assert comment["is_liked"] is False
 
+    def test_comment_list_contains_replies_count_field(self):
+        """Test that each comment in the list contains replies_count field."""
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["results"]) == 2  # noqa: PLR2004
+
+        for comment in data["results"]:
+            assert (
+                "replies_count" in comment
+            ), "Each comment should contain replies_count field"
+
+    def test_comment_list_replies_count_accuracy(self):
+        """Test that replies_count field shows accurate count of replies."""
+        # Create replies for the first comment
+        PostCommentFactory(post=self.post, user=self.user, parent=self.comment1)
+        PostCommentFactory(post=self.post, user=self.user, parent=self.comment1)
+        PostCommentFactory(post=self.post, user=self.user, parent=self.comment1)
+
+        # Leave second comment with no replies
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Create a mapping of comment IDs to their data for easier testing
+        comments_data = {comment["id"]: comment for comment in data["results"]}
+
+        # Verify replies count
+        assert comments_data[self.comment1.id]["replies_count"] == 3  # noqa: PLR2004
+        assert comments_data[self.comment2.id]["replies_count"] == 0
+
+    def test_comment_list_replies_count_field_type(self):
+        """Test that replies_count field is returned as integer."""
+        # Add some replies to test non-zero values
+        PostCommentFactory(post=self.post, user=self.user, parent=self.comment1)
+        PostCommentFactory(post=self.post, user=self.user, parent=self.comment2)
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        for comment in data["results"]:
+            replies_count = comment.get("replies_count")
+            assert isinstance(replies_count, int), "replies_count should be an integer"
+            assert replies_count >= 0, "replies_count should not be negative"
+
 
 class TestPostCommentCreateView(TestCase):
     """Test cases for creating comments via POST requests."""
@@ -488,6 +538,54 @@ class TestPostCommentNestedReplies(TestCase):
             elif comment["id"] == comment_no_replies.id:
                 assert comment["has_replies"] is False
 
+    def test_replies_count_field_in_response(self):
+        """Test that replies_count field is included and accurate for nested replies"""
+        # Create comments with different reply counts
+        comment_no_replies = PostCommentFactory(post=self.post, user=self.user)
+
+        comment_one_reply = PostCommentFactory(post=self.post, user=self.user)
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=comment_one_reply,
+        )
+
+        comment_multiple_replies = PostCommentFactory(post=self.post, user=self.user)
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=comment_multiple_replies,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=comment_multiple_replies,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=comment_multiple_replies,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        comments = data["results"]
+
+        # Create mapping for easier testing
+        comments_data = {comment["id"]: comment for comment in comments}
+
+        # Verify replies_count field exists and has correct values
+        assert "replies_count" in comments_data[comment_no_replies.id]
+        assert comments_data[comment_no_replies.id]["replies_count"] == 0
+
+        assert "replies_count" in comments_data[comment_one_reply.id]
+        assert comments_data[comment_one_reply.id]["replies_count"] == 1
+
+        assert "replies_count" in comments_data[comment_multiple_replies.id]
+        assert comments_data[comment_multiple_replies.id]["replies_count"] == 3  # noqa: PLR2004
+
 
 class TestPostCommentDeleteView(TestCase):
     """Test cases for deleting comments via DELETE requests."""
@@ -712,6 +810,39 @@ class TestPostCommentRepliesView(TestCase):
         reply_data = replies[0]
         assert "has_replies" in reply_data
         assert reply_data["has_replies"] is True  # Should have nested reply
+
+    def test_get_replies_includes_replies_count_field(self):
+        """Test that replies include replies_count field"""
+        # Create a reply and nested replies
+        reply = PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=self.parent_comment,
+        )
+        # Create 2 nested replies to the reply
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=reply,
+        )
+        PostCommentFactory(
+            post=self.post,
+            user=self.user,
+            parent=reply,
+        )
+
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+
+        data = response.json()
+        replies = data["results"]
+
+        assert len(replies) == 1
+        reply_data = replies[0]
+        assert "replies_count" in reply_data
+        assert (
+            reply_data["replies_count"] == 2  # noqa: PLR2004
+        )  # Should have 2 nested replies
 
     def test_get_replies_nonexistent_comment(self):
         """Test GET request for nonexistent parent comment returns empty"""
