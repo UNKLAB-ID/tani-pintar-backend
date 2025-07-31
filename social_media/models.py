@@ -23,22 +23,15 @@ class PostQuerySet(models.QuerySet):
         # Get user's profile for friendship checks
         try:
             user_profile = user.profile
-        except AttributeError:
-            # User has no profile, can only see public posts
+        except (AttributeError, User.profile.RelatedObjectDoesNotExist):
+            # User has no profile or profile doesn't exist, can only see public posts
             return self.filter(privacy=Post.PUBLIC)
 
-        # Get IDs of users who are friends (mutual followers)
-        friend_profiles = user_profile.following.filter(
+        # Optimized single query to get friend user IDs (mutual followers)
+        # This joins the following relationships to find users who follow each other
+        friend_user_ids = user_profile.following.filter(
             following__followers__follower=user_profile,
-        ).values_list("following_id", flat=True)
-
-        friend_user_ids = []
-        if friend_profiles:
-            from accounts.models import Profile
-
-            friend_user_ids = Profile.objects.filter(
-                id__in=friend_profiles,
-            ).values_list("user_id", flat=True)
+        ).values_list("following__user_id", flat=True)
 
         return self.filter(
             Q(privacy=Post.PUBLIC)  # Public posts
@@ -74,6 +67,7 @@ class Post(models.Model):
         choices=PRIVACY_CHOICES,
         default=PUBLIC,
         help_text="Privacy setting for the post",
+        db_index=True,
     )
 
     shared_count = models.PositiveIntegerField(default=0)
