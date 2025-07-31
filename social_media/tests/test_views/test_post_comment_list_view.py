@@ -400,7 +400,7 @@ class TestPostCommentNestedReplies(TestCase):
         )
 
     def test_get_comments_with_replies(self):
-        """Test that GET request returns comments with replies properly structured"""
+        """Test that GET request returns only top-level comments, not replies"""
         # Create parent comment
         parent_comment = PostCommentFactory(
             post=self.post,
@@ -408,7 +408,7 @@ class TestPostCommentNestedReplies(TestCase):
             content="Parent comment",
         )
 
-        # Create replies
+        # Create replies (these should NOT appear in main comment list)
         PostCommentFactory(
             post=self.post,
             user=self.user,
@@ -428,21 +428,19 @@ class TestPostCommentNestedReplies(TestCase):
         data = response.json()
         comments = data["results"]
 
-        # Should have parent comment and replies
-        assert len(comments) == 3  # noqa: PLR2004
+        # Should only have parent comment, replies should be hidden
+        assert len(comments) == 1
 
-        # Verify content exists in results
+        # Verify only parent comment exists in results
         contents = [comment["content"] for comment in comments]
         assert "Parent comment" in contents
-        assert "First reply" in contents
-        assert "Second reply" in contents
+        assert "First reply" not in contents  # Replies should not appear
+        assert "Second reply" not in contents  # Replies should not appear
 
         # Verify has_replies field is properly set
-        for comment in comments:
-            if comment["content"] == "Parent comment":
-                assert comment["has_replies"] is True
-            else:  # Replies should not have replies
-                assert comment["has_replies"] is False
+        parent_comment_data = comments[0]
+        assert parent_comment_data["content"] == "Parent comment"
+        assert parent_comment_data["has_replies"] is True
 
     def test_comment_user_serialization(self):
         """Test that comment user data is properly serialized"""
