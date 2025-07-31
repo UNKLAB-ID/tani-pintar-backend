@@ -14,7 +14,11 @@ from .views import RetrieveUpdateDestroyPostView
 
 urlpatterns = [
     path("posts/", ListCreatePostView.as_view(), name="posts"),
-    path("posts/<slug:slug>/", RetrieveUpdateDestroyPostView.as_view(), name="post"),
+    path(
+        "posts/<slug:slug>/",
+        RetrieveUpdateDestroyPostView.as_view(),
+        name="post-detail",
+    ),
     path("posts/<slug:slug>/like/", PostLikeCreateView.as_view(), name="post-like"),
     path(
         "posts/<slug:slug>/unlike/",

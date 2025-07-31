@@ -113,6 +113,52 @@ class Profile(models.Model):
     def get_following_count(self):
         return self.following.count()
 
+    def are_friends(self, other_profile):
+        """
+        Check if this profile and another profile are friends (mutual followers).
+
+        In the social media platform, friendship is defined as a mutual following
+        relationship - both users must follow each other to be considered friends.
+        This friendship status determines access to posts with 'friends' privacy setting.
+
+        The method performs two database queries to verify the mutual following
+        relationship. For performance optimization in high-traffic scenarios,
+        consider caching friendship relationships.
+
+        Args:
+            other_profile (Profile): The profile to check friendship status with.
+
+        Returns:
+            bool: True if both profiles follow each other (mutual followers),
+                 False otherwise. Always returns False if comparing with self.
+
+        Business Logic:
+            - A profile cannot be friends with itself
+            - Friendship requires bidirectional following relationship
+            - Used by post privacy system to determine content visibility
+            - One-way follows do not constitute friendship
+
+        Examples:
+            # Check if two profiles are friends
+            is_friend = user_profile.are_friends(other_profile)
+
+            # Use in privacy filtering
+            if post.privacy == Post.FRIENDS and not user_profile.are_friends(post_author):
+                # Post not visible to user
+
+        Performance Notes:
+            - Executes 2 database queries (one for each direction of following)
+            - Consider caching results for frequently accessed relationships
+            - Database constraints prevent self-following, but method includes safety check
+        """  # noqa: E501
+        if self == other_profile:
+            return False
+        # Check if both follow each other (mutual followers = friends)
+        return (
+            Follow.objects.filter(follower=self, following=other_profile).exists()
+            and Follow.objects.filter(follower=other_profile, following=self).exists()
+        )
+
 
 class Follow(models.Model):
     follower = models.ForeignKey(

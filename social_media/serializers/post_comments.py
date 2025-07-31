@@ -9,6 +9,7 @@ class PostCommentListSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     has_replies = serializers.SerializerMethodField()
+    replies_count = serializers.SerializerMethodField()
 
     class Meta:
         model = PostComment
@@ -22,6 +23,7 @@ class PostCommentListSerializer(serializers.ModelSerializer):
             "likes_count",
             "is_liked",
             "has_replies",
+            "replies_count",
         )
 
     def get_likes_count(self, obj):
@@ -72,6 +74,26 @@ class PostCommentListSerializer(serializers.ModelSerializer):
 
         # Fallback to database query if annotation not available
         return obj.replies.exists()
+
+    def get_replies_count(self, obj):
+        """
+        Return the number of replies for this comment.
+
+        Uses the annotated 'replies_count' field from the queryset for optimal
+        performance. Falls back to a database query if annotation is not available.
+
+        Args:
+            obj: PostComment instance
+
+        Returns:
+            int: Number of replies on the comment
+        """
+        # Use annotated field if available (from view's queryset)
+        if hasattr(obj, "replies_count"):
+            return obj.replies_count
+
+        # Fallback to database query if annotation not available
+        return obj.replies.count()
 
 
 class CreatePostCommentSerializer(serializers.ModelSerializer):

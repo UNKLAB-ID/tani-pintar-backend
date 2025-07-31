@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Prefetch
@@ -108,6 +109,7 @@ class PostCommentListView(ListCreateAPIView):
                 has_replies=Exists(
                     PostComment.objects.filter(parent=OuterRef("pk")),
                 ),
+                replies_count=Count("replies"),
             )
             .order_by("created_at")
         )
@@ -265,6 +267,7 @@ class PostCommentRepliesView(ListAPIView):
                 has_replies=Exists(
                     PostComment.objects.filter(parent=OuterRef("pk")),
                 ),
+                replies_count=Count("replies"),
             )
             .order_by("created_at")
         )

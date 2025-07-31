@@ -19,7 +19,7 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
     def test_retrieve_post(self):
         # Test that the user can retrieve the post
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json().get("content") is not None
@@ -35,7 +35,7 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
     def test_update_post(self):
         # Test that the user can update the post
         response = self.client.put(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
             data={"content": "New content"},
             content_type="application/json",
         )
@@ -48,7 +48,7 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
         # Test that another user cannot update the post
         self.client.force_login(self.user_2)
         response = self.client.put(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
             data={"content": "New content"},
             content_type="application/json",
         )
@@ -57,20 +57,20 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
     def test_destroy_post(self):
         # Test that the user can delete the post
         response = self.client.delete(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
         )
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Test that another user cannot delete the post
         self.client.force_login(self.user_2)
         response = self.client.delete(
-            reverse("social_media:post", kwargs={"slug": self.posts[1].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[1].slug}),
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
         # Test that the post is not found
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -78,15 +78,15 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
     def test_post_views_count(self):
         # Test that the views count is incremented
         self.client.get(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
         )
         self.client.force_login(self.user_2)
         self.client.get(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
         )
 
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": self.posts[0].slug}),
+            reverse("social_media:post-detail", kwargs={"slug": self.posts[0].slug}),
         )
         assert response.json().get("views_count") == 2  # noqa: PLR2004
 
@@ -101,14 +101,14 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
 
         # Test post with no likes
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post_no_likes.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post_no_likes.slug}),
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json().get("likes_count") == 0
 
         # Test post with likes
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post_with_likes.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post_with_likes.slug}),
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json().get("likes_count") == 3  # noqa: PLR2004
@@ -119,7 +119,7 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
         PostLikeFactory.create_batch(2, post=post)
 
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -135,7 +135,7 @@ class TestRetrieveUpdateDestroyPostView(TestCase):
 
         # Update the post content
         response = self.client.put(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
             data={"content": "Updated content"},
             content_type="application/json",
         )
@@ -160,7 +160,7 @@ class TestPostDetailIsLikedView(TestCase):
         post = PostFactory(user=self.user)
 
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -174,7 +174,7 @@ class TestPostDetailIsLikedView(TestCase):
         PostLikeFactory(post=post, user=self.user)
 
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -189,7 +189,7 @@ class TestPostDetailIsLikedView(TestCase):
         PostLikeFactory(post=post, user=self.other_user)
 
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -204,7 +204,7 @@ class TestPostDetailIsLikedView(TestCase):
 
         self.client.logout()
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -218,7 +218,7 @@ class TestPostDetailIsLikedView(TestCase):
         PostLikeFactory(post=post, user=self.user)
 
         response = self.client.get(
-            reverse("social_media:post", kwargs={"slug": post.slug}),
+            reverse("social_media:post-detail", kwargs={"slug": post.slug}),
         )
 
         assert response.status_code == status.HTTP_200_OK

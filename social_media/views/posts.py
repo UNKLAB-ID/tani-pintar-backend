@@ -17,21 +17,70 @@ from social_media.serializers import UpdatePostSerializer
 
 
 class ListCreatePostView(ListCreateAPIView):
-    queryset = (
-        Post.objects.select_related("user")
-        .prefetch_related(
-            "postimage_set",
-            "comments",
-            "likes",
-            "saved_posts",
-        )
-        .exclude(is_potentially_harmful=True)
-    )
+    """
+    API view for listing and creating posts with privacy enforcement.
+
+    This view handles both GET (list posts) and POST (create post) operations
+    while enforcing privacy settings at the queryset level. It ensures that
+    users only see posts they have permission to view based on privacy settings
+    and their relationships with post authors.
+
+    Features:
+        - Privacy-aware post listing using visible_to_user() filtering
+        - Cursor-based pagination for efficient scrolling
+        - Full-text search on post content
+        - Content filtering to exclude harmful posts
+        - Optimized database queries with select_related and prefetch_related
+
+    Permissions:
+        - Anonymous users: Can view public posts only
+        - Authenticated users: Can view and create posts based on privacy rules
+    """
+
+    queryset = Post.objects.none()  # Will be dynamically set in get_queryset()
     pagination_class = PostCursorPagination
     filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ["content"]
     filterset_class = PostFilter
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Get posts visible to the current user based on privacy settings.
+
+        This method implements view-level privacy enforcement by using the
+        Post model's custom manager to filter posts based on the requesting
+        user's authentication status and relationship with post authors.
+
+        Privacy Filtering:
+            - Anonymous users: Only public posts
+            - Authenticated users: Public + own posts + friends' posts
+            - Content moderation: Excludes potentially harmful posts
+
+        Performance Optimizations:
+            - select_related("user"): Reduces database queries for post authors
+            - prefetch_related(): Efficiently loads related objects in batch
+            - Database indexing on privacy field for fast filtering
+
+        Returns:
+            QuerySet[Post]: Privacy-filtered posts optimized for serialization.
+
+        Database Queries:
+            - 1 query for posts with privacy filtering
+            - 1 query for user data (select_related)
+            - 4 queries for related objects (prefetch_related)
+        """
+        return (
+            Post.objects.select_related("user")
+            .prefetch_related(
+                "postimage_set",
+                "comments",
+                "likes",
+                "saved_posts",
+            )
+            .exclude(is_potentially_harmful=True)
+            .visible_to_user(self.request.user)
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -54,18 +103,68 @@ class ListCreatePostView(ListCreateAPIView):
 
 
 class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
-    queryset = (
-        Post.objects.select_related("user")
-        .prefetch_related(
-            "postimage_set",
-            "comments",
-            "likes",
-            "saved_posts",
-        )
-        .exclude(is_potentially_harmful=True)
-    )
+    """
+    API view for retrieving, updating, and deleting individual posts with privacy enforcement.
+
+    This view handles GET (retrieve), PUT/PATCH (update), and DELETE operations
+    for individual posts identified by their slug. Privacy enforcement ensures
+    users can only access posts they have permission to view, and only post
+    authors can modify or delete their posts.
+
+    Features:
+        - Privacy-aware post retrieval using visible_to_user() filtering
+        - Automatic view tracking for analytics when posts are accessed
+        - Owner-only permissions for update and delete operations
+        - Optimized database queries for efficient data loading
+
+    Security:
+        - Privacy filtering prevents unauthorized access to private posts
+        - Ownership validation prevents unauthorized modifications
+        - Slug-based lookup provides URL-friendly access without exposing IDs
+
+    URL Pattern:
+        - Uses 'slug' field for lookup instead of primary key
+        - Example: /api/posts/abc123def/ where 'abc123def' is the post slug
+    """  # noqa: E501
+
+    queryset = Post.objects.none()  # Will be dynamically set in get_queryset()
     lookup_field = "slug"
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Get posts visible to the current user based on privacy settings.
+
+        This method ensures that users can only retrieve posts they have
+        permission to view. It applies the same privacy filtering as the
+        list view to maintain consistency in privacy enforcement.
+
+        The privacy filtering at the queryset level provides an additional
+        security layer - even if a user knows a post's slug, they cannot
+        access it unless they have the appropriate permissions.
+
+        Privacy Rules Applied:
+            - Anonymous users: Only public posts
+            - Authenticated users: Public + own posts + friends' posts
+            - Content moderation: Excludes potentially harmful posts
+
+        Returns:
+            QuerySet[Post]: Privacy-filtered posts for detail operations.
+
+        Raises:
+            Http404: If post doesn't exist or user lacks permission to view it.
+        """
+        return (
+            Post.objects.select_related("user")
+            .prefetch_related(
+                "postimage_set",
+                "comments",
+                "likes",
+                "saved_posts",
+            )
+            .exclude(is_potentially_harmful=True)
+            .visible_to_user(self.request.user)
+        )
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
