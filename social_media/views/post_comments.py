@@ -100,6 +100,7 @@ class PostCommentListView(ListCreateAPIView):
             PostComment.objects.filter(
                 post__slug=post_slug,
                 post__is_potentially_harmful=False,
+                parent__isnull=True,  # Only show top-level comments, not replies
             )
             .select_related("user__profile", "parent")
             .prefetch_related(replies_prefetch, "likes__user")
