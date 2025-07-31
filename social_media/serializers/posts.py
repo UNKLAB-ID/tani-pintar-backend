@@ -35,6 +35,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             "content",
+            "privacy",
             "images",
             "user",
         )
@@ -72,6 +73,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
+            "privacy",
             "views_count",
             "likes_count",
             "comments_count",
@@ -106,6 +108,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
+            "privacy",
             "images",
             "views_count",
             "likes_count",
@@ -152,6 +155,7 @@ class UpdatePostSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
+            "privacy",
             "images",
             "views_count",
             "likes_count",
@@ -196,6 +200,7 @@ class PostListSerializer(serializers.ModelSerializer):
         fields = (
             "slug",
             "content",
+            "privacy",
             "likes_count",
             "comments_count",
             "is_liked",

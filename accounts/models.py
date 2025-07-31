@@ -113,6 +113,17 @@ class Profile(models.Model):
     def get_following_count(self):
         return self.following.count()
 
+    def are_friends(self, other_profile):
+        """
+        Check if this profile and another profile are friends (mutual followers)
+        """
+        if self == other_profile:
+            return False
+        return (
+            self.following.filter(following=other_profile).exists()
+            and self.followers.filter(follower=other_profile).exists()
+        )
+
 
 class Follow(models.Model):
     follower = models.ForeignKey(

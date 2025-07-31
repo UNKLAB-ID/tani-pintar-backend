@@ -17,21 +17,28 @@ from social_media.serializers import UpdatePostSerializer
 
 
 class ListCreatePostView(ListCreateAPIView):
-    queryset = (
-        Post.objects.select_related("user")
-        .prefetch_related(
-            "postimage_set",
-            "comments",
-            "likes",
-            "saved_posts",
-        )
-        .exclude(is_potentially_harmful=True)
-    )
+    queryset = Post.objects.none()  # Will be dynamically set in get_queryset()
     pagination_class = PostCursorPagination
     filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ["content"]
     filterset_class = PostFilter
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Get posts visible to the current user based on privacy settings
+        """
+        return (
+            Post.objects.select_related("user")
+            .prefetch_related(
+                "postimage_set",
+                "comments",
+                "likes",
+                "saved_posts",
+            )
+            .exclude(is_potentially_harmful=True)
+            .visible_to_user(self.request.user)
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -54,18 +61,25 @@ class ListCreatePostView(ListCreateAPIView):
 
 
 class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
-    queryset = (
-        Post.objects.select_related("user")
-        .prefetch_related(
-            "postimage_set",
-            "comments",
-            "likes",
-            "saved_posts",
-        )
-        .exclude(is_potentially_harmful=True)
-    )
+    queryset = Post.objects.none()  # Will be dynamically set in get_queryset()
     lookup_field = "slug"
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Get posts visible to the current user based on privacy settings
+        """
+        return (
+            Post.objects.select_related("user")
+            .prefetch_related(
+                "postimage_set",
+                "comments",
+                "likes",
+                "saved_posts",
+            )
+            .exclude(is_potentially_harmful=True)
+            .visible_to_user(self.request.user)
+        )
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:

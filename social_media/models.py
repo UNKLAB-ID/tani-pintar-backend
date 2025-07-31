@@ -1,14 +1,80 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils.crypto import get_random_string
 
 from core.users.models import User
 
 
+class PostQuerySet(models.QuerySet):
+    def visible_to_user(self, user):
+        """
+        Filter posts based on privacy settings and user relationships
+        """
+        if not user or not user.is_authenticated:
+            # Anonymous users can only see public posts
+            return self.filter(privacy=Post.PUBLIC)
+
+        # Authenticated users can see:
+        # 1. All public posts
+        # 2. Their own posts (regardless of privacy)
+        # 3. Friends' posts where privacy is 'friends'
+
+        # Get user's profile for friendship checks
+        try:
+            user_profile = user.profile
+        except AttributeError:
+            # User has no profile, can only see public posts
+            return self.filter(privacy=Post.PUBLIC)
+
+        # Get IDs of users who are friends (mutual followers)
+        friend_profiles = user_profile.following.filter(
+            following__followers__follower=user_profile,
+        ).values_list("following_id", flat=True)
+
+        friend_user_ids = []
+        if friend_profiles:
+            from accounts.models import Profile
+
+            friend_user_ids = Profile.objects.filter(
+                id__in=friend_profiles,
+            ).values_list("user_id", flat=True)
+
+        return self.filter(
+            Q(privacy=Post.PUBLIC)  # Public posts
+            | Q(user=user)  # Own posts
+            | Q(privacy=Post.FRIENDS, user_id__in=friend_user_ids),  # Friends' posts
+        )
+
+
+class PostManager(models.Manager):
+    def get_queryset(self):
+        return PostQuerySet(self.model, using=self._db)
+
+    def visible_to_user(self, user):
+        return self.get_queryset().visible_to_user(user)
+
+
 class Post(models.Model):
+    PUBLIC = "public"
+    FRIENDS = "friends"
+    ONLY_ME = "only_me"
+
+    PRIVACY_CHOICES = [
+        (PUBLIC, "Public"),
+        (FRIENDS, "Friends"),
+        (ONLY_ME, "Only Me"),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=15, unique=True)
     content = models.TextField(default="")
+    privacy = models.CharField(
+        max_length=10,
+        choices=PRIVACY_CHOICES,
+        default=PUBLIC,
+        help_text="Privacy setting for the post",
+    )
 
     shared_count = models.PositiveIntegerField(default=0)
 
@@ -19,6 +85,8 @@ class Post(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = PostManager()
 
     class Meta:
         ordering = ["-created_at"]
