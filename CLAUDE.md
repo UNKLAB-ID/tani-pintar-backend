@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Testing
+
 ```bash
 # Run all tests
-pytest
+just django pytest
 
 # Run tests with coverage
 coverage run -m pytest
@@ -18,6 +19,7 @@ mypy core
 ```
 
 ### Code Quality
+
 ```bash
 # Lint and format code
 ruff check .
@@ -28,22 +30,24 @@ djlint --check .
 ```
 
 ### Django Development
+
 ```bash
 # Run development server
-python manage.py runserver
+just manage runserver
 
 # Create superuser
-python manage.py createsuperuser
+just manage createsuperuser
 
 # Database migrations
-python manage.py makemigrations
-python manage.py migrate
+just manage makemigrations
+just manage migrate
 
 # Collect static files
-python manage.py collectstatic
+just manage collectstatic
 ```
 
 ### Celery (Background Tasks)
+
 ```bash
 # Start Celery worker
 celery -A config.celery_app worker -l info
@@ -56,6 +60,7 @@ celery -A config.celery_app flower
 ```
 
 ### Docker Development
+
 ```bash
 # Local development with Docker
 docker-compose -f docker-compose.local.yml up
@@ -72,6 +77,7 @@ docker-compose -f docker-compose.production.yml up
 This is a Django REST API backend for "Tani Pintar" (Smart Farmer), an agricultural platform connecting farmers, distributors, consumers, suppliers, agents, and vendors.
 
 ### Key Applications
+
 - `accounts/` - User profiles, verification codes, location data
 - `social_media/` - Posts, images, likes, views, social features
 - `thinkflow/` - AI plant disease detection using OpenAI
@@ -80,6 +86,7 @@ This is a Django REST API backend for "Tani Pintar" (Smart Farmer), an agricultu
 - `ecommerce/`, `tani/`, `vendors/` - E-commerce related features
 
 ### API Structure
+
 - DRF with JWT authentication (`rest_framework_simplejwt`)
 - API documentation with `drf-spectacular` (Swagger/OpenAPI)
 - CORS enabled for frontend integration
@@ -87,12 +94,14 @@ This is a Django REST API backend for "Tani Pintar" (Smart Farmer), an agricultu
 - PostgreSQL database
 
 ### Authentication & Profiles
+
 - Custom User model in `core.users`
 - Profile types: Farmer, Distributor, Consumer, Supplier, Agent, Vendor
 - ID card verification system with status tracking
 - Email verification required for registration
 
 ### Key Features
+
 - Social media posts with images, likes, and view tracking
 - Background task processing with Celery
 - Plant disease detection API integration (OpenAI)
@@ -100,12 +109,14 @@ This is a Django REST API backend for "Tani Pintar" (Smart Farmer), an agricultu
 - Location-based services (countries/cities)
 
 ### Settings Structure
+
 - `config/settings/base.py` - Base configuration
 - `config/settings/local.py` - Local development
 - `config/settings/production.py` - Production settings
 - Environment variables managed via django-environ
 
 ### Testing
+
 - Pytest configuration in `pyproject.toml`
 - Factory Boy for test data generation
 - Django coverage plugin for accurate coverage reporting
