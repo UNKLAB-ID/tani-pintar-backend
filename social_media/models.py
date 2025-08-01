@@ -392,8 +392,10 @@ class Report(models.Model):
         user (ForeignKey): The user who made the report
         reason (CharField): Two-letter code indicating the report reason
         detail_reason (TextField): Optional additional explanation from reporter
-        restrict_user (BooleanField): Whether reporter wants to hide content from this post author
-        block_user (BooleanField): Whether reporter wants to block the post author entirely
+        restrict_user (BooleanField): Whether reporter wants to hide content from this
+        post author
+        block_user (BooleanField): Whether reporter wants to block the post
+        author entirely
         is_approved (BooleanField): Whether a moderator has approved this report
         approved_by (CharField): Username/ID of moderator who approved the report
         created_at (DateTimeField): When the report was created
@@ -499,9 +501,13 @@ class Report(models.Model):
         Return string representation of the report.
 
         Returns:
-            str: Formatted string showing user, post, and reason information
+            str: Formatted string showing user, post, and reason
+            information
         """
-        return f"Report by {self.user.username} on Post {self.post.slug} - {self.get_reason_display()}"
+        return (
+            f"Report by {self.user.username} on Post {self.post.slug} - "
+            f"{self.get_reason_display()}"
+        )
 
     def save(self, *args, **kwargs):
         """

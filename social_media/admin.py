@@ -194,11 +194,11 @@ class PostSavedAdmin(admin.ModelAdmin):
 class ReportAdmin(admin.ModelAdmin):
     """
     Admin interface for managing reports.
-    
+
     This admin interface provides comprehensive management of user reports,
     allowing moderators to review, approve, and track reports efficiently.
     """
-    
+
     list_display = (
         "id",
         "post_link",
@@ -211,16 +211,16 @@ class ReportAdmin(admin.ModelAdmin):
         "restrict_user",
         "block_user",
     )
-    
+
     list_filter = (
         "reason",
         "is_approved",
-        "restrict_user", 
+        "restrict_user",
         "block_user",
         "created_at",
         "updated_at",
     )
-    
+
     search_fields = (
         "user__username",
         "post__user__username",
@@ -228,90 +228,113 @@ class ReportAdmin(admin.ModelAdmin):
         "detail_reason",
         "approved_by",
     )
-    
+
     readonly_fields = (
         "created_at",
         "created_by",
         "updated_at",
     )
-    
+
     autocomplete_fields = ("user", "post")
-    
+
     ordering = ("-created_at",)
-    
+
     fieldsets = (
-        ("Report Information", {
-            "fields": (
-                "post",
-                "user",
-                "reason",
-                "detail_reason",
-            ),
-        }),
-        ("User Actions", {
-            "fields": (
-                "restrict_user",
-                "block_user",
-            ),
-        }),
-        ("Moderation", {
-            "fields": (
-                "is_approved",
-                "approved_by",
-                "updated_by",
-            ),
-        }),
-        ("Timestamps", {
-            "fields": (
-                "created_at",
-                "created_by",
-                "updated_at",
-            ),
-            "classes": ("collapse",),
-        }),
+        (
+            "Report Information",
+            {
+                "fields": (
+                    "post",
+                    "user",
+                    "reason",
+                    "detail_reason",
+                ),
+            },
+        ),
+        (
+            "User Actions",
+            {
+                "fields": (
+                    "restrict_user",
+                    "block_user",
+                ),
+            },
+        ),
+        (
+            "Moderation",
+            {
+                "fields": (
+                    "is_approved",
+                    "approved_by",
+                    "updated_by",
+                ),
+            },
+        ),
+        (
+            "Timestamps",
+            {
+                "fields": (
+                    "created_at",
+                    "created_by",
+                    "updated_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
     )
-    
+
     def get_queryset(self, request):
         """Optimize queries with select_related."""
         queryset = super().get_queryset(request)
         return queryset.select_related("user", "post", "post__user")
-    
+
+    @admin.display(
+        description="Post",
+        ordering="post__slug",
+    )
     def post_link(self, obj):
         """Create a clickable link to the reported post."""
         from django.urls import reverse
         from django.utils.html import format_html
-        
+
         url = reverse("admin:social_media_post_change", args=[obj.post.pk])
         return format_html('<a href="{}">{}</a>', url, obj.post.slug)
-    post_link.short_description = "Post"
-    post_link.admin_order_field = "post__slug"
-    
+
+    @admin.display(
+        description="Reporter",
+        ordering="user__username",
+    )
     def reporter(self, obj):
         """Display the username of the reporter."""
         return obj.user.username
-    reporter.short_description = "Reporter"
-    reporter.admin_order_field = "user__username"
-    
+
+    @admin.display(
+        description="Post Author",
+        ordering="post__user__username",
+    )
     def post_author(self, obj):
         """Display the username of the post author."""
         return obj.post.user.username
-    post_author.short_description = "Post Author"
-    post_author.admin_order_field = "post__user__username"
-    
+
+    @admin.display(
+        description="Reason",
+        ordering="reason",
+    )
     def reason_display(self, obj):
         """Display the human-readable reason."""
         return obj.get_reason_display()
-    reason_display.short_description = "Reason"
-    reason_display.admin_order_field = "reason"
-    
+
     def save_model(self, request, obj, form, change):
         """Auto-set updated_by when saving."""
         if change:  # Only for updates, not creation
             obj.updated_by = request.user.username
         super().save_model(request, obj, form, change)
-    
+
     actions = ["approve_reports", "unapprove_reports"]
-    
+
+    @admin.action(
+        description="Approve selected reports",
+    )
     def approve_reports(self, request, queryset):
         """Bulk approve selected reports."""
         updated = queryset.update(
@@ -323,8 +346,10 @@ class ReportAdmin(admin.ModelAdmin):
             request,
             f"{updated} report(s) were successfully approved.",
         )
-    approve_reports.short_description = "Approve selected reports"
-    
+
+    @admin.action(
+        description="Unapprove selected reports",
+    )
     def unapprove_reports(self, request, queryset):
         """Bulk unapprove selected reports."""
         updated = queryset.update(
@@ -336,4 +361,3 @@ class ReportAdmin(admin.ModelAdmin):
             request,
             f"{updated} report(s) were successfully unapproved.",
         )
-    unapprove_reports.short_description = "Unapprove selected reports"

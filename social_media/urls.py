@@ -1,5 +1,7 @@
 from django.urls import path
 
+from .views import ApproveReportView
+from .views import CreateReportView
 from .views import ListCreatePostView
 from .views import PostCommentLikeCreateView
 from .views import PostCommentLikeDestroyView
@@ -8,14 +10,12 @@ from .views import PostCommentRepliesView
 from .views import PostCommentUpdateView
 from .views import PostLikeCreateView
 from .views import PostLikeDestroyView
+from .views import PostReportView
 from .views import PostSaveCreateView
 from .views import PostSaveDestroyView
-from .views import RetrieveUpdateDestroyPostView
-from .views import ApproveReportView
-from .views import CreateReportView
-from .views import PostReportView
 from .views import ReportDetailView
 from .views import ReportListView
+from .views import RetrieveUpdateDestroyPostView
 
 urlpatterns = [
     path("posts/", ListCreatePostView.as_view(), name="posts"),

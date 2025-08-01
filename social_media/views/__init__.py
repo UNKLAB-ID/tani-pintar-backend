@@ -16,6 +16,8 @@ from .reports import ReportDetailView
 from .reports import ReportListView
 
 __all__ = [
+    "ApproveReportView",
+    "CreateReportView",
     "ListCreatePostView",
     "PostCommentLikeCreateView",
     "PostCommentLikeDestroyView",
@@ -24,12 +26,10 @@ __all__ = [
     "PostCommentUpdateView",
     "PostLikeCreateView",
     "PostLikeDestroyView",
+    "PostReportView",
     "PostSaveCreateView",
     "PostSaveDestroyView",
-    "RetrieveUpdateDestroyPostView",
-    "ApproveReportView",
-    "CreateReportView",
-    "PostReportView",
     "ReportDetailView",
     "ReportListView",
+    "RetrieveUpdateDestroyPostView",
 ]

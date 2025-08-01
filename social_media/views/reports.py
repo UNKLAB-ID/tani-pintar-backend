@@ -1,15 +1,15 @@
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from rest_framework import generics
+from rest_framework import permissions
+from rest_framework import status
+from rest_framework.response import Response
 
-from social_media.models import Report, Post
-from social_media.serializers import (
-    CreateReportSerializer,
-    ReportListSerializer,
-    ReportDetailSerializer,
-    ApproveReportSerializer,
-)
+from social_media.models import Post
+from social_media.models import Report
+from social_media.serializers import ApproveReportSerializer
+from social_media.serializers import CreateReportSerializer
+from social_media.serializers import ReportDetailSerializer
+from social_media.serializers import ReportListSerializer
 
 
 class IsSuperUserOrReadOnly(permissions.BasePermission):
@@ -21,18 +21,18 @@ class IsSuperUserOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         """
         Check if user has permission to access the view.
-        
+
         Args:
             request: The HTTP request
             view: The view being accessed
-            
+
         Returns:
             bool: True if user has permission, False otherwise
         """
         # Allow POST (create) for authenticated users
-        if request.method == 'POST':
+        if request.method == "POST":
             return request.user.is_authenticated
-        
+
         # Only allow list/detail views for superusers
         return request.user.is_authenticated and request.user.is_superuser
 
@@ -90,7 +90,7 @@ class CreateReportView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
+
         return Response(
             {
                 "message": "Report submitted successfully. Our team will review it.",
@@ -212,18 +212,22 @@ class ApproveReportView(generics.UpdateAPIView):
         Returns:
             Response: Success response with updated report data
         """
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        action_taken = "approved" if serializer.validated_data.get("is_approved") else "updated"
-        
-        return Response({
-            "message": f"Report {action_taken} successfully.",
-            "report": ReportDetailSerializer(instance).data,
-        })
+        action_taken = (
+            "approved" if serializer.validated_data.get("is_approved") else "updated"
+        )
+
+        return Response(
+            {
+                "message": f"Report {action_taken} successfully.",
+                "report": ReportDetailSerializer(instance).data,
+            },
+        )
 
 
 class PostReportView(generics.CreateAPIView):
@@ -283,15 +287,15 @@ class PostReportView(generics.CreateAPIView):
             Response: Success or error response
         """
         post = self.get_post()
-        
+
         # Add post to request data
         data = request.data.copy()
         data["post"] = post.id
-        
+
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
+
         return Response(
             {
                 "message": f"Report for post '{post.slug}' submitted successfully.",

@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from social_media.models import Report
-from social_media.models import Post
 
 
 class CreateReportSerializer(serializers.ModelSerializer):
@@ -48,7 +47,7 @@ class CreateReportSerializer(serializers.ModelSerializer):
         # Check if user has already reported this post
         if Report.objects.filter(post=value, user=user).exists():
             raise serializers.ValidationError(
-                "You have already reported this post."
+                serializers.ValidationError.default_detail,
             )
 
         return value
@@ -146,12 +145,17 @@ class ReportDetailSerializer(serializers.ModelSerializer):
             "updated_by",
         ]
 
+    POST_CONTENT_PREVIEW_LENGTH = 100
+
     def get_post_data(self, obj):
         """Get basic post information for the report."""
+        content = obj.post.content
+        if len(content) > self.POST_CONTENT_PREVIEW_LENGTH:
+            content = content[: self.POST_CONTENT_PREVIEW_LENGTH] + "..."
         return {
             "id": obj.post.id,
             "slug": obj.post.slug,
-            "content": obj.post.content[:100] + "..." if len(obj.post.content) > 100 else obj.post.content,
+            "content": content,
             "author": obj.post.user.username,
             "created_at": obj.post.created_at,
         }
@@ -192,11 +196,14 @@ class ApproveReportSerializer(serializers.ModelSerializer):
             Report: The updated report instance
         """
         user = self.context["request"].user
-        
+
         if validated_data.get("is_approved"):
             instance.approve(user)
         else:
-            instance.is_approved = validated_data.get("is_approved", instance.is_approved)
+            instance.is_approved = validated_data.get(
+                "is_approved",
+                instance.is_approved,
+            )
             instance.updated_by = user.username
             instance.save()
 
