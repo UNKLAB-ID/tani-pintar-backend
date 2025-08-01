@@ -11,6 +11,11 @@ from .views import PostLikeDestroyView
 from .views import PostSaveCreateView
 from .views import PostSaveDestroyView
 from .views import RetrieveUpdateDestroyPostView
+from .views import ApproveReportView
+from .views import CreateReportView
+from .views import PostReportView
+from .views import ReportDetailView
+from .views import ReportListView
 
 urlpatterns = [
     path("posts/", ListCreatePostView.as_view(), name="posts"),
@@ -24,6 +29,17 @@ urlpatterns = [
         "posts/<slug:slug>/unlike/",
         PostLikeDestroyView.as_view(),
         name="post-unlike",
+    ),
+    path("posts/<slug:slug>/save/", PostSaveCreateView.as_view(), name="post-save"),
+    path(
+        "posts/<slug:slug>/unsave/",
+        PostSaveDestroyView.as_view(),
+        name="post-unsave",
+    ),
+    path(
+        "posts/<slug:slug>/report/",
+        PostReportView.as_view(),
+        name="post-report",
     ),
     path(
         "posts/<str:post_slug>/comments/",
@@ -50,11 +66,14 @@ urlpatterns = [
         PostCommentLikeDestroyView.as_view(),
         name="post-comment-unlike",
     ),
-    path("posts/<slug:slug>/save/", PostSaveCreateView.as_view(), name="post-save"),
+    # Report endpoints
+    path("reports/", CreateReportView.as_view(), name="report-create"),
+    path("reports/list/", ReportListView.as_view(), name="report-list"),
+    path("reports/<int:id>/", ReportDetailView.as_view(), name="report-detail"),
     path(
-        "posts/<slug:slug>/unsave/",
-        PostSaveDestroyView.as_view(),
-        name="post-unsave",
+        "reports/<int:id>/approve/",
+        ApproveReportView.as_view(),
+        name="report-approve",
     ),
 ]
 

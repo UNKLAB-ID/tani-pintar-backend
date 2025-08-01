@@ -368,3 +368,164 @@ class PostSaved(models.Model):
 
     def __str__(self):
         return f"User {self.user.username} saved Post {self.post.id}"
+
+
+class Report(models.Model):
+    """
+    Model representing a user report of a post for policy violations.
+
+    This model tracks when users report posts for various reasons such as spam,
+    hate speech, violence, etc. Each user can only report a post once, and the
+    system tracks the approval status and moderation actions.
+
+    Report Reasons:
+        SP: Spam - Unsolicited or repetitive content
+        HR: Hate Speech - Content promoting hatred or discrimination
+        VL: Violence - Content depicting or promoting violence
+        NU: Nudity - Inappropriate sexual or nude content
+        MI: Misinformation - False or misleading information
+        BU: Bullying - Content targeting individuals with harassment
+        OT: Other - Other policy violations not covered above
+
+    Attributes:
+        post (ForeignKey): The post being reported
+        user (ForeignKey): The user who made the report
+        reason (CharField): Two-letter code indicating the report reason
+        detail_reason (TextField): Optional additional explanation from reporter
+        restrict_user (BooleanField): Whether reporter wants to hide content from this post author
+        block_user (BooleanField): Whether reporter wants to block the post author entirely
+        is_approved (BooleanField): Whether a moderator has approved this report
+        approved_by (CharField): Username/ID of moderator who approved the report
+        created_at (DateTimeField): When the report was created
+        created_by (CharField): Username/ID of the user who created the report
+        updated_at (DateTimeField): Last time the report status was updated
+        updated_by (CharField): Username/ID of who last updated the report
+
+    Constraints:
+        - Unique constraint on (post, user) to prevent duplicate reports
+        - Cascade delete when post is deleted
+        - Database indexes on reason, is_approved, and created_at for admin filtering
+    """
+
+    # Report reason choices
+    SPAM = "SP"
+    HATE_SPEECH = "HR"
+    VIOLENCE = "VL"
+    NUDITY = "NU"
+    MISINFORMATION = "MI"
+    BULLYING = "BU"
+    OTHER = "OT"
+
+    REASON_CHOICES = [
+        (SPAM, "Spam"),
+        (HATE_SPEECH, "Hate Speech"),
+        (VIOLENCE, "Violence"),
+        (NUDITY, "Nudity"),
+        (MISINFORMATION, "Misinformation"),
+        (BULLYING, "Bullying"),
+        (OTHER, "Other"),
+    ]
+
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="reports",
+        help_text="The post being reported",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="reports_made",
+        help_text="The user who made the report",
+    )
+    reason = models.CharField(
+        max_length=2,
+        choices=REASON_CHOICES,
+        help_text="Reason code for the report",
+        db_index=True,
+    )
+    detail_reason = models.TextField(
+        blank=True,
+        help_text="Optional additional explanation from the reporter",
+    )
+    restrict_user = models.BooleanField(
+        default=False,
+        help_text="Whether reporter wants to hide content from this post author",
+    )
+    block_user = models.BooleanField(
+        default=False,
+        help_text="Whether reporter wants to block the post author entirely",
+    )
+    is_approved = models.BooleanField(
+        default=False,
+        help_text="Whether a moderator has approved this report",
+        db_index=True,
+    )
+    approved_by = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="Username/ID of moderator who approved the report",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        help_text="When the report was created",
+    )
+    created_by = models.CharField(
+        max_length=150,
+        help_text="Username/ID of the user who created the report",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="Last time the report status was updated",
+    )
+    updated_by = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="Username/ID of who last updated the report",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["post", "user"],
+                name="unique_post_report",
+            ),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """
+        Return string representation of the report.
+
+        Returns:
+            str: Formatted string showing user, post, and reason information
+        """
+        return f"Report by {self.user.username} on Post {self.post.slug} - {self.get_reason_display()}"
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to automatically set created_by field.
+
+        This ensures that the created_by field is always populated with the
+        username of the user making the report for audit purposes.
+        """
+        if not self.created_by:
+            self.created_by = self.user.username
+        super().save(*args, **kwargs)
+
+    def approve(self, moderator_user):
+        """
+        Approve the report and mark who approved it.
+
+        Args:
+            moderator_user (User): The moderator approving the report
+
+        Returns:
+            bool: True if the report was successfully approved
+        """
+        self.is_approved = True
+        self.approved_by = moderator_user.username
+        self.updated_by = moderator_user.username
+        self.save()
+        return True
