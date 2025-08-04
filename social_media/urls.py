@@ -62,8 +62,6 @@ urlpatterns = [
         PostCommentLikeDestroyView.as_view(),
         name="post-comment-unlike",
     ),
-    # Report endpoint
-    path("reports/", PostReportView.as_view(), name="report-create"),
 ]
 
 app_name = "social_media"
