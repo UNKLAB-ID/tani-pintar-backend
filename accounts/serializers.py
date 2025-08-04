@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from accounts.models import LoginCode
@@ -78,6 +79,10 @@ class ConfirmLoginSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
+        # Allow '0000' code in DEBUG mode
+        if settings.DEBUG and data["code"] == "0000":
+            return data
+
         user = User.objects.filter(username=data["phone_number"]).first()
         login_code = (
             LoginCode.objects.filter(user=user, code=data["code"]).last()
