@@ -79,7 +79,7 @@ class ConfirmLoginSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
-        # Allow '000' code in DEBUG mode
+        # Allow '0000' code in DEBUG mode
         if settings.DEBUG and data["code"] == "0000":
             return data
 

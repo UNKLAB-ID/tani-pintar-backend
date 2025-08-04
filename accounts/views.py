@@ -93,7 +93,7 @@ class ConfirmRegistrationView(UpdateAPIView):
         user = User.objects.get(username=serializer.validated_data.get("phone_number"))
         code = serializer.validated_data.get("code")
 
-        # Allow '000' code in DEBUG mode
+        # Allow '0000' code in DEBUG mode
         if settings.DEBUG and code == "0000":
             user.is_active = True
             user.save()
