@@ -1,7 +1,5 @@
 from django.urls import path
 
-from .views import ApproveReportView
-from .views import CreateReportView
 from .views import ListCreatePostView
 from .views import PostCommentLikeCreateView
 from .views import PostCommentLikeDestroyView
@@ -13,8 +11,6 @@ from .views import PostLikeDestroyView
 from .views import PostReportView
 from .views import PostSaveCreateView
 from .views import PostSaveDestroyView
-from .views import ReportDetailView
-from .views import ReportListView
 from .views import RetrieveUpdateDestroyPostView
 
 urlpatterns = [
@@ -66,15 +62,8 @@ urlpatterns = [
         PostCommentLikeDestroyView.as_view(),
         name="post-comment-unlike",
     ),
-    # Report endpoints
-    path("reports/", CreateReportView.as_view(), name="report-create"),
-    path("reports/list/", ReportListView.as_view(), name="report-list"),
-    path("reports/<int:id>/", ReportDetailView.as_view(), name="report-detail"),
-    path(
-        "reports/<int:id>/approve/",
-        ApproveReportView.as_view(),
-        name="report-approve",
-    ),
+    # Report endpoint
+    path("reports/", PostReportView.as_view(), name="report-create"),
 ]
 
 app_name = "social_media"
