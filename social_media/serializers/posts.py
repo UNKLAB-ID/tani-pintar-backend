@@ -197,14 +197,6 @@ class UpdatePostSerializer(serializers.ModelSerializer):
             "user",
         )
 
-    def validate_privacy(self, value):
-        valid_choices = [choice[0] for choice in Post.PRIVACY_CHOICES]
-        if value not in valid_choices:
-            valid_options = ", ".join(valid_choices)
-            msg = f"Invalid privacy option. Valid choices are: {valid_options}"
-            raise serializers.ValidationError(msg)
-        return value
-
     def validate_images(self, value):
         if len(value) > self.MAX_IMAGES:
             msg = "You can only upload a maximum of 10 images."
