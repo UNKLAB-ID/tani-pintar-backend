@@ -12,8 +12,6 @@ from .posts import RetrieveUpdateDestroyPostView
 from .reports import PostReportView
 
 __all__ = [
-    "ApproveReportView",
-    "CreateReportView",
     "ListCreatePostView",
     "PostCommentLikeCreateView",
     "PostCommentLikeDestroyView",
