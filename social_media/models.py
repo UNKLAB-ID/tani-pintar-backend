@@ -411,7 +411,7 @@ class Report(models.Model):
 
     # Report reason choices
     SPAM = "SP"
-    HATE_SPEECH = "HR"
+    HATE_SPEECH = "HS"
     VIOLENCE = "VL"
     NUDITY = "NU"
     MISINFORMATION = "MI"
