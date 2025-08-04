@@ -148,6 +148,7 @@ class UpdatePostSerializer(serializers.ModelSerializer):
 
     privacy = serializers.ChoiceField(
         choices=Post.PRIVACY_CHOICES,
+        required=False,
         error_messages={
             "invalid_choice": f"Invalid privacy option. Valid choices are: {', '.join([choice[0] for choice in Post.PRIVACY_CHOICES])}.",  # noqa: E501
         },
