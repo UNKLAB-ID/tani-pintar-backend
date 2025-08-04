@@ -144,11 +144,17 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
 
 class UpdatePostSerializer(serializers.ModelSerializer):
+    privacy = serializers.ChoiceField(
+        choices=Post.PRIVACY_CHOICES,
+        error_messages={
+            "invalid_choice": f"Invalid privacy option. Valid choices are: {', '.join([choice[0] for choice in Post.PRIVACY_CHOICES])}.",  # noqa: E501
+        },
+    )
     images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
     views_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
-    user = UserSerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Post
@@ -176,6 +182,14 @@ class UpdatePostSerializer(serializers.ModelSerializer):
             "updated_at",
             "user",
         )
+
+    def validate_privacy(self, value):
+        valid_choices = [choice[0] for choice in Post.PRIVACY_CHOICES]
+        if value not in valid_choices:
+            valid_options = ", ".join(valid_choices)
+            msg = f"Invalid privacy option. Valid choices are: {valid_options}"
+            raise serializers.ValidationError(msg)
+        return value
 
     def get_likes_count(self, obj):
         return obj.likes.count()
