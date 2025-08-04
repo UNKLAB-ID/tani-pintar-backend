@@ -180,11 +180,34 @@ class RetrieveUpdateDestroyPostView(RetrieveUpdateDestroyAPIView):
 
         return response
 
-    def perform_update(self, serializer):
-        if serializer.instance.user != self.request.user:
+    def update(self, request, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+
+        # Check permission
+        if instance.user != request.user:
             msg = "You do not have permission to update this post."
             raise PermissionDenied(msg)
-        super().perform_update(serializer)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Refresh instance from database to get updated relationships
+        instance.refresh_from_db()
+
+        # Get fresh instance with prefetched relationships for optimal performance
+        fresh_instance = self.get_queryset().get(pk=instance.pk)
+
+        # Return response using PostDetailSerializer
+        detail_serializer = PostDetailSerializer(
+            fresh_instance,
+            context={"request": request},
+        )
+        return Response(detail_serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
 
     def perform_destroy(self, instance):
         if instance.user != self.request.user:
