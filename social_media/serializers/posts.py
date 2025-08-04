@@ -144,11 +144,31 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
 
 class UpdatePostSerializer(serializers.ModelSerializer):
-    images = PostImageSerializer(many=True, read_only=True, source="postimage_set")
+    MAX_IMAGES = 10  # Maximum number of images that can be uploaded
+
+    privacy = serializers.ChoiceField(
+        choices=Post.PRIVACY_CHOICES,
+        required=False,
+        error_messages={
+            "invalid_choice": f"Invalid privacy option. Valid choices are: {', '.join([choice[0] for choice in Post.PRIVACY_CHOICES])}.",  # noqa: E501
+        },
+    )
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False,
+        help_text="List of new images to add to the post",
+    )
+    delete_image_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        help_text="List of image IDs to delete from the post",
+    )
     views_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
-    user = UserSerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Post
@@ -157,6 +177,7 @@ class UpdatePostSerializer(serializers.ModelSerializer):
             "content",
             "privacy",
             "images",
+            "delete_image_ids",
             "views_count",
             "likes_count",
             "comments_count",
@@ -167,7 +188,6 @@ class UpdatePostSerializer(serializers.ModelSerializer):
         )
         read_only_fields = (
             "slug",
-            "images",
             "views_count",
             "likes_count",
             "comments_count",
@@ -176,6 +196,66 @@ class UpdatePostSerializer(serializers.ModelSerializer):
             "updated_at",
             "user",
         )
+
+    def validate_images(self, value):
+        if len(value) > self.MAX_IMAGES:
+            msg = "You can only upload a maximum of 10 images."
+            raise serializers.ValidationError(msg)
+        return value
+
+    def validate_delete_image_ids(self, value):
+        if not value:
+            return value
+
+        # Check if all image IDs belong to the current post
+        if self.instance:
+            existing_image_ids = self.instance.postimage_set.values_list(
+                "id",
+                flat=True,
+            )
+            invalid_ids = [
+                img_id for img_id in value if img_id not in existing_image_ids
+            ]
+            if invalid_ids:
+                msg = f"Invalid image IDs: {invalid_ids}. These images don't belong to this post."  # noqa: E501
+                raise serializers.ValidationError(msg)
+
+        return value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        # Check total image count after additions and deletions
+        if self.instance:
+            current_image_count = self.instance.postimage_set.count()
+            new_images = attrs.get("images", [])
+            delete_image_ids = attrs.get("delete_image_ids", [])
+
+            final_count = current_image_count + len(new_images) - len(delete_image_ids)
+
+            if final_count > self.MAX_IMAGES:
+                msg = f"Total images cannot exceed {self.MAX_IMAGES}. Current: {current_image_count}, Adding: {len(new_images)}, Deleting: {len(delete_image_ids)}"  # noqa: E501
+                raise serializers.ValidationError(msg)
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        images = validated_data.pop("images", None)
+        delete_image_ids = validated_data.pop("delete_image_ids", None)
+
+        # Update the post instance with other fields
+        instance = super().update(instance, validated_data)
+
+        # Handle image deletions if provided
+        if delete_image_ids:
+            instance.postimage_set.filter(id__in=delete_image_ids).delete()
+
+        # Handle new image additions if provided
+        if images:
+            post_images = [PostImage(post=instance, image=image) for image in images]
+            PostImage.objects.bulk_create(post_images)
+
+        return instance
 
     def get_likes_count(self, obj):
         return obj.likes.count()
