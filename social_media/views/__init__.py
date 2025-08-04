@@ -9,6 +9,7 @@ from .post_saves import PostSaveCreateView
 from .post_saves import PostSaveDestroyView
 from .posts import ListCreatePostView
 from .posts import RetrieveUpdateDestroyPostView
+from .reports import PostReportView
 
 __all__ = [
     "ListCreatePostView",
@@ -19,6 +20,7 @@ __all__ = [
     "PostCommentUpdateView",
     "PostLikeCreateView",
     "PostLikeDestroyView",
+    "PostReportView",
     "PostSaveCreateView",
     "PostSaveDestroyView",
     "RetrieveUpdateDestroyPostView",

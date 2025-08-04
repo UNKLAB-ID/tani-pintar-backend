@@ -8,6 +8,7 @@ from .views import PostCommentRepliesView
 from .views import PostCommentUpdateView
 from .views import PostLikeCreateView
 from .views import PostLikeDestroyView
+from .views import PostReportView
 from .views import PostSaveCreateView
 from .views import PostSaveDestroyView
 from .views import RetrieveUpdateDestroyPostView
@@ -24,6 +25,17 @@ urlpatterns = [
         "posts/<slug:slug>/unlike/",
         PostLikeDestroyView.as_view(),
         name="post-unlike",
+    ),
+    path("posts/<slug:slug>/save/", PostSaveCreateView.as_view(), name="post-save"),
+    path(
+        "posts/<slug:slug>/unsave/",
+        PostSaveDestroyView.as_view(),
+        name="post-unsave",
+    ),
+    path(
+        "posts/<slug:slug>/report/",
+        PostReportView.as_view(),
+        name="post-report",
     ),
     path(
         "posts/<str:post_slug>/comments/",
@@ -49,12 +61,6 @@ urlpatterns = [
         "posts/<str:post_slug>/comments/<int:comment_id>/unlike/",
         PostCommentLikeDestroyView.as_view(),
         name="post-comment-unlike",
-    ),
-    path("posts/<slug:slug>/save/", PostSaveCreateView.as_view(), name="post-save"),
-    path(
-        "posts/<slug:slug>/unsave/",
-        PostSaveDestroyView.as_view(),
-        name="post-unsave",
     ),
 ]
 
