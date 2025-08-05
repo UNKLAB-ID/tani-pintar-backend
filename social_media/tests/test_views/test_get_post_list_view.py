@@ -393,6 +393,90 @@ class TestPostListFilterView(TestCase):
             specific_post.slug in post_slugs
         ), "Should find the post with specific content"
 
+    def test_search_by_profile_name(self):
+        """Test searching posts by profile full name."""
+        # Create a profile with a specific name
+        profile_with_unique_name = ProfileFactory(
+            full_name="John Smith Unique Name",
+        )
+        specific_post = PostFactory(
+            user=profile_with_unique_name.user,
+            content="Regular post content",
+        )
+
+        response = self.client.get(self.url, {"search": "John Smith"})
+        posts = response.json()
+
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), "Should return 200 status code"
+        assert (
+            len(posts.get("results")) >= 1
+        ), "Should return at least one post from user with matching name"
+
+        # Verify the specific post is in results
+        post_slugs = [post.get("slug") for post in posts.get("results")]
+        assert specific_post.slug in post_slugs, "Should find the post by profile name"
+
+    def test_search_by_profile_name_partial_match(self):
+        """Test partial matching of profile names in search."""
+        # Create a profile with a specific name
+        profile_with_name = ProfileFactory(
+            full_name="Jane Elizabeth Doe",
+        )
+        specific_post = PostFactory(
+            user=profile_with_name.user,
+            content="Some content here",
+        )
+
+        # Test partial match
+        response = self.client.get(self.url, {"search": "Elizabeth"})
+        posts = response.json()
+
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), "Should return 200 status code"
+        assert (
+            len(posts.get("results")) >= 1
+        ), "Should return posts with partial name match"
+
+        # Verify the specific post is in results
+        post_slugs = [post.get("slug") for post in posts.get("results")]
+        assert (
+            specific_post.slug in post_slugs
+        ), "Should find the post by partial profile name match"
+
+    def test_search_content_and_profile_name_combined(self):
+        """Test that search finds posts matching either content OR profile name."""
+        # Create profile with specific name
+        profile_with_name = ProfileFactory(
+            full_name="Alice Cooper",
+        )
+        post_by_name = PostFactory(
+            user=profile_with_name.user,
+            content="Regular content without search term",
+        )
+
+        # Create post with specific content
+        post_by_content = PostFactory(
+            user=self.farmer_profile.user,
+            content="Content with special keyword",
+        )
+
+        # Search for term that matches profile name
+        response = self.client.get(self.url, {"search": "Alice"})
+        posts = response.json()
+        post_slugs = [post.get("slug") for post in posts.get("results")]
+
+        assert post_by_name.slug in post_slugs, "Should find post by profile name match"
+
+        # Search for term that matches content
+        response = self.client.get(self.url, {"search": "special keyword"})
+        posts = response.json()
+        post_slugs = [post.get("slug") for post in posts.get("results")]
+
+        assert post_by_content.slug in post_slugs, "Should find post by content match"
+
     def test_combined_search_and_filter(self):
         """Test combining search with user/profile filters."""
         # Create a post with specific content for a specific user

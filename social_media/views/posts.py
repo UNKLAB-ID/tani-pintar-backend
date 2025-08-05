@@ -40,7 +40,7 @@ class ListCreatePostView(ListCreateAPIView):
     queryset = Post.objects.none()  # Will be dynamically set in get_queryset()
     pagination_class = PostCursorPagination
     filter_backends = [SearchFilter, DjangoFilterBackend]
-    search_fields = ["content"]
+    search_fields = ["content", "user__profile__full_name"]
     filterset_class = PostFilter
     permission_classes = [IsAuthenticatedOrReadOnly]
 
