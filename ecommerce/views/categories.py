@@ -25,10 +25,6 @@ class CategoryListView(generics.ListAPIView):
         - description: Search in category description
         - meta_title: Search in SEO meta title
     Ordering:
-        - sort_order: Custom sort order
-        - name: Alphabetical order
-        - created_at: Creation date
-        - Default: sort_order, name
     """
 
     queryset = ProductCategory.objects.filter(is_active=True)
@@ -53,13 +49,9 @@ class CategoryListView(generics.ListAPIView):
 
     def get_queryset(self):
         """
-        Override to provide optimized queryset with prefetch related.
+        Override to provide optimized queryset without prefetching children.
         """
-        queryset = super().get_queryset()
-        # Prefetch children for better performance
-        return queryset.prefetch_related(
-            "children",
-        )
+        return super().get_queryset()
 
 
 class CategoryDetailView(generics.RetrieveAPIView):
@@ -89,9 +81,5 @@ class CategoryDetailView(generics.RetrieveAPIView):
         """
         Override to provide optimized queryset with prefetch related.
         """
-        queryset = super().get_queryset()
+        return super().get_queryset()
         # Prefetch related data for better performance
-        return queryset.prefetch_related(
-            "children",
-            "parent",
-        )

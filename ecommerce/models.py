@@ -1,7 +1,6 @@
 import uuid
 
 from django.db import models
-from django.urls import reverse
 from django.utils.text import slugify
 
 
@@ -84,42 +83,6 @@ class ProductCategory(models.Model):
         super().save(*args, **kwargs)
 
 
-class ProductSubCategoryQuerySet(models.QuerySet):
-    """Custom QuerySet for ProductSubCategory model with useful filtering methods."""
-
-    def active(self):
-        """Return only active subcategories."""
-        return self.filter(is_active=True)
-
-    def inactive(self):
-        """Return only inactive subcategories."""
-        return self.filter(is_active=False)
-
-    def by_name(self, name):
-        """Filter subcategories by name (case insensitive)."""
-        return self.filter(name__icontains=name)
-
-    def by_category(self, category):
-        """Filter subcategories by parent category."""
-        return self.filter(category=category)
-
-
-class ProductSubCategoryManager(models.Manager):
-    """Custom manager for ProductSubCategory model."""
-
-    def get_queryset(self):
-        """Return ProductSubCategoryQuerySet instead of default QuerySet."""
-        return ProductSubCategoryQuerySet(self.model, using=self._db)
-
-    def active(self):
-        """Get only active subcategories."""
-        return self.get_queryset().active()
-
-    def inactive(self):
-        """Get only inactive subcategories."""
-        return self.get_queryset().inactive()
-
-
 class ProductSubCategory(models.Model):
     """
     Product SubCategory model for detailed product classification.
@@ -180,19 +143,12 @@ class ProductSubCategory(models.Model):
         auto_now=True,
         help_text="When the subcategory was last updated",
     )
-    # Custom manager
-    objects = ProductSubCategoryManager()
 
+    # Custom manager
     class Meta:
         verbose_name = "Product SubCategory"
         verbose_name_plural = "Product SubCategories"
         ordering = ["category", "name"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["category", "name"],
-                name="unique_subcategory_per_category",
-            ),
-        ]
         indexes = [
             models.Index(fields=["name"]),
             models.Index(fields=["slug"]),
@@ -221,15 +177,4 @@ class ProductSubCategory(models.Model):
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
-        # Set meta_title from name and category if not provided
-        if not self.meta_title:
-            self.meta_title = f"{self.name} - {self.category.name}"
         super().save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        """Get the absolute URL for this subcategory."""
-        return reverse("ecommerce:subcategory-detail", kwargs={"slug": self.slug})
-
-    def get_full_path(self):
-        """Get the full hierarchical path of the subcategory."""
-        return f"{self.category.name} > {self.name}"

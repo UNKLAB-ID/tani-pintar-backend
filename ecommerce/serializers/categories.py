@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from ecommerce.models import ProductCategory
+from ecommerce.serializers.subcategories import SubCategoryListSerializer
 
 
 class CategoryListSerializer(serializers.ModelSerializer):
@@ -11,7 +12,7 @@ class CategoryListSerializer(serializers.ModelSerializer):
     optimized for performance and minimal data transfer.
     """
 
-    subcategories_count = serializers.SerializerMethodField()
+    subcategories = SubCategoryListSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProductCategory
@@ -20,24 +21,19 @@ class CategoryListSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "description",
-            "subcategories_count",
+            "subcategories",
             "is_active",
             "is_featured",
-            "sort_order",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
             "slug",
-            "subcategories_count",
+            "subcategories",
             "created_at",
             "updated_at",
         ]
-
-    def get_subcategories_count(self, obj):
-        """Get the number of subcategories for this category."""
-        return obj.subcategories.active().count()
 
 
 class CategoryDetailSerializer(serializers.ModelSerializer):
@@ -48,7 +44,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
     including subcategories and SEO metadata.
     """
 
-    subcategories = serializers.SerializerMethodField()
+    subcategories = SubCategoryListSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProductCategory
@@ -57,11 +53,8 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "slug",
-            "meta_title",
-            "meta_description",
             "is_active",
             "is_featured",
-            "sort_order",
             "subcategories",
             "created_at",
             "updated_at",
@@ -73,15 +66,3 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-    def get_subcategories(self, obj):
-        """Get all active subcategories of this category."""
-        # Import here to avoid circular import
-        from .subcategories import SubCategoryListSerializer
-
-        subcategories = obj.subcategories.active().order_by("sort_order", "name")
-        return SubCategoryListSerializer(
-            subcategories,
-            many=True,
-            context=self.context,
-        ).data

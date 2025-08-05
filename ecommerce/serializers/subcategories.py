@@ -23,7 +23,6 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
             "category",
             "category_name",
             "is_active",
-            "sort_order",
             "created_at",
             "updated_at",
         ]
@@ -56,7 +55,6 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
             "category",
             "category_data",
             "is_active",
-            "sort_order",
             "created_at",
             "updated_at",
         ]

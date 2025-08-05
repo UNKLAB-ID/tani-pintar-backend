@@ -35,11 +35,10 @@ class SubCategoryListView(generics.ListAPIView):
     ]
     ordering_fields = [
         "name",
-        "sort_order",
         "created_at",
         "updated_at",
     ]
-    ordering = ["sort_order", "name"]
+    ordering = ["name"]
 
 
 class SubCategoryDetailView(generics.RetrieveAPIView):
