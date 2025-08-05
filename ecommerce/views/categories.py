@@ -4,7 +4,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny
 
-from ecommerce.models import Category
+from ecommerce.models import ProductCategory
 from ecommerce.serializers import CategoryDetailSerializer
 from ecommerce.serializers import CategoryListSerializer
 
@@ -31,30 +31,25 @@ class CategoryListView(generics.ListAPIView):
         - Default: sort_order, name
     """
 
-    queryset = Category.objects.active().select_related("parent")
+    queryset = ProductCategory.objects.filter(is_active=True)
     serializer_class = CategoryListSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     # Filtering
     filterset_fields = {
         "is_featured": ["exact"],
-        "parent": ["exact"],
-        "parent__isnull": ["exact"],
     }
     # Search
     search_fields = [
         "name",
-        "description",
-        "meta_title",
     ]
     # Ordering
     ordering_fields = [
-        "sort_order",
         "name",
         "created_at",
         "updated_at",
     ]
-    ordering = ["sort_order", "name"]
+    ordering = ["name"]
 
     def get_queryset(self):
         """
@@ -85,7 +80,7 @@ class CategoryDetailView(generics.RetrieveAPIView):
         - SEO metadata
     """
 
-    queryset = Category.objects.active().select_related("parent")
+    queryset = ProductCategory.objects.filter(is_active=True)
     serializer_class = CategoryDetailSerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"

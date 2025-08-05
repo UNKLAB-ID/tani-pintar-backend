@@ -5,39 +5,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 
-class CategoryQuerySet(models.QuerySet):
-    """Custom QuerySet for Category model with useful filtering methods."""
-
-    def active(self):
-        """Return only active categories."""
-        return self.filter(is_active=True)
-
-    def inactive(self):
-        """Return only inactive categories."""
-        return self.filter(is_active=False)
-
-    def by_name(self, name):
-        """Filter categories by name (case insensitive)."""
-        return self.filter(name__icontains=name)
-
-
-class CategoryManager(models.Manager):
-    """Custom manager for Category model."""
-
-    def get_queryset(self):
-        """Return CategoryQuerySet instead of default QuerySet."""
-        return CategoryQuerySet(self.model, using=self._db)
-
-    def active(self):
-        """Get only active categories."""
-        return self.get_queryset().active()
-
-    def inactive(self):
-        """Get only inactive categories."""
-        return self.get_queryset().inactive()
-
-
-class Category(models.Model):
+class ProductCategory(models.Model):
     """
     Enhanced Category model for ecommerce products.
     This model represents product categories with additional features like:
@@ -76,26 +44,6 @@ class Category(models.Model):
         blank=True,
         help_text="SEO-friendly URL slug (auto-generated from name)",
     )
-    # Hierarchical structure
-    parent = models.ForeignKey(
-        "self",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="children",
-        help_text="Parent category for hierarchical structure",
-    )
-    # SEO and metadata
-    meta_title = models.CharField(
-        max_length=160,
-        blank=True,
-        help_text="SEO meta title (recommended: 50-60 characters)",
-    )
-    meta_description = models.TextField(
-        max_length=320,
-        blank=True,
-        help_text="SEO meta description (recommended: 150-160 characters)",
-    )
     # Status and ordering
     is_active = models.BooleanField(
         default=True,
@@ -104,10 +52,6 @@ class Category(models.Model):
     is_featured = models.BooleanField(
         default=False,
         help_text="Whether this category should be featured prominently",
-    )
-    sort_order = models.PositiveIntegerField(
-        default=0,
-        help_text="Sort order for displaying categories",
     )
     # Timestamps
     created_at = models.DateTimeField(
@@ -118,26 +62,13 @@ class Category(models.Model):
         auto_now=True,
         help_text="When the category was last updated",
     )
-    # Custom manager
-    objects = CategoryManager()
 
     class Meta:
-        verbose_name = "Category"
+        verbose_name = "Categorys"
         verbose_name_plural = "Categories"
-        ordering = ["sort_order", "name"]
-        indexes = [
-            models.Index(fields=["name"]),
-            models.Index(fields=["slug"]),
-            models.Index(fields=["is_active"]),
-            models.Index(fields=["is_featured"]),
-            models.Index(fields=["sort_order"]),
-            models.Index(fields=["created_at"]),
-        ]
 
     def __str__(self):
         """String representation of the category."""
-        if self.parent:
-            return f"{self.parent.name} > {self.name}"
         return self.name
 
     def save(self, *args, **kwargs):
@@ -147,63 +78,158 @@ class Category(models.Model):
         that can be used in URLs.
         """
         if not self.slug:
-            base_slug = slugify(self.name)
+            slug = slugify(self.name)
+            self.slug = slug
+
+        super().save(*args, **kwargs)
+
+
+class ProductSubCategoryQuerySet(models.QuerySet):
+    """Custom QuerySet for ProductSubCategory model with useful filtering methods."""
+
+    def active(self):
+        """Return only active subcategories."""
+        return self.filter(is_active=True)
+
+    def inactive(self):
+        """Return only inactive subcategories."""
+        return self.filter(is_active=False)
+
+    def by_name(self, name):
+        """Filter subcategories by name (case insensitive)."""
+        return self.filter(name__icontains=name)
+
+    def by_category(self, category):
+        """Filter subcategories by parent category."""
+        return self.filter(category=category)
+
+
+class ProductSubCategoryManager(models.Manager):
+    """Custom manager for ProductSubCategory model."""
+
+    def get_queryset(self):
+        """Return ProductSubCategoryQuerySet instead of default QuerySet."""
+        return ProductSubCategoryQuerySet(self.model, using=self._db)
+
+    def active(self):
+        """Get only active subcategories."""
+        return self.get_queryset().active()
+
+    def inactive(self):
+        """Get only inactive subcategories."""
+        return self.get_queryset().inactive()
+
+
+class ProductSubCategory(models.Model):
+    """
+    Product SubCategory model for detailed product classification.
+    This model represents subcategories that belong to a main ProductCategory,
+    providing more granular product organization.
+    Features:
+    - UUID primary key for better security
+    - Foreign key relationship to ProductCategory
+    - Auto-generated slugs for SEO-friendly URLs
+    - SEO metadata fields
+    - Active/inactive status
+    - Custom manager and querysets for better querying
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the subcategory",
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text="Subcategory name",
+    )
+    description = models.TextField(  # noqa: DJ001
+        blank=True,
+        null=True,
+        help_text="Optional detailed description of the subcategory",
+    )
+    slug = models.SlugField(
+        max_length=120,
+        unique=True,
+        blank=True,
+        help_text="SEO-friendly URL slug (auto-generated from name)",
+    )
+    # Relationship to parent category
+    category = models.ForeignKey(
+        ProductCategory,
+        on_delete=models.CASCADE,
+        related_name="subcategories",
+        help_text="Parent category for this subcategory",
+    )
+    # Status and ordering
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this subcategory is active and visible",
+    )
+    is_featured = models.BooleanField(
+        default=False,
+        help_text="Whether this subcategory should be featured prominently",
+    )
+    # Timestamps
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the subcategory was created",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the subcategory was last updated",
+    )
+    # Custom manager
+    objects = ProductSubCategoryManager()
+
+    class Meta:
+        verbose_name = "Product SubCategory"
+        verbose_name_plural = "Product SubCategories"
+        ordering = ["category", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["category", "name"],
+                name="unique_subcategory_per_category",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["slug"]),
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["is_featured"]),
+            models.Index(fields=["category"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self):
+        """String representation of the subcategory."""
+        return f"{self.category.name} > {self.name}"
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to auto-generate slug from name and category.
+        This ensures that every subcategory has a unique, SEO-friendly slug
+        that can be used in URLs.
+        """
+        if not self.slug:
+            base_slug = slugify(f"{self.category.name}-{self.name}")
             slug = base_slug
             counter = 1
             # Ensure slug uniqueness
-            while Category.objects.filter(slug=slug).exists():
+            while ProductSubCategory.objects.filter(slug=slug).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
-        # Set meta_title from name if not provided
+        # Set meta_title from name and category if not provided
         if not self.meta_title:
-            self.meta_title = self.name
+            self.meta_title = f"{self.name} - {self.category.name}"
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        """Get the absolute URL for this category."""
-        return reverse("ecommerce:category-detail", kwargs={"slug": self.slug})
+        """Get the absolute URL for this subcategory."""
+        return reverse("ecommerce:subcategory-detail", kwargs={"slug": self.slug})
 
     def get_full_path(self):
-        """Get the full hierarchical path of the category."""
-        if self.parent:
-            return f"{self.parent.get_full_path()} > {self.name}"
-        return self.name
-
-    def get_children(self):
-        """Get all direct children of this category."""
-        return self.children.active()
-
-    def get_descendants(self):
-        """Get all descendants (children, grandchildren, etc.) of this category."""
-        descendants = []
-        for child in self.get_children():
-            descendants.append(child)
-            descendants.extend(child.get_descendants())
-        return descendants
-
-    def get_ancestors(self):
-        """Get all ancestors (parent, grandparent, etc.) of this category."""
-        ancestors = []
-        parent = self.parent
-        while parent:
-            ancestors.append(parent)
-            parent = parent.parent
-        return ancestors
-
-    def is_root(self):
-        """Check if this category is a root category (has no parent)."""
-        return self.parent is None
-
-    def is_leaf(self):
-        """Check if this category is a leaf category (has no children)."""
-        return not self.children.exists()
-
-    def get_level(self):
-        """Get the hierarchical level of this category (0 for root)."""
-        level = 0
-        parent = self.parent
-        while parent:
-            level += 1
-            parent = parent.parent
-        return level
+        """Get the full hierarchical path of the subcategory."""
+        return f"{self.category.name} > {self.name}"
