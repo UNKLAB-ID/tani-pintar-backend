@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from ecommerce.models import ProductSubCategory
+from ecommerce.serializers.categories import CategoryDetailSerializer
 
 
 class SubCategoryListSerializer(serializers.ModelSerializer):
@@ -11,7 +12,7 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
     optimized for performance and minimal data transfer.
     """
 
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    category = CategoryDetailSerializer(read_only=True)
 
     class Meta:
         model = ProductSubCategory
@@ -21,7 +22,6 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "category",
-            "category_name",
             "is_active",
             "created_at",
             "updated_at",
@@ -29,7 +29,6 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "slug",
-            "category_name",
             "created_at",
             "updated_at",
         ]
@@ -43,7 +42,7 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
     including parent category details.
     """
 
-    category_data = serializers.SerializerMethodField()
+    category = CategoryDetailSerializer(read_only=True)
 
     class Meta:
         model = ProductSubCategory
@@ -53,7 +52,6 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
             "description",
             "slug",
             "category",
-            "category_data",
             "is_active",
             "created_at",
             "updated_at",
@@ -61,19 +59,6 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "slug",
-            "category_data",
             "created_at",
             "updated_at",
         ]
-
-    def get_category_data(self, obj):
-        """Get parent category data."""
-        if obj.category:
-            return {
-                "id": str(obj.category.id),
-                "name": obj.category.name,
-                "slug": obj.category.slug,
-                "description": obj.category.description,
-                "is_featured": obj.category.is_featured,
-            }
-        return None
