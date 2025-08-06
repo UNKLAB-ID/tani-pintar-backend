@@ -149,14 +149,6 @@ class ProductSubCategory(models.Model):
         verbose_name = "Product SubCategory"
         verbose_name_plural = "Product SubCategories"
         ordering = ["category", "name"]
-        indexes = [
-            models.Index(fields=["name"]),
-            models.Index(fields=["slug"]),
-            models.Index(fields=["is_active"]),
-            models.Index(fields=["is_featured"]),
-            models.Index(fields=["category"]),
-            models.Index(fields=["created_at"]),
-        ]
 
     def __str__(self):
         """String representation of the subcategory."""
