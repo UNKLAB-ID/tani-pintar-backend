@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from ecommerce.models import ProductSubCategory
-from ecommerce.serializers.categories import CategoryDetailSerializer
 
 
 class SubCategoryListSerializer(serializers.ModelSerializer):
@@ -12,7 +11,7 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
     optimized for performance and minimal data transfer.
     """
 
-    category = CategoryDetailSerializer(read_only=True)
+    category = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductSubCategory
@@ -29,9 +28,20 @@ class SubCategoryListSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "slug",
+            "category_name",
             "created_at",
             "updated_at",
         ]
+
+    def get_category(self, obj):
+        """Get all active subcategories of this category."""
+        # Import here to avoid circular import
+        from .categories import CategorySimpleSerializer
+
+        category = obj.category
+        if category and category.is_active:
+            return CategorySimpleSerializer(category, context=self.context).data
+        return None
 
 
 class SubCategoryDetailSerializer(serializers.ModelSerializer):
@@ -42,7 +52,7 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
     including parent category details.
     """
 
-    category = CategoryDetailSerializer(read_only=True)
+    category = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductSubCategory
@@ -52,6 +62,44 @@ class SubCategoryDetailSerializer(serializers.ModelSerializer):
             "description",
             "slug",
             "category",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "slug",
+            "category",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_category(self, obj):
+        """Get all active subcategories of this category."""
+        # Import here to avoid circular import
+        from .categories import CategorySimpleSerializer
+
+        category = obj.category
+        if category and category.is_active:
+            return CategorySimpleSerializer(category, context=self.context).data
+        return None
+
+
+class SubCategoryGetDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for detailed subcategory view.
+
+    This serializer provides comprehensive information about a subcategory,
+    including parent category details.
+    """
+
+    class Meta:
+        model = ProductSubCategory
+        fields = [
+            "id",
+            "name",
+            "description",
+            "slug",
             "is_active",
             "created_at",
             "updated_at",

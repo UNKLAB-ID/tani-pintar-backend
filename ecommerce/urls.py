@@ -1,7 +1,7 @@
 from django.urls import path
 
-from .views import CategoryDetailView
-from .views import CategoryListView
+from .views.categories import CategoryDetailView
+from .views.categories import CategoryListView
 from .views.subcategories import SubCategoryDetailView
 from .views.subcategories import SubCategoryListView
 

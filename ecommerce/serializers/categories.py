@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from ecommerce.models import ProductCategory
-from ecommerce.serializers.subcategories import SubCategoryListSerializer
 
 
 class CategoryListSerializer(serializers.ModelSerializer):
@@ -12,7 +11,7 @@ class CategoryListSerializer(serializers.ModelSerializer):
     optimized for performance and minimal data transfer.
     """
 
-    subcategories = SubCategoryListSerializer(many=True, read_only=True)
+    subcategories = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductCategory
@@ -34,6 +33,18 @@ class CategoryListSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def get_subcategories(self, obj):
+        """Get all active subcategories of this category."""
+        # Import here to avoid circular import
+        from .subcategories import SubCategoryGetDetailSerializer
+
+        subcategories = obj.subcategories.filter(is_active=True).order_by("name")
+        return SubCategoryGetDetailSerializer(
+            subcategories,
+            many=True,
+            context=self.context,
+        ).data
 
 
 class CategoryDetailSerializer(serializers.ModelSerializer):
@@ -44,7 +55,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
     including subcategories and SEO metadata.
     """
 
-    subcategories = SubCategoryListSerializer(many=True, read_only=True)
+    subcategories = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductCategory
@@ -65,4 +76,37 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
             "subcategories",
             "created_at",
             "updated_at",
+        ]
+
+    def get_subcategories(self, obj):
+        """Get all active subcategories of this category."""
+        # Import here to avoid circular import
+        from .subcategories import SubCategoryGetDetailSerializer
+
+        subcategories = obj.subcategories.filter(is_active=True).order_by("name")
+        return SubCategoryGetDetailSerializer(
+            subcategories,
+            many=True,
+            context=self.context,
+        ).data
+
+
+class CategorySimpleSerializer(serializers.ModelSerializer):
+    """
+    Serializer for simple category representation.
+
+    This serializer provides minimal information about a category,
+    suitable for nested representations.
+    """
+
+    class Meta:
+        model = ProductCategory
+        fields = [
+            "id",
+            "name",
+            "slug",
+        ]
+        read_only_fields = [
+            "id",
+            "slug",
         ]
