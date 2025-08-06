@@ -19,19 +19,12 @@ class CategoryListSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "slug",
-            "description",
             "subcategories",
-            "is_active",
-            "is_featured",
-            "created_at",
-            "updated_at",
         ]
         read_only_fields = [
             "id",
             "slug",
             "subcategories",
-            "created_at",
-            "updated_at",
         ]
 
     def get_subcategories(self, obj):
@@ -62,20 +55,13 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "description",
-            "slug",
-            "is_active",
-            "is_featured",
             "subcategories",
-            "created_at",
-            "updated_at",
+            "slug",
         ]
         read_only_fields = [
             "id",
             "slug",
             "subcategories",
-            "created_at",
-            "updated_at",
         ]
 
     def get_subcategories(self, obj):
