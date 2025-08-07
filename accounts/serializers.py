@@ -181,3 +181,43 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
             "cover_picture_url",
             "created_at",
         ]
+
+
+class FollowActionSerializer(serializers.Serializer):
+    message = serializers.CharField(read_only=True)
+    is_following = serializers.BooleanField(read_only=True)
+    followers_count = serializers.IntegerField(read_only=True)
+
+
+class ProfileUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email"]
+
+
+class ProfileFollowingSerializer(serializers.ModelSerializer):
+    user = ProfileUserSerializer()
+    profile_picture_url = serializers.SerializerMethodField()
+    thumbnail_profile_picture_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = [
+            "id",
+            "user",
+            "full_name",
+            "headline",
+            "profile_type",
+            "profile_picture_url",
+            "thumbnail_profile_picture_url",
+        ]
+
+    def get_profile_picture_url(self, obj):
+        if obj.profile_picture:
+            return obj.profile_picture.url
+        return None
+
+    def get_thumbnail_profile_picture_url(self, obj):
+        if obj.thumbnail_profile_picture:
+            return obj.thumbnail_profile_picture.url
+        return None
