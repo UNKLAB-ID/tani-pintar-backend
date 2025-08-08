@@ -369,8 +369,3 @@ class UserFollowersListView(ListAPIView):
         return Profile.objects.filter(
             following__following=profile,
         ).select_related("user")
-
-        # Get all profiles that follow this user
-        return Profile.objects.filter(
-            following__following=profile,
-        ).select_related("user")
