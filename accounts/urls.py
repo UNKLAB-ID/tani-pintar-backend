@@ -19,6 +19,21 @@ urlpatterns = [
         views.ProfileDetailAPIView.as_view(),
         name="profile-detail-by-id",
     ),
+    path(
+        "users/<int:user_id>/follow/",
+        views.FollowUserView.as_view(),
+        name="follow-user",
+    ),
+    path(
+        "users/<int:user_id>/following/",
+        views.UserFollowingListView.as_view(),
+        name="user-following",
+    ),
+    path(
+        "users/<int:user_id>/followers/",
+        views.UserFollowersListView.as_view(),
+        name="user-followers",
+    ),
 ]
 
 app_name = "accounts"
