@@ -8,7 +8,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.generics import UpdateAPIView
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -22,6 +22,7 @@ from core.users.models import User
 
 from .models import Profile
 from .models import VerificationCode
+from .paginations import FollowCursorPagination
 from .serializers import ConfirmLoginSerializer
 from .serializers import ConfirmRegistrationSerializer
 from .serializers import FollowActionSerializer
@@ -304,16 +305,25 @@ class FollowUserView(APIView):
 
 class UserFollowingListView(ListAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = ProfileFollowingSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = FollowCursorPagination
 
     def get_queryset(self):
-        user_id = self.kwargs["user_id"]
+        user_id = self.kwargs.get("user_id", None)
+        if user_id is None:
+            msg = "user_id not found in URL kwargs."
+            raise ValueError(msg)
+
         try:
             user = User.objects.get(id=user_id)
-            profile = Profile.objects.get(user=user)
-        except (User.DoesNotExist, Profile.DoesNotExist):
+            profile = (
+                user.profile if hasattr(user, "profile") and user.profile else None
+            )
+
+            if profile is None:
+                return Profile.objects.none()
+        except User.DoesNotExist:
             return Profile.objects.none()
 
         # Get all profiles that this user is following
@@ -324,16 +334,25 @@ class UserFollowingListView(ListAPIView):
 
 class UserFollowersListView(ListAPIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = ProfileFollowingSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = FollowCursorPagination
 
     def get_queryset(self):
-        user_id = self.kwargs["user_id"]
+        user_id = self.kwargs.get("user_id", None)
+        if user_id is None:
+            msg = "user_id not found in URL kwargs."
+            raise ValueError(msg)
+
         try:
             user = User.objects.get(id=user_id)
-            profile = Profile.objects.get(user=user)
-        except (User.DoesNotExist, Profile.DoesNotExist):
+            profile = (
+                user.profile if hasattr(user, "profile") and user.profile else None
+            )
+
+            if profile is None:
+                return Profile.objects.none()
+        except User.DoesNotExist:
             return Profile.objects.none()
 
         # Get all profiles that follow this user
