@@ -6,26 +6,6 @@ from .models import Profile
 from .models import VerificationCode
 
 
-class FollowingInline(admin.TabularInline):
-    model = Follow
-    fk_name = "follower"
-    extra = 0
-    readonly_fields = ["created_at"]
-    verbose_name = "Following"
-    verbose_name_plural = "Users this profile follows"
-    autocomplete_fields = ["following"]
-
-
-class FollowersInline(admin.TabularInline):
-    model = Follow
-    fk_name = "following"
-    extra = 0
-    readonly_fields = ["created_at"]
-    verbose_name = "Follower"
-    verbose_name_plural = "Users following this profile"
-    autocomplete_fields = ["follower"]
-
-
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -49,7 +29,6 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = ("get_follow_stats", "get_is_active", "created_at", "updated_at")
     search_fields = ("full_name", "email", "phone_number", "user__username")
     date_hierarchy = "created_at"
-    inlines = [FollowingInline, FollowersInline]
 
     @admin.display(
         description="Followers/Following",
