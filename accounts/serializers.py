@@ -189,16 +189,42 @@ class FollowActionSerializer(serializers.Serializer):
     followers_count = serializers.IntegerField(read_only=True)
 
 
-class ProfileUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username", "email"]
-
-
-class ProfileFollowingSerializer(serializers.ModelSerializer):
+class ProfileFollowerAndFollowingListSerializer(serializers.ModelSerializer):
     user = ProfileUserSerializer()
-    profile_picture_url = serializers.SerializerMethodField()
-    thumbnail_profile_picture_url = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+    is_following_me = serializers.SerializerMethodField()
+    is_followed_by_me = serializers.SerializerMethodField()
+
+    def get_following_count(self, obj):
+        return obj.following.count()
+
+    def get_followers_count(self, obj):
+        return obj.followers.count()
+
+    def get_is_following_me(self, obj):
+        """Check if this profile is following the current user"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+
+        try:
+            current_profile = Profile.objects.get(user=request.user)
+            return obj.is_following(current_profile)
+        except Profile.DoesNotExist:
+            return False
+
+    def get_is_followed_by_me(self, obj):
+        """Check if the current user is following this profile"""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+
+        try:
+            current_profile = Profile.objects.get(user=request.user)
+            return current_profile.is_following(obj)
+        except Profile.DoesNotExist:
+            return False
 
     class Meta:
         model = Profile
@@ -207,17 +233,21 @@ class ProfileFollowingSerializer(serializers.ModelSerializer):
             "user",
             "full_name",
             "headline",
+            "farmer_community",
+            "country",
+            "city",
+            "email",
+            "phone_number",
             "profile_type",
+            "id_card_file",
+            "id_card_validation_status",
             "profile_picture_url",
             "thumbnail_profile_picture_url",
+            "cover_picture_url",
+            "followers_count",
+            "following_count",
+            "is_following_me",
+            "is_followed_by_me",
+            "created_at",
+            "updated_at",
         ]
-
-    def get_profile_picture_url(self, obj):
-        if obj.profile_picture:
-            return obj.profile_picture.url
-        return None
-
-    def get_thumbnail_profile_picture_url(self, obj):
-        if obj.thumbnail_profile_picture:
-            return obj.thumbnail_profile_picture.url
-        return None

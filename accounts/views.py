@@ -27,7 +27,7 @@ from .serializers import ConfirmLoginSerializer
 from .serializers import ConfirmRegistrationSerializer
 from .serializers import FollowActionSerializer
 from .serializers import LoginSerializer
-from .serializers import ProfileFollowingSerializer
+from .serializers import ProfileFollowerAndFollowingListSerializer
 from .serializers import RegisterSerializer
 
 
@@ -306,8 +306,13 @@ class FollowUserView(APIView):
 class UserFollowingListView(ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [AllowAny]
-    serializer_class = ProfileFollowingSerializer
+    serializer_class = ProfileFollowerAndFollowingListSerializer
     pagination_class = FollowCursorPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     def get_queryset(self):
         user_id = self.kwargs.get("user_id", None)
@@ -335,8 +340,13 @@ class UserFollowingListView(ListAPIView):
 class UserFollowersListView(ListAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [AllowAny]
-    serializer_class = ProfileFollowingSerializer
+    serializer_class = ProfileFollowerAndFollowingListSerializer
     pagination_class = FollowCursorPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
     def get_queryset(self):
         user_id = self.kwargs.get("user_id", None)
@@ -354,6 +364,11 @@ class UserFollowersListView(ListAPIView):
                 return Profile.objects.none()
         except User.DoesNotExist:
             return Profile.objects.none()
+
+        # Get all profiles that follow this user
+        return Profile.objects.filter(
+            following__following=profile,
+        ).select_related("user")
 
         # Get all profiles that follow this user
         return Profile.objects.filter(
