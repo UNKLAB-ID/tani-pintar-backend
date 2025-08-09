@@ -204,7 +204,7 @@ class ProfileView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = self.serializer_class(profile)
+        serializer = self.serializer_class(profile, context={"request": request})
         return Response(serializer.data)
 
 
@@ -215,6 +215,11 @@ class ProfileDetailAPIView(RetrieveAPIView):
     permission_classes = []  # No permission required to get specific user profile
     lookup_field = "id"
     lookup_url_kwarg = "profile_id"
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
 
 class FollowUserView(APIView):
