@@ -1,7 +1,11 @@
 import uuid
+from pathlib import Path
 
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.text import slugify
+
+User = get_user_model()
 
 
 class ProductCategory(models.Model):
@@ -170,3 +174,210 @@ class ProductSubCategory(models.Model):
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
+
+
+class Product(models.Model):
+    """
+    Product model for e-commerce platform.
+    This model represents products that users can create and manage.
+    Features:
+    - UUID primary key for better security
+    - Foreign key relationships to User and ProductCategory
+    - Auto-generated slugs for SEO-friendly URLs
+    - Price and stock management
+    - Status management (draft, active, inactive)
+    - Approval system for admin control
+    """
+
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("active", "Active"),
+        ("inactive", "Inactive"),
+    ]
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the product",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="products",
+        help_text="User who owns this product",
+    )
+    category = models.ForeignKey(
+        ProductCategory,
+        on_delete=models.CASCADE,
+        related_name="products",
+        help_text="Category for this product",
+    )
+    name = models.CharField(
+        max_length=200,
+        help_text="Product name",
+    )
+    slug = models.SlugField(
+        max_length=220,
+        unique=True,
+        blank=True,
+        help_text="SEO-friendly URL slug (auto-generated from name)",
+    )
+    description = models.TextField(
+        help_text="Detailed description of the product",
+    )
+    price = models.DecimalField(
+        max_digits=29,
+        decimal_places=2,
+        help_text="Product price",
+    )
+    stock = models.PositiveIntegerField(
+        default=0,
+        help_text="Available stock quantity",
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="draft",
+        help_text="Product status",
+    )
+    is_approve = models.BooleanField(
+        default=False,
+        help_text=(
+            "Whether this product is approved by admin (only changeable in admin)"
+        ),
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the product was created",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the product was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the product."""
+        return self.name
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to auto-generate slug from name.
+        This ensures that every product has a unique, SEO-friendly slug
+        that can be used in URLs.
+        """
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            # Ensure slug uniqueness
+            while Product.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    @property
+    def primary_image(self):
+        """Get the primary image for this product."""
+        return self.images.filter(is_primary=True).first()
+
+    @property
+    def image_count(self):
+        """Get the count of images for this product."""
+        return self.images.count()
+
+
+class ProductImage(models.Model):
+    """
+    ProductImage model for managing product images.
+    This model represents images associated with products, similar to PostImage
+    in social media functionality.
+    Features:
+    - UUID primary key for better security
+    - Foreign key relationship to Product
+    - Image file handling with automatic deletion
+    - Primary image designation
+    - Sort ordering for display
+    - Optional captions
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the product image",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="images",
+        help_text="Product this image belongs to",
+    )
+    image = models.ImageField(
+        upload_to="product_images/",
+        help_text="Product image file",
+    )
+    caption = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Optional caption for the image",
+    )
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="Whether this is the primary image for the product",
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        help_text="Sort order for displaying images",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the image was uploaded",
+    )
+
+    class Meta:
+        verbose_name = "Product Image"
+        verbose_name_plural = "Product Images"
+        ordering = ["sort_order", "created_at"]
+
+    def __str__(self):
+        """String representation of the product image."""
+        return f"{self.product.name} - Image {self.sort_order}"
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to handle primary image logic.
+        Ensures only one primary image per product.
+        """
+        # If this image is being set as primary, remove primary status from other images
+        if self.is_primary:
+            ProductImage.objects.filter(
+                product=self.product,
+                is_primary=True,
+            ).exclude(pk=self.pk).update(is_primary=False)
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Override delete method to remove the image file from storage
+        when the model instance is deleted.
+        """
+        # Delete the image file from storage
+        if self.image:
+            try:
+                image_path = Path(self.image.path)
+                if image_path.is_file():
+                    image_path.unlink()
+            except (ValueError, FileNotFoundError):
+                # Handle cases where file doesn't exist or path is invalid
+                pass
+
+        super().delete(*args, **kwargs)
