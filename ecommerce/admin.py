@@ -156,7 +156,6 @@ class ProductAdmin(admin.ModelAdmin):
         "user__email",
     ]
     readonly_fields = [
-        "slug",
         "created_at",
         "updated_at",
     ]
@@ -166,6 +165,11 @@ class ProductAdmin(admin.ModelAdmin):
     # Only allow admin to change is_approve field
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(self.readonly_fields)
+
+        # If editing existing object, make slug readonly
+        if obj:
+            readonly_fields.append("slug")
+
         # If user is not superuser, make is_approve readonly
         if not request.user.is_superuser:
             readonly_fields.append("is_approve")
