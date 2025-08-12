@@ -119,9 +119,9 @@ class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
     max_num = 10
-    min_num = 1
-    fields = ["image", "caption", "is_primary", "sort_order"]
-    ordering = ["sort_order"]
+    min_num = 0
+    fields = ["image", "caption"]
+    ordering = ["created_at"]
 
 
 @admin.register(Product)
@@ -136,15 +136,14 @@ class ProductAdmin(admin.ModelAdmin):
         "name",
         "user",
         "category",
-        "price",
-        "stock",
+        "available_stock",
         "status",
-        "is_approve",
+        "approval_status",
         "created_at",
     ]
     list_filter = [
         "status",
-        "is_approve",
+        "approval_status",
         "category",
         "created_at",
         "updated_at",
@@ -156,24 +155,12 @@ class ProductAdmin(admin.ModelAdmin):
         "user__email",
     ]
     readonly_fields = [
+        "slug",
         "created_at",
         "updated_at",
     ]
     prepopulated_fields = {"slug": ("name",)}
     raw_id_fields = ["user"]
-
-    # Only allow admin to change is_approve field
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = list(self.readonly_fields)
-
-        # If editing existing object, make slug readonly
-        if obj:
-            readonly_fields.append("slug")
-
-        # If user is not superuser, make is_approve readonly
-        if not request.user.is_superuser:
-            readonly_fields.append("is_approve")
-        return readonly_fields
 
     fieldsets = (
         (
@@ -185,15 +172,15 @@ class ProductAdmin(admin.ModelAdmin):
                     "name",
                     "slug",
                     "description",
+                    "image",
                 ),
             },
         ),
         (
-            "Pricing & Inventory",
+            "Inventory & Status",
             {
                 "fields": (
-                    "price",
-                    "stock",
+                    "available_stock",
                     "status",
                 ),
             },
@@ -201,7 +188,7 @@ class ProductAdmin(admin.ModelAdmin):
         (
             "Admin Controls",
             {
-                "fields": ("is_approve",),
+                "fields": ("approval_status",),
                 "classes": ("collapse",),
             },
         ),
@@ -219,28 +206,28 @@ class ProductAdmin(admin.ModelAdmin):
 
     inlines = [ProductImageInline]
 
-    actions = ["approve_products", "disapprove_products"]
+    actions = ["approve_products", "reject_products"]
 
     @admin.action(
         description="Approve selected products",
     )
     def approve_products(self, request, queryset):
         """Bulk action to approve selected products."""
-        updated = queryset.update(is_approve=True)
+        updated = queryset.update(approval_status=Product.APPROVAL_APPROVED)
         self.message_user(
             request,
             f"{updated} product(s) have been approved.",
         )
 
     @admin.action(
-        description="Disapprove selected products",
+        description="Reject selected products",
     )
-    def disapprove_products(self, request, queryset):
-        """Bulk action to disapprove selected products."""
-        updated = queryset.update(is_approve=False)
+    def reject_products(self, request, queryset):
+        """Bulk action to reject selected products."""
+        updated = queryset.update(approval_status=Product.APPROVAL_REJECTED)
         self.message_user(
             request,
-            f"{updated} product(s) have been disapproved.",
+            f"{updated} product(s) have been rejected.",
         )
 
     def get_queryset(self, request):
@@ -259,12 +246,9 @@ class ProductImageAdmin(admin.ModelAdmin):
     list_display = [
         "product",
         "caption",
-        "is_primary",
-        "sort_order",
         "created_at",
     ]
     list_filter = [
-        "is_primary",
         "created_at",
     ]
     search_fields = [
