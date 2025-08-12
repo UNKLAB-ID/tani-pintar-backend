@@ -1,10 +1,9 @@
 import uuid
 
-from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.text import slugify
 
-User = get_user_model()
+from core.users.models import User
 
 
 class ProductCategory(models.Model):
