@@ -159,7 +159,6 @@ class ProductAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    prepopulated_fields = {"slug": ("name",)}
     raw_id_fields = ["user"]
 
     fieldsets = (
