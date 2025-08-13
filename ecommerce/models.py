@@ -229,7 +229,6 @@ class Product(models.Model):
     )
     image = models.ImageField(
         upload_to="ecommerce/products/images/",
-        default="ecommerce/products/images/default-product.jpg",
         help_text="Main product image",
     )
     name = models.CharField(
