@@ -3,6 +3,8 @@ import uuid
 from django.db import models
 from django.utils.text import slugify
 
+from core.users.models import User
+
 
 class ProductCategory(models.Model):
     """
@@ -170,3 +172,166 @@ class ProductSubCategory(models.Model):
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
+
+
+class Product(models.Model):
+    """
+    Product model for e-commerce platform.
+    This model represents products that users can create and manage.
+    Features:
+    - UUID primary key for better security
+    - Foreign key relationships to User and ProductCategory
+    - Auto-generated slugs for SEO-friendly URLs
+    - Stock management
+    - Status management (draft, active, inactive)
+    - Approval system for admin control
+    """
+
+    # Status constants
+    STATUS_DRAFT = "draft"
+    STATUS_ACTIVE = "active"
+    STATUS_INACTIVE = "inactive"
+
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Draft"),
+        (STATUS_ACTIVE, "Active"),
+        (STATUS_INACTIVE, "Inactive"),
+    ]
+
+    # Approval status constants
+    APPROVAL_PENDING = "pending"
+    APPROVAL_APPROVED = "approved"
+    APPROVAL_REJECTED = "rejected"
+
+    APPROVAL_CHOICES = [
+        (APPROVAL_PENDING, "Waiting for approval"),
+        (APPROVAL_APPROVED, "Approved"),
+        (APPROVAL_REJECTED, "Rejected"),
+    ]
+
+    uuid = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the product",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="products",
+        help_text="User who owns this product",
+    )
+    category = models.ForeignKey(
+        ProductCategory,
+        on_delete=models.CASCADE,
+        related_name="products",
+        help_text="Category for this product",
+    )
+    image = models.ImageField(
+        upload_to="ecommerce/products/images/",
+        help_text="Main product image",
+    )
+    name = models.CharField(
+        max_length=200,
+        help_text="Product name",
+    )
+    slug = models.SlugField(
+        max_length=220,
+        unique=True,
+        help_text="SEO-friendly URL slug (auto-generated from name)",
+    )
+    description = models.TextField(
+        help_text="Detailed description of the product",
+    )
+    available_stock = models.PositiveIntegerField(
+        default=0,
+        help_text="Available stock quantity",
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
+        help_text="Product status",
+    )
+    approval_status = models.CharField(
+        max_length=10,
+        choices=APPROVAL_CHOICES,
+        default=APPROVAL_PENDING,
+        help_text="Approval status of the product by admin",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the product was created",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the product was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the product."""
+        return self.name
+
+    def save(self, *args, **kwargs):
+        """
+        Override save method to auto-generate slug from name.
+        This ensures that every product has a unique, SEO-friendly slug
+        that can be used in URLs.
+        """
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            # Ensure slug uniqueness
+            while Product.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+
+class ProductImage(models.Model):
+    """
+    ProductImage model for managing product images.
+    This model represents images associated with products, similar to PostImage
+    in social media functionality.
+    Features:
+    - Foreign key relationship to Product
+    - Image file handling
+    - Optional captions
+    """
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="images",
+        help_text="Product this image belongs to",
+    )
+    image = models.ImageField(
+        upload_to="ecommerce/products/images/",
+        help_text="Product image file",
+    )
+    caption = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Optional caption for the image",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the image was uploaded",
+    )
+
+    class Meta:
+        verbose_name = "Product Image"
+        verbose_name_plural = "Product Images"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        """String representation of the product image."""
+        return f"{self.product.name} - Image {self.pk}"
