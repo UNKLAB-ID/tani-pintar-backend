@@ -4,9 +4,6 @@ from rest_framework import filters
 from rest_framework import permissions
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
-from rest_framework.parsers import FormParser
-from rest_framework.parsers import JSONParser
-from rest_framework.parsers import MultiPartParser
 
 from ecommerce.models import Product
 from ecommerce.serializers.products import CreateProductSerializer
@@ -24,7 +21,6 @@ class ProductListCreateView(ListCreateAPIView):
 
     queryset = Product.objects.all().order_by("-created_at")
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["category", "status", "user", "approval_status"]
     search_fields = ["name", "description"]
@@ -40,7 +36,6 @@ class ProductListCreateView(ListCreateAPIView):
         Get queryset with appropriate filtering based on user.
         - Anonymous users see only approved products
         - Authenticated users can see their own products regardless of approval
-        - Staff can see all products
         """
         queryset = super().get_queryset()
 
@@ -51,9 +46,6 @@ class ProductListCreateView(ListCreateAPIView):
 
         # Filter based on user permissions
         if self.request.user.is_authenticated:
-            if self.request.user.is_staff:
-                # Staff can see all products
-                return queryset
             # Authenticated users see approved products + their own products
             return queryset.filter(
                 Q(approval_status=Product.APPROVAL_APPROVED)
@@ -77,7 +69,6 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
 
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
     lookup_field = "uuid"
     lookup_url_kwarg = "pk"
 
@@ -99,9 +90,6 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
         # Filter based on user permissions for GET requests
         if self.request.method == "GET":
             if self.request.user.is_authenticated:
-                if self.request.user.is_staff:
-                    # Staff can see all products
-                    return queryset
                 # Authenticated users see approved products + their own products
                 return queryset.filter(
                     Q(approval_status=Product.APPROVAL_APPROVED)
