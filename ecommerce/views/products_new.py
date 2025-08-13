@@ -110,8 +110,7 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
             # Anonymous users only see approved products
             return queryset.filter(approval_status=Product.APPROVAL_APPROVED)
 
-        # For modification operations, return all
-        # (permissions handled in perform methods)
+        # For modification operations, return all (permissions handled in perform methods)  # noqa: E501
         return queryset
 
     def perform_update(self, serializer):

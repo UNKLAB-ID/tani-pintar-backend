@@ -2,7 +2,8 @@ from django.urls import path
 
 from .views.categories import CategoryDetailView
 from .views.categories import CategoryListView
-from .views.products import ProductViewSet
+from .views.products import ProductDetailView
+from .views.products import ProductListCreateView
 from .views.subcategories import SubCategoryDetailView
 from .views.subcategories import SubCategoryListView
 
@@ -24,19 +25,12 @@ urlpatterns = [
     # Product URLs
     path(
         "products/",
-        ProductViewSet.as_view({"get": "list", "post": "create"}),
-        name="product-list",
+        ProductListCreateView.as_view(),
+        name="product-list-create",
     ),
     path(
         "products/<uuid:pk>/",
-        ProductViewSet.as_view(
-            {
-                "get": "retrieve",
-                "put": "update",
-                "patch": "partial_update",
-                "delete": "destroy",
-            },
-        ),
+        ProductDetailView.as_view(),
         name="product-detail",
     ),
 ]

@@ -1,7 +1,21 @@
 from rest_framework import serializers
 
+from core.users.models import User
 from ecommerce.models import Product
 from ecommerce.models import ProductImage
+from ecommerce.serializers.categories import CategorySimpleSerializer
+
+
+class UserSimpleSerializer(serializers.ModelSerializer):
+    """
+    Simple user serializer for product views.
+    Contains only essential user information.
+    """
+
+    class Meta:
+        model = User
+        fields = ["id", "username"]
+        read_only_fields = ["id", "username"]
 
 
 class ProductImageDetailSerializer(serializers.ModelSerializer):
@@ -43,8 +57,8 @@ class CreateProductSerializer(serializers.ModelSerializer):
     Handles product creation with main image field.
     """
 
-    user = serializers.StringRelatedField(read_only=True)
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    user = UserSimpleSerializer(read_only=True)
+    category = CategorySimpleSerializer(read_only=True)
 
     class Meta:
         model = Product
@@ -52,7 +66,6 @@ class CreateProductSerializer(serializers.ModelSerializer):
             "uuid",
             "user",
             "category",
-            "category_name",
             "name",
             "description",
             "image",
@@ -118,8 +131,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     Includes all product information with nested images.
     """
 
-    user = serializers.StringRelatedField(read_only=True)
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    user = UserSimpleSerializer(read_only=True)
+    category = CategorySimpleSerializer(read_only=True)
     images = ProductImageDetailSerializer(many=True, read_only=True)
 
     class Meta:
@@ -128,7 +141,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "uuid",
             "user",
             "category",
-            "category_name",
             "name",
             "slug",
             "description",
@@ -148,8 +160,8 @@ class ProductListSerializer(serializers.ModelSerializer):
     Only includes essential fields for better performance.
     """
 
-    user = serializers.StringRelatedField(read_only=True)
-    category_name = serializers.CharField(source="category.name", read_only=True)
+    user = UserSimpleSerializer(read_only=True)
+    category = CategorySimpleSerializer(read_only=True)
 
     class Meta:
         model = Product
@@ -157,7 +169,6 @@ class ProductListSerializer(serializers.ModelSerializer):
             "uuid",
             "user",
             "category",
-            "category_name",
             "name",
             "slug",
             "description",
