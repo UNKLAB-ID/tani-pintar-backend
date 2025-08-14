@@ -267,7 +267,7 @@ class CartItemInline(admin.TabularInline):
 
     model = CartItem
     extra = 0
-    readonly_fields = ["created_at", "updated_at"]
+    readonly_fields = ["id", "created_at", "updated_at"]
     raw_id_fields = ["product"]
 
 
@@ -275,7 +275,7 @@ class CartItemInline(admin.TabularInline):
 class CartAdmin(admin.ModelAdmin):
     """
     Admin interface for Cart model.
-    Allows viewing user carts but not editing them.
+    Allows full CRUD operations for managing user carts.
     """
 
     list_display = [
@@ -295,32 +295,20 @@ class CartAdmin(admin.ModelAdmin):
     ]
     readonly_fields = [
         "id",
-        "user",
         "total_items",
         "items_count",
         "created_at",
         "updated_at",
     ]
+    raw_id_fields = ["user"]
     inlines = [CartItemInline]
-
-    def has_change_permission(self, request, obj=None):
-        """Admin can view but not edit carts."""
-        return False
-
-    def has_add_permission(self, request):
-        """Admin cannot create carts."""
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        """Admin cannot delete carts."""
-        return False
 
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
     """
     Admin interface for CartItem model.
-    Allows viewing cart items but not editing them.
+    Allows full CRUD operations for managing cart items.
     """
 
     list_display = [
@@ -340,21 +328,7 @@ class CartItemAdmin(admin.ModelAdmin):
     ]
     readonly_fields = [
         "id",
-        "cart",
-        "product",
-        "quantity",
         "created_at",
         "updated_at",
     ]
-
-    def has_change_permission(self, request, obj=None):
-        """Admin can view but not edit cart items."""
-        return False
-
-    def has_add_permission(self, request):
-        """Admin cannot create cart items."""
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        """Admin cannot delete cart items."""
-        return False
+    raw_id_fields = ["cart", "product"]
