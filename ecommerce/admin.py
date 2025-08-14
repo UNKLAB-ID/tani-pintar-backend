@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from .models import Cart
+from .models import CartItem
 from .models import Product
 from .models import ProductCategory
 from .models import ProductImage
@@ -258,3 +260,101 @@ class ProductImageAdmin(admin.ModelAdmin):
         "created_at",
     ]
     raw_id_fields = ["product"]
+
+
+class CartItemInline(admin.TabularInline):
+    """Inline admin for CartItem within Cart admin."""
+
+    model = CartItem
+    extra = 0
+    readonly_fields = ["created_at", "updated_at"]
+    raw_id_fields = ["product"]
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Cart model.
+    Allows viewing user carts but not editing them.
+    """
+
+    list_display = [
+        "user",
+        "total_items",
+        "items_count",
+        "created_at",
+        "updated_at",
+    ]
+    list_filter = [
+        "created_at",
+        "updated_at",
+    ]
+    search_fields = [
+        "user__username",
+        "user__email",
+    ]
+    readonly_fields = [
+        "id",
+        "user",
+        "total_items",
+        "items_count",
+        "created_at",
+        "updated_at",
+    ]
+    inlines = [CartItemInline]
+
+    def has_change_permission(self, request, obj=None):
+        """Admin can view but not edit carts."""
+        return False
+
+    def has_add_permission(self, request):
+        """Admin cannot create carts."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Admin cannot delete carts."""
+        return False
+
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    """
+    Admin interface for CartItem model.
+    Allows viewing cart items but not editing them.
+    """
+
+    list_display = [
+        "cart",
+        "product",
+        "quantity",
+        "created_at",
+        "updated_at",
+    ]
+    list_filter = [
+        "created_at",
+        "updated_at",
+    ]
+    search_fields = [
+        "cart__user__username",
+        "product__name",
+    ]
+    readonly_fields = [
+        "id",
+        "cart",
+        "product",
+        "quantity",
+        "created_at",
+        "updated_at",
+    ]
+
+    def has_change_permission(self, request, obj=None):
+        """Admin can view but not edit cart items."""
+        return False
+
+    def has_add_permission(self, request):
+        """Admin cannot create cart items."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Admin cannot delete cart items."""
+        return False

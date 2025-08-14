@@ -335,3 +335,107 @@ class ProductImage(models.Model):
     def __str__(self):
         """String representation of the product image."""
         return f"{self.product.name} - Image {self.pk}"
+
+
+class Cart(models.Model):
+    """
+    Cart model for managing user shopping carts.
+    This model represents a shopping cart that belongs to a user.
+    Features:
+    - UUID primary key for better security
+    - One-to-one relationship with User
+    - Timestamps for creation and updates
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the cart",
+    )
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="cart",
+        help_text="User who owns this cart",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the cart was created",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the cart was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Cart"
+        verbose_name_plural = "Carts"
+
+    def __str__(self):
+        """String representation of the cart."""
+        return f"Cart for {self.user.username}"
+
+    @property
+    def total_items(self):
+        """Calculate total number of items in cart."""
+        return sum(item.quantity for item in self.items.all())
+
+    @property
+    def items_count(self):
+        """Get count of different products in cart."""
+        return self.items.count()
+
+
+class CartItem(models.Model):
+    """
+    CartItem model for managing items in a shopping cart.
+    This model represents individual items within a cart.
+    Features:
+    - UUID primary key for better security
+    - Foreign key relationships to Cart and Product
+    - Quantity management
+    - Timestamps for creation and updates
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the cart item",
+    )
+    cart = models.ForeignKey(
+        Cart,
+        on_delete=models.CASCADE,
+        related_name="items",
+        help_text="Cart this item belongs to",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="cart_items",
+        help_text="Product in this cart item",
+    )
+    quantity = models.PositiveIntegerField(
+        default=1,
+        help_text="Quantity of this product in the cart",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the item was added to cart",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the cart item was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Cart Item"
+        verbose_name_plural = "Cart Items"
+        unique_together = ["cart", "product"]
+        ordering = ["created_at"]
+
+    def __str__(self):
+        """String representation of the cart item."""
+        username = self.cart.user.username
+        return f"{self.product.name} ({self.quantity}) in {username}'s cart"
