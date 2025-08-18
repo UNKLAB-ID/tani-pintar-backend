@@ -70,6 +70,14 @@ class Vendor(BaseVendorModel, LocationMixin):
             raise ValidationError(
                 {"business_number": "Business number is required for company vendors."},
             )
+        if not self.business_nib:
+            raise ValidationError(
+                {
+                    "business_nib": (
+                        "Business NIB document is required for company vendors."
+                    ),
+                },
+            )
         if not self.npwp:
             raise ValidationError({"npwp": "NPWP is required for company vendors."})
 

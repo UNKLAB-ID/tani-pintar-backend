@@ -80,6 +80,13 @@ class TestVendorModel(TestCase):
             vendor.clean()
         assert "business_number" in context.value.message_dict
 
+    def test_company_vendor_missing_business_nib(self):
+        """Test validation fails when company vendor missing business NIB."""
+        vendor = CompanyVendorFactory(business_nib=None)
+        with pytest.raises(ValidationError) as context:
+            vendor.clean()
+        assert "business_nib" in context.value.message_dict
+
     def test_company_vendor_missing_npwp(self):
         """Test validation fails when company vendor missing NPWP."""
         vendor = CompanyVendorFactory(npwp="")
@@ -89,8 +96,11 @@ class TestVendorModel(TestCase):
 
     def test_review_status_choices(self):
         """Test all review status choices work correctly."""
+        # Create a single vendor and update its status to avoid location conflicts
+        vendor = IndividualVendorFactory()
         for status, _ in Vendor.REVIEW_STATUS_CHOICES:
-            vendor = VendorFactory(review_status=status)
+            vendor.review_status = status
+            vendor.save()
             assert vendor.review_status == status
 
     def test_vendor_type_choices(self):
@@ -153,3 +163,55 @@ class TestVendorModel(TestCase):
         vendor = VendorFactory()
         assert vendor.review_status == Vendor.PENDING
         assert vendor.review_notes == ""
+
+    def test_location_hierarchy_validation_city_province_mismatch(self):
+        """Test validation fails when city doesn't belong to province."""
+        from location.tests.factories import CityFactory
+        from location.tests.factories import ProvinceFactory
+
+        province1 = ProvinceFactory()
+        province2 = ProvinceFactory()
+        city_in_province2 = CityFactory(province=province2)
+
+        vendor = VendorFactory.build(
+            province=province1,
+            city=city_in_province2,  # City belongs to different province
+        )
+
+        with pytest.raises(ValidationError) as context:
+            vendor.clean()
+        assert "city" in context.value.message_dict
+        assert "City must belong to the selected province" in str(
+            context.value.message_dict["city"],
+        )
+
+    def test_location_hierarchy_validation_district_city_mismatch(self):
+        """Test validation fails when district doesn't belong to city."""
+        from location.tests.factories import CityFactory
+        from location.tests.factories import DistrictFactory
+        from location.tests.factories import ProvinceFactory
+
+        # Create province and two cities in the same province
+        province = ProvinceFactory()
+        city1 = CityFactory(province=province)
+        city2 = CityFactory(province=province)
+        district_in_city2 = DistrictFactory(city=city2)
+
+        vendor = VendorFactory.build(
+            province=province,
+            city=city1,
+            district=district_in_city2,  # District belongs to different city
+        )
+
+        with pytest.raises(ValidationError) as context:
+            vendor.clean()
+        assert "district" in context.value.message_dict
+        assert "District must belong to the selected city" in str(
+            context.value.message_dict["district"],
+        )
+
+    def test_location_hierarchy_validation_success(self):
+        """Test validation passes with proper location hierarchy."""
+        vendor = IndividualVendorFactory()  # Factory ensures proper hierarchy
+        # Should not raise any ValidationError
+        vendor.clean()
