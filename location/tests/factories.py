@@ -12,14 +12,16 @@ fake = Faker()
 class CountryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Country
+        django_get_or_create = ("name",)
 
     name = factory.Faker("country")
-    code = factory.LazyFunction(lambda: fake.country_code(representation="alpha-2"))
+    code = factory.LazyAttribute(lambda obj: obj.name[:2].upper())
 
 
 class ProvinceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Province
+        django_get_or_create = ("name", "country")
 
     name = factory.Faker("state")
     country = factory.SubFactory(CountryFactory)
@@ -28,6 +30,7 @@ class ProvinceFactory(factory.django.DjangoModelFactory):
 class CityFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = City
+        django_get_or_create = ("name", "province")
 
     name = factory.Faker("city")
     province = factory.SubFactory(ProvinceFactory)
@@ -36,6 +39,7 @@ class CityFactory(factory.django.DjangoModelFactory):
 class DistrictFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = District
+        django_get_or_create = ("name", "city")
 
     name = factory.Faker("city_suffix")
     city = factory.SubFactory(CityFactory)

@@ -21,10 +21,10 @@ class VendorFactory(factory.django.DjangoModelFactory):
     review_status = Vendor.PENDING
     review_notes = ""
 
-    # Location fields
+    # Location fields with proper relationships
     province = factory.SubFactory(ProvinceFactory)
-    city = factory.SubFactory(CityFactory)
-    district = factory.SubFactory(DistrictFactory)
+    city = factory.SubFactory(CityFactory, province=factory.SelfAttribute("..province"))
+    district = factory.SubFactory(DistrictFactory, city=factory.SelfAttribute("..city"))
     latitude = factory.Faker("latitude")
     longitude = factory.Faker("longitude")
     address = factory.Faker("address")
