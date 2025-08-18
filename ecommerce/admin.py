@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from .models import Cart
 from .models import Product
 from .models import ProductCategory
 from .models import ProductImage
@@ -258,3 +259,34 @@ class ProductImageAdmin(admin.ModelAdmin):
         "created_at",
     ]
     raw_id_fields = ["product"]
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Cart model.
+    Allows full CRUD operations for managing user cart items.
+    """
+
+    list_display = [
+        "user",
+        "product",
+        "quantity",
+        "created_at",
+        "updated_at",
+    ]
+    list_filter = [
+        "created_at",
+        "updated_at",
+    ]
+    search_fields = [
+        "user__username",
+        "user__email",
+        "product__name",
+    ]
+    readonly_fields = [
+        "id",
+        "created_at",
+        "updated_at",
+    ]
+    raw_id_fields = ["user", "product"]

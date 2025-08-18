@@ -335,3 +335,56 @@ class ProductImage(models.Model):
     def __str__(self):
         """String representation of the product image."""
         return f"{self.product.name} - Image {self.pk}"
+
+
+class Cart(models.Model):
+    """
+    Cart model for managing user shopping cart items.
+    This model represents individual cart items that belong to a user.
+    Features:
+    - UUID primary key for better security
+    - Foreign key relationships to User and Product
+    - Quantity management
+    - Timestamps for creation and updates
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the cart item",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="cart_items",
+        help_text="User who owns this cart item",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="cart_items",
+        help_text="Product in this cart item",
+    )
+    quantity = models.PositiveIntegerField(
+        default=1,
+        help_text="Quantity of this product in the cart",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the item was added to cart",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the cart item was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Cart Item"
+        verbose_name_plural = "Cart Items"
+        unique_together = ["user", "product"]
+        ordering = ["created_at"]
+
+    def __str__(self):
+        """String representation of the cart item."""
+        return f"{self.product.name} ({self.quantity}) in {self.user.username}'s cart"
