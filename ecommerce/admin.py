@@ -1,7 +1,6 @@
 from django.contrib import admin
 
 from .models import Cart
-from .models import CartItem
 from .models import Product
 from .models import ProductCategory
 from .models import ProductImage
@@ -262,57 +261,15 @@ class ProductImageAdmin(admin.ModelAdmin):
     raw_id_fields = ["product"]
 
 
-class CartItemInline(admin.TabularInline):
-    """Inline admin for CartItem within Cart admin."""
-
-    model = CartItem
-    extra = 0
-    readonly_fields = ["id", "created_at", "updated_at"]
-    raw_id_fields = ["product"]
-
-
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
     """
     Admin interface for Cart model.
-    Allows full CRUD operations for managing user carts.
+    Allows full CRUD operations for managing user cart items.
     """
 
     list_display = [
         "user",
-        "total_items",
-        "items_count",
-        "created_at",
-        "updated_at",
-    ]
-    list_filter = [
-        "created_at",
-        "updated_at",
-    ]
-    search_fields = [
-        "user__username",
-        "user__email",
-    ]
-    readonly_fields = [
-        "id",
-        "total_items",
-        "items_count",
-        "created_at",
-        "updated_at",
-    ]
-    raw_id_fields = ["user"]
-    inlines = [CartItemInline]
-
-
-@admin.register(CartItem)
-class CartItemAdmin(admin.ModelAdmin):
-    """
-    Admin interface for CartItem model.
-    Allows full CRUD operations for managing cart items.
-    """
-
-    list_display = [
-        "cart",
         "product",
         "quantity",
         "created_at",
@@ -323,7 +280,8 @@ class CartItemAdmin(admin.ModelAdmin):
         "updated_at",
     ]
     search_fields = [
-        "cart__user__username",
+        "user__username",
+        "user__email",
         "product__name",
     ]
     readonly_fields = [
@@ -331,4 +289,4 @@ class CartItemAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    raw_id_fields = ["cart", "product"]
+    raw_id_fields = ["user", "product"]

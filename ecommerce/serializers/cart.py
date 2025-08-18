@@ -1,49 +1,31 @@
 from rest_framework import serializers
 
 from ecommerce.models import Cart
-from ecommerce.models import CartItem
 from ecommerce.models import Product
+from ecommerce.serializers.products import ProductListSerializer
 
 
-class SimpleProductSerializer(serializers.ModelSerializer):
+class CartSerializer(serializers.ModelSerializer):
     """
-    Simple serializer for Product model.
-    Returns basic product information needed for cart display.
-    """
-
-    class Meta:
-        model = Product
-        fields = [
-            "uuid",
-            "name",
-            "image",
-            "available_stock",
-            "status",
-            "approval_status",
-        ]
-        read_only_fields = fields
-
-
-class CartItemSerializer(serializers.ModelSerializer):
-    """
-    Serializer for CartItem model.
-    Includes product details and allows CRUD operations on quantity.
+    Serializer for Cart model.
+    Includes product details for cart items.
     """
 
-    product = SimpleProductSerializer(read_only=True)
+    product = ProductListSerializer(read_only=True)
     product_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
-        model = CartItem
+        model = Cart
         fields = [
             "id",
+            "user",
             "product",
             "product_uuid",
             "quantity",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "user", "created_at", "updated_at"]
 
     def validate_product_uuid(self, value):
         """
@@ -73,13 +55,6 @@ class CartItemSerializer(serializers.ModelSerializer):
             msg = "Quantity must be greater than 0."
             raise serializers.ValidationError(msg)
 
-        # Check stock availability during update
-        if self.instance:
-            product = self.instance.product
-            if value > product.available_stock:
-                msg = f"Quantity exceeds available stock ({product.available_stock})."
-                raise serializers.ValidationError(msg)
-
         return value
 
     def create(self, validated_data):
@@ -97,70 +72,21 @@ class CartItemSerializer(serializers.ModelSerializer):
         validated_data["product"] = product
         return super().create(validated_data)
 
-
-class CartSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Cart model.
-    Includes all cart items and calculated totals.
-    """
-
-    items = CartItemSerializer(many=True, read_only=True)
-    total_items = serializers.IntegerField(read_only=True)
-    items_count = serializers.IntegerField(read_only=True)
-    user = serializers.StringRelatedField(read_only=True)
-
-    class Meta:
-        model = Cart
-        fields = [
-            "id",
-            "user",
-            "items",
-            "total_items",
-            "items_count",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = fields
-
-
-class CartItemCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating/updating cart items.
-    Simplified version for API endpoints.
-    """
-
-    product_uuid = serializers.UUIDField()
-
-    class Meta:
-        model = CartItem
-        fields = ["product_uuid", "quantity"]
-
-    def validate_product_uuid(self, value):
+    def update(self, instance, validated_data):
         """
-        Validate that the product exists and is active/approved.
+        Update cart item, handling product changes if needed.
         """
-        try:
-            product = Product.objects.get(uuid=value)
-        except Product.DoesNotExist as exc:
-            msg = "Product with this UUID does not exist."
-            raise serializers.ValidationError(msg) from exc
+        if "product_uuid" in validated_data:
+            product_uuid = validated_data.pop("product_uuid")
+            product = Product.objects.get(uuid=product_uuid)
+            validated_data["product"] = product
 
-        if product.status != Product.STATUS_ACTIVE:
-            msg = "Product is not active."
-            raise serializers.ValidationError(msg)
+        # Check stock availability for new quantity
+        new_quantity = validated_data.get("quantity", instance.quantity)
+        product = validated_data.get("product", instance.product)
 
-        if product.approval_status != Product.APPROVAL_APPROVED:
-            msg = "Product is not approved."
-            raise serializers.ValidationError(msg)
+        if new_quantity > product.available_stock:
+            msg = f"Quantity exceeds available stock ({product.available_stock})."
+            raise serializers.ValidationError({"quantity": msg})
 
-        return value
-
-    def validate_quantity(self, value):
-        """
-        Validate that quantity is positive.
-        """
-        if value <= 0:
-            msg = "Quantity must be greater than 0."
-            raise serializers.ValidationError(msg)
-
-        return value
+        return super().update(instance, validated_data)
