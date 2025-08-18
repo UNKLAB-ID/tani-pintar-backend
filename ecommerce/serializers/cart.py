@@ -5,14 +5,13 @@ from ecommerce.models import Product
 from ecommerce.serializers.products import ProductListSerializer
 
 
-class CartSerializer(serializers.ModelSerializer):
+class CartListSerializer(serializers.ModelSerializer):
     """
-    Serializer for Cart model.
-    Includes product details for cart items.
+    Serializer for listing cart items.
+    Read-only serializer with full product details.
     """
 
     product = ProductListSerializer(read_only=True)
-    product_uuid = serializers.UUIDField(write_only=True)
 
     class Meta:
         model = Cart
@@ -20,12 +19,23 @@ class CartSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "product",
-            "product_uuid",
             "quantity",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "user", "created_at", "updated_at"]
+        read_only_fields = fields
+
+
+class CartCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating cart items.
+    """
+
+    product_uuid = serializers.UUIDField()
+
+    class Meta:
+        model = Cart
+        fields = ["product_uuid", "quantity"]
 
     def validate_product_uuid(self, value):
         """
@@ -49,7 +59,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     def validate_quantity(self, value):
         """
-        Validate that quantity is positive and doesn't exceed available stock.
+        Validate that quantity is positive.
         """
         if value <= 0:
             msg = "Quantity must be greater than 0."
@@ -66,27 +76,63 @@ class CartSerializer(serializers.ModelSerializer):
 
         # Check stock availability
         if validated_data["quantity"] > product.available_stock:
-            msg = f"Quantity exceeds available stock ({product.available_stock})."
+            available = product.available_stock
+            msg = f"Quantity exceeds available stock ({available})."
             raise serializers.ValidationError({"quantity": msg})
 
         validated_data["product"] = product
         return super().create(validated_data)
 
+
+class CartDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for cart detail view.
+    Read-only serializer with full product details.
+    """
+
+    product = ProductListSerializer(read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = [
+            "id",
+            "user",
+            "product",
+            "quantity",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+class CartUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating cart items.
+    """
+
+    class Meta:
+        model = Cart
+        fields = ["quantity"]
+
+    def validate_quantity(self, value):
+        """
+        Validate that quantity is positive and doesn't exceed available stock.
+        """
+        if value <= 0:
+            msg = "Quantity must be greater than 0."
+            raise serializers.ValidationError(msg)
+
+        return value
+
     def update(self, instance, validated_data):
         """
-        Update cart item, handling product changes if needed.
+        Update cart item quantity with stock validation.
         """
-        if "product_uuid" in validated_data:
-            product_uuid = validated_data.pop("product_uuid")
-            product = Product.objects.get(uuid=product_uuid)
-            validated_data["product"] = product
-
-        # Check stock availability for new quantity
         new_quantity = validated_data.get("quantity", instance.quantity)
-        product = validated_data.get("product", instance.product)
 
-        if new_quantity > product.available_stock:
-            msg = f"Quantity exceeds available stock ({product.available_stock})."
+        if new_quantity > instance.product.available_stock:
+            available = instance.product.available_stock
+            msg = f"Quantity exceeds available stock ({available})."
             raise serializers.ValidationError({"quantity": msg})
 
         return super().update(instance, validated_data)

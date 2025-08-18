@@ -4,7 +4,11 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from ecommerce.models import Cart
-from ecommerce.serializers.cart import CartSerializer
+from ecommerce.models import Product
+from ecommerce.serializers.cart import CartCreateSerializer
+from ecommerce.serializers.cart import CartDetailSerializer
+from ecommerce.serializers.cart import CartListSerializer
+from ecommerce.serializers.cart import CartUpdateSerializer
 
 
 class CartListCreateView(ListCreateAPIView):
@@ -14,8 +18,13 @@ class CartListCreateView(ListCreateAPIView):
     POST: Add item to cart.
     """
 
-    serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class based on action."""
+        if self.request.method == "POST":
+            return CartCreateSerializer
+        return CartListSerializer
 
     def get_queryset(self):
         """Return cart items for the current user."""
@@ -27,7 +36,9 @@ class CartListCreateView(ListCreateAPIView):
     def perform_create(self, serializer):
         """Set the user for the cart item."""
         # Check if item already exists
-        product = serializer.validated_data["product"]
+        product_uuid = serializer.validated_data["product_uuid"]
+        # Get the actual product from UUID (already validated in serializer)
+        product = Product.objects.get(uuid=product_uuid)
         quantity = serializer.validated_data["quantity"]
 
         existing_item = Cart.objects.filter(
@@ -60,8 +71,13 @@ class CartDetailView(RetrieveUpdateDestroyAPIView):
     DELETE: Remove item from cart.
     """
 
-    serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class based on action."""
+        if self.request.method in ["PUT", "PATCH"]:
+            return CartUpdateSerializer
+        return CartDetailSerializer
 
     def get_queryset(self):
         """Return cart items for the current user."""
