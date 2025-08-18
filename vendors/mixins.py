@@ -57,10 +57,10 @@ class LocationMixin(models.Model):
         related_name="vendors",
     )
 
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    address_detail = models.CharField(max_length=255)
-    postal_code = models.CharField(max_length=20)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=False)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=False)
+    address_detail = models.CharField(max_length=255, null=False)
+    postal_code = models.CharField(max_length=20, null=False)
 
     class Meta:
         abstract = True

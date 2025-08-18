@@ -33,6 +33,17 @@ class Vendor(BaseVendorModel, LocationMixin):
     def clean(self):
         super().clean()
 
+        # Validate location hierarchy relationships
+        if self.city and self.province and self.city.province != self.province:
+            raise ValidationError(
+                {"city": "City must belong to the selected province."},
+            )
+
+        if self.district and self.city and self.district.city != self.city:
+            raise ValidationError(
+                {"district": "District must belong to the selected city."},
+            )
+
         if self.vendor_type == self.TYPE_INDIVIDUAL:
             self._validate_individual_vendor()
         elif self.vendor_type == self.TYPE_COMPANY:
@@ -61,3 +72,10 @@ class Vendor(BaseVendorModel, LocationMixin):
             )
         if not self.npwp:
             raise ValidationError({"npwp": "NPWP is required for company vendors."})
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["vendor_type", "review_status"]),
+            models.Index(fields=["user"]),
+            models.Index(fields=["province", "city", "district"]),
+        ]
