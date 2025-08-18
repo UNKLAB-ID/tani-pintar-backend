@@ -29,6 +29,8 @@ urlpatterns = [
     path("thinkflow/", include("thinkflow.urls", namespace="thinkflow")),
     # Vendors
     path("vendors/", include("vendors.urls", namespace="vendors")),
+    # Ecommerce
+    path("ecommerce/", include("ecommerce.urls", namespace="ecommerce")),
     # Health check
     path("health-check/", include("health_check.urls")),
     # Media files

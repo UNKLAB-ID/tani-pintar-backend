@@ -5,8 +5,10 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.generics import GenericAPIView
+from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,9 +22,12 @@ from core.users.models import User
 
 from .models import Profile
 from .models import VerificationCode
+from .paginations import FollowCursorPagination
 from .serializers import ConfirmLoginSerializer
 from .serializers import ConfirmRegistrationSerializer
+from .serializers import FollowActionSerializer
 from .serializers import LoginSerializer
+from .serializers import ProfileFollowerAndFollowingListSerializer
 from .serializers import RegisterSerializer
 
 
@@ -199,7 +204,7 @@ class ProfileView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = self.serializer_class(profile)
+        serializer = self.serializer_class(profile, context={"request": request})
         return Response(serializer.data)
 
 
@@ -210,3 +215,162 @@ class ProfileDetailAPIView(RetrieveAPIView):
     permission_classes = []  # No permission required to get specific user profile
     lookup_field = "id"
     lookup_url_kwarg = "profile_id"
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+
+class FollowUserView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        """Follow a user"""
+        try:
+            target_user = User.objects.get(id=user_id)
+            target_profile = Profile.objects.get(user=target_user)
+            current_profile = Profile.objects.get(user=request.user)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                {"error": "Profile not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Check if already following
+        if current_profile.is_following(target_profile):
+            return Response(
+                {"error": "Already following this user"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Prevent self-follow (additional check, though model constraint handles this)
+        if current_profile == target_profile:
+            return Response(
+                {"error": "Cannot follow yourself"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Follow the user
+        current_profile.follow(target_profile)
+
+        serializer = FollowActionSerializer(
+            {
+                "message": "Successfully followed user",
+                "is_following": True,
+                "followers_count": target_profile.get_followers_count(),
+            },
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, user_id):
+        """Unfollow a user"""
+        try:
+            target_user = User.objects.get(id=user_id)
+            target_profile = Profile.objects.get(user=target_user)
+            current_profile = Profile.objects.get(user=request.user)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                {"error": "Profile not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Check if not following
+        if not current_profile.is_following(target_profile):
+            return Response(
+                {"error": "Not following this user"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Unfollow the user
+        current_profile.unfollow(target_profile)
+
+        serializer = FollowActionSerializer(
+            {
+                "message": "Successfully unfollowed user",
+                "is_following": False,
+                "followers_count": target_profile.get_followers_count(),
+            },
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserFollowingListView(ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
+    serializer_class = ProfileFollowerAndFollowingListSerializer
+    pagination_class = FollowCursorPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id", None)
+        if user_id is None:
+            msg = "user_id not found in URL kwargs."
+            raise ValueError(msg)
+
+        try:
+            user = User.objects.get(id=user_id)
+            profile = (
+                user.profile if hasattr(user, "profile") and user.profile else None
+            )
+
+            if profile is None:
+                return Profile.objects.none()
+        except User.DoesNotExist:
+            return Profile.objects.none()
+
+        # Get all profiles that this user is following
+        return Profile.objects.filter(
+            followers__follower=profile,
+        ).select_related("user")
+
+
+class UserFollowersListView(ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
+    serializer_class = ProfileFollowerAndFollowingListSerializer
+    pagination_class = FollowCursorPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
+
+    def get_queryset(self):
+        user_id = self.kwargs.get("user_id", None)
+        if user_id is None:
+            msg = "user_id not found in URL kwargs."
+            raise ValueError(msg)
+
+        try:
+            user = User.objects.get(id=user_id)
+            profile = (
+                user.profile if hasattr(user, "profile") and user.profile else None
+            )
+
+            if profile is None:
+                return Profile.objects.none()
+        except User.DoesNotExist:
+            return Profile.objects.none()
+
+        # Get all profiles that follow this user
+        return Profile.objects.filter(
+            following__following=profile,
+        ).select_related("user")
