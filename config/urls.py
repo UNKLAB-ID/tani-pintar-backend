@@ -27,6 +27,8 @@ urlpatterns = [
     path("social-media/", include("social_media.urls", namespace="social-media")),
     # ThinkFlow
     path("thinkflow/", include("thinkflow.urls", namespace="thinkflow")),
+    # Vendors
+    path("vendors/", include("vendors.urls", namespace="vendors")),
     # Health check
     path("health-check/", include("health_check.urls")),
     # Media files

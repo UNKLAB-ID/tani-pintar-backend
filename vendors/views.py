@@ -2,27 +2,23 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from vendors.models import Vendor
+from vendors.pagination import VendorCursorPagination
 from vendors.serializers import VendorCreateSerializer
 from vendors.serializers import VendorDetailSerializer
 from vendors.serializers import VendorListSerializer
 from vendors.serializers import VendorUpdateSerializer
 
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.user == request.user
-
-
 class VendorListCreateAPIView(generics.ListCreateAPIView):
     queryset = Vendor.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = VendorCursorPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["vendor_type", "review_status", "province", "city"]
     search_fields = ["name", "business_name", "full_name"]
@@ -57,10 +53,8 @@ class VendorMeAPIView(generics.RetrieveUpdateAPIView):
         try:
             return Vendor.objects.get(user=self.request.user)
         except Vendor.DoesNotExist:
-            return Response(
-                {"detail": "User does not have a vendor profile."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            msg = "User does not have a vendor profile."
+            raise NotFound(msg)  # noqa: B904
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:

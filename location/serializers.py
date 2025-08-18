@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer
 
 from location.models import City
 from location.models import Country
+from location.models import District
 from location.models import Province
 
 
@@ -24,4 +25,12 @@ class CitySerializer(ModelSerializer):
 
     class Meta:
         model = City
+        fields = "__all__"
+
+
+class DistrictSerializer(ModelSerializer):
+    city = CitySerializer()
+
+    class Meta:
+        model = District
         fields = "__all__"
