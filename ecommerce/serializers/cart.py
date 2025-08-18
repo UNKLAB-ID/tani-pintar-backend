@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from ecommerce.models import Cart
 from ecommerce.models import Product
+from ecommerce.serializers.products import ProductDetailSerializer
 from ecommerce.serializers.products import ProductListSerializer
 
 
@@ -90,7 +91,7 @@ class CartDetailSerializer(serializers.ModelSerializer):
     Read-only serializer with full product details.
     """
 
-    product = ProductListSerializer(read_only=True)
+    product = ProductDetailSerializer(read_only=True)
 
     class Meta:
         model = Cart

@@ -63,7 +63,7 @@ class CartListCreateView(ListCreateAPIView):
             serializer.save(user=self.request.user)
 
 
-class CartDetailView(RetrieveUpdateDestroyAPIView):
+class CartItemView(RetrieveUpdateDestroyAPIView):
     """
     API view for retrieving, updating and deleting cart items.
     GET: Retrieve cart item.

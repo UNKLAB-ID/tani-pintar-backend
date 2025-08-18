@@ -1,4 +1,4 @@
-from .cart import CartDetailView
+from .cart import CartItemView
 from .cart import CartListCreateView
 from .categories import CategoryDetailView
 from .categories import CategoryListView
@@ -8,7 +8,7 @@ from .subcategories import SubCategoryDetailView
 from .subcategories import SubCategoryListView
 
 __all__ = [
-    "CartDetailView",
+    "CartItemView",
     "CartListCreateView",
     "CategoryDetailView",
     "CategoryListView",
