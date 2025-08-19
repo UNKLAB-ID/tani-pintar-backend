@@ -35,3 +35,7 @@ openai==1.99.9  # https://pypi.org/project/openai/
 # Custom
 pytest-cov==6.2.1
 pydantic==2.11.7
+
+# Django Extensions & Testing
+django-extensions==4.1  # https://github.com/django-extensions/django-extensions
+factory-boy==3.3.3  # https://github.com/FactoryBoy/factory_boy
