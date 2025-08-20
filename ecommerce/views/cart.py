@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from ecommerce.models import Cart
 from ecommerce.models import Product
+from ecommerce.paginations import CartCursorPagination
 from ecommerce.serializers.cart import CartCreateSerializer
 from ecommerce.serializers.cart import CartDetailSerializer
 from ecommerce.serializers.cart import CartListSerializer
@@ -14,11 +15,12 @@ from ecommerce.serializers.cart import CartUpdateSerializer
 class CartListCreateView(ListCreateAPIView):
     """
     API view for listing and creating cart items.
-    GET: List user's cart items.
+    GET: List user's cart items with cursor pagination.
     POST: Add item to cart.
     """
 
     permission_classes = [IsAuthenticated]
+    pagination_class = CartCursorPagination
 
     def get_serializer_class(self):
         """Return appropriate serializer class based on action."""
