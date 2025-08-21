@@ -6,6 +6,7 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 from ecommerce.models import Product
+from ecommerce.paginations import ProductCursorPagination
 from ecommerce.serializers.products import CreateProductSerializer
 from ecommerce.serializers.products import ProductDetailSerializer
 from ecommerce.serializers.products import ProductListSerializer
@@ -15,12 +16,13 @@ from ecommerce.serializers.products import UpdateProductSerializer
 class ProductListCreateView(ListCreateAPIView):
     """
     View for listing and creating products.
-    GET: List products with filtering and search
+    GET: List products with filtering, search and cursor pagination
     POST: Create new product
     """
 
     queryset = Product.objects.all().order_by("-created_at")
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = ProductCursorPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["category", "status", "user", "approval_status"]
     search_fields = ["name", "description"]

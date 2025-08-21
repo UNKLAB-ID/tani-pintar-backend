@@ -1,18 +1,34 @@
 from rest_framework import serializers
 
+from accounts.serializers import SimpleProfileDetailSerializer
+from core.users.models import User
 from ecommerce.models import Cart
 from ecommerce.models import Product
 from ecommerce.serializers.products import ProductDetailSerializer
 from ecommerce.serializers.products import ProductListSerializer
 
 
+class CartUserProfileSerializer(serializers.ModelSerializer):
+    """
+    Simple user serializer with profile for cart items.
+    """
+
+    profile = SimpleProfileDetailSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "profile"]
+        read_only_fields = fields
+
+
 class CartListSerializer(serializers.ModelSerializer):
     """
     Serializer for listing cart items.
-    Read-only serializer with full product details.
+    Read-only serializer with full product details and user profile.
     """
 
     product = ProductListSerializer(read_only=True)
+    user = CartUserProfileSerializer(read_only=True)
 
     class Meta:
         model = Cart
@@ -88,10 +104,11 @@ class CartCreateSerializer(serializers.ModelSerializer):
 class CartDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for cart detail view.
-    Read-only serializer with full product details.
+    Read-only serializer with full product details and user profile.
     """
 
     product = ProductDetailSerializer(read_only=True)
+    user = CartUserProfileSerializer(read_only=True)
 
     class Meta:
         model = Cart
