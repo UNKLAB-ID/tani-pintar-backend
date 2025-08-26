@@ -295,6 +295,114 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
 
+class UnitOfMeasure(models.Model):
+    """
+    Unit of Measure (UOM) master model.
+    This model represents different units of measurement for products.
+    Examples: kg, gram, liter, piece, meter, etc.
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the UOM",
+    )
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+        help_text="Unit name (e.g., kilogram, liter, piece)",
+    )
+    abbreviation = models.CharField(
+        max_length=10,
+        unique=True,
+        help_text="Short form (e.g., kg, L, pcs)",
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Optional description of the unit",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this UOM is active and available for use",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the UOM was created",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the UOM was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Unit of Measure"
+        verbose_name_plural = "Units of Measure"
+        ordering = ["name"]
+
+    def __str__(self):
+        """String representation of the UOM."""
+        return f"{self.name} ({self.abbreviation})"
+
+
+class ProductPrice(models.Model):
+    """
+    Product Price model for managing product pricing with UOM.
+    This model represents pricing information for products with specific units.
+    Features:
+    - Foreign key relationships to Product and UOM
+    - Decimal price field for precise pricing
+    - Multiple price entries per product for different units
+    - Timestamps for price tracking
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the product price",
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="prices",
+        help_text="Product this price belongs to",
+    )
+    unit_of_measure = models.ForeignKey(
+        UnitOfMeasure,
+        on_delete=models.CASCADE,
+        related_name="product_prices",
+        help_text="Unit of measure for this price",
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Price per unit",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this price is active and available",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When the price was created",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the price was last updated",
+    )
+
+    class Meta:
+        verbose_name = "Product Price"
+        verbose_name_plural = "Product Prices"
+        unique_together = ["product", "unit_of_measure"]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        """String representation of the product price."""
+        return f"{self.product.name} - {self.price} per {self.unit_of_measure.abbreviation}"  # noqa: E501
+
+
 class ProductImage(models.Model):
     """
     ProductImage model for managing product images.

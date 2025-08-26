@@ -4,6 +4,7 @@ from core.users.models import User
 from ecommerce.models import Product
 from ecommerce.models import ProductImage
 from ecommerce.serializers.categories import CategorySimpleSerializer
+from ecommerce.serializers.pricing import ProductPriceSerializer
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
@@ -128,12 +129,13 @@ class UpdateProductSerializer(serializers.ModelSerializer):
 class ProductDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for product detail view.
-    Includes all product information with nested images.
+    Includes all product information with nested images and pricing.
     """
 
     user = UserSimpleSerializer(read_only=True)
     category = CategorySimpleSerializer(read_only=True)
     images = ProductImageDetailSerializer(many=True, read_only=True)
+    prices = ProductPriceSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -151,17 +153,19 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "images",
+            "prices",
         ]
 
 
 class ProductListSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for product list views.
-    Only includes essential fields for better performance.
+    Only includes essential fields for better performance including basic pricing.
     """
 
     user = UserSimpleSerializer(read_only=True)
     category = CategorySimpleSerializer(read_only=True)
+    prices = ProductPriceSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -177,4 +181,5 @@ class ProductListSerializer(serializers.ModelSerializer):
             "status",
             "approval_status",
             "created_at",
+            "prices",
         ]

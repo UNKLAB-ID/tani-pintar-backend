@@ -4,6 +4,10 @@ from .views.cart import CartItemView
 from .views.cart import CartListCreateView
 from .views.categories import CategoryDetailView
 from .views.categories import CategoryListView
+from .views.pricing import ProductPriceDetailView
+from .views.pricing import ProductPriceListCreateView
+from .views.pricing import UnitOfMeasureDetailView
+from .views.pricing import UnitOfMeasureListView
 from .views.products import ProductDetailView
 from .views.products import ProductListCreateView
 from .views.subcategories import SubCategoryDetailView
@@ -37,6 +41,28 @@ urlpatterns = [
         "products/<uuid:pk>/",
         ProductDetailView.as_view(),
         name="product-detail",
+    ),
+    # UOM URLs
+    path(
+        "uom/",
+        UnitOfMeasureListView.as_view(),
+        name="uom-list",
+    ),
+    path(
+        "uom/<uuid:pk>/",
+        UnitOfMeasureDetailView.as_view(),
+        name="uom-detail",
+    ),
+    # Product Price URLs
+    path(
+        "products/<uuid:product_id>/prices/",
+        ProductPriceListCreateView.as_view(),
+        name="product-price-list-create",
+    ),
+    path(
+        "products/<uuid:product_id>/prices/<uuid:pk>/",
+        ProductPriceDetailView.as_view(),
+        name="product-price-detail",
     ),
 ]
 

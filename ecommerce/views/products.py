@@ -44,6 +44,7 @@ class ProductListCreateView(ListCreateAPIView):
         # Optimize queries
         queryset = queryset.select_related("user", "category").prefetch_related(
             "images",
+            "prices__unit_of_measure",
         )
 
         # Filter based on user permissions
@@ -87,6 +88,7 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
         # Optimize queries
         queryset = queryset.select_related("user", "category").prefetch_related(
             "images",
+            "prices__unit_of_measure",
         )
 
         # Filter based on user permissions for GET requests
