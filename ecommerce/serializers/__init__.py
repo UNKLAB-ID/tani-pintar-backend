@@ -5,8 +5,9 @@ from .cart import CartUpdateSerializer
 from .categories import CategoryDetailSerializer
 from .categories import CategoryListSerializer
 from .pricing import CreateProductPriceSerializer
-from .pricing import ProductPriceSerializer
-from .pricing import UnitOfMeasureSerializer
+from .pricing import ProductPriceListSerializer
+from .pricing import UnitOfMeasureDetailSerializer
+from .pricing import UnitOfMeasureListSerializer
 from .pricing import UpdateProductPriceSerializer
 from .products import ProductImageListSerializer
 from .products import ProductListSerializer
@@ -22,9 +23,10 @@ __all__ = [
     "CreateProductPriceSerializer",
     "ProductImageListSerializer",
     "ProductListSerializer",
-    "ProductPriceSerializer",
+    "ProductPriceListSerializer",
     "SubCategoryDetailSerializer",
     "SubCategoryGetDetailSerializer",
-    "UnitOfMeasureSerializer",
+    "UnitOfMeasureDetailSerializer",
+    "UnitOfMeasureListSerializer",
     "UpdateProductPriceSerializer",
 ]

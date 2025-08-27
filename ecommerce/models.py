@@ -313,18 +313,9 @@ class UnitOfMeasure(models.Model):
         unique=True,
         help_text="Unit name (e.g., kilogram, liter, piece)",
     )
-    abbreviation = models.CharField(
-        max_length=10,
-        unique=True,
-        help_text="Short form (e.g., kg, L, pcs)",
-    )
     description = models.TextField(
         blank=True,
         help_text="Optional description of the unit",
-    )
-    is_active = models.BooleanField(
-        default=True,
-        help_text="Whether this UOM is active and available for use",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -342,7 +333,7 @@ class UnitOfMeasure(models.Model):
 
     def __str__(self):
         """String representation of the UOM."""
-        return f"{self.name} ({self.abbreviation})"
+        return self.name
 
 
 class ProductPrice(models.Model):
@@ -379,10 +370,6 @@ class ProductPrice(models.Model):
         decimal_places=2,
         help_text="Price per unit",
     )
-    is_active = models.BooleanField(
-        default=True,
-        help_text="Whether this price is active and available",
-    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="When the price was created",
@@ -400,7 +387,7 @@ class ProductPrice(models.Model):
 
     def __str__(self):
         """String representation of the product price."""
-        return f"{self.product.name} - {self.price} per {self.unit_of_measure.abbreviation}"  # noqa: E501
+        return f"{self.product.name} - {self.price} per {self.unit_of_measure.name}"
 
 
 class ProductImage(models.Model):

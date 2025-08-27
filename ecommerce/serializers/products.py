@@ -4,7 +4,7 @@ from core.users.models import User
 from ecommerce.models import Product
 from ecommerce.models import ProductImage
 from ecommerce.serializers.categories import CategorySimpleSerializer
-from ecommerce.serializers.pricing import ProductPriceSerializer
+from ecommerce.serializers.pricing import ProductPriceListSerializer
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
@@ -135,7 +135,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)
     category = CategorySimpleSerializer(read_only=True)
     images = ProductImageDetailSerializer(many=True, read_only=True)
-    prices = ProductPriceSerializer(many=True, read_only=True)
+    prices = ProductPriceListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -165,7 +165,7 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     user = UserSimpleSerializer(read_only=True)
     category = CategorySimpleSerializer(read_only=True)
-    prices = ProductPriceSerializer(many=True, read_only=True)
+    prices = ProductPriceListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product

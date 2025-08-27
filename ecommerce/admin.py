@@ -135,7 +135,7 @@ class ProductPriceInline(admin.TabularInline):
 
     model = ProductPrice
     extra = 1
-    fields = ["unit_of_measure", "price", "is_active"]
+    fields = ["unit_of_measure", "price"]
 
 
 @admin.register(Product)
@@ -314,18 +314,15 @@ class UnitOfMeasureAdmin(admin.ModelAdmin):
 
     list_display = [
         "name",
-        "abbreviation",
-        "is_active",
+        "description",
         "created_at",
         "updated_at",
     ]
     list_filter = [
-        "is_active",
         "created_at",
     ]
     search_fields = [
         "name",
-        "abbreviation",
         "description",
     ]
     readonly_fields = [
@@ -346,19 +343,16 @@ class ProductPriceAdmin(admin.ModelAdmin):
         "product",
         "unit_of_measure",
         "price",
-        "is_active",
         "created_at",
         "updated_at",
     ]
     list_filter = [
-        "is_active",
         "unit_of_measure",
         "created_at",
     ]
     search_fields = [
         "product__name",
         "unit_of_measure__name",
-        "unit_of_measure__abbreviation",
     ]
     readonly_fields = [
         "id",
