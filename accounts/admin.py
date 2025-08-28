@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import Follow
 from .models import LoginCode
@@ -7,7 +8,7 @@ from .models import VerificationCode
 
 
 @admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(ModelAdmin):
     list_display = (
         "full_name",
         "email",
@@ -51,7 +52,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Follow)
-class FollowAdmin(admin.ModelAdmin):
+class FollowAdmin(ModelAdmin):
     list_display = [
         "get_follower_name",
         "get_following_name",
@@ -112,12 +113,12 @@ class FollowAdmin(admin.ModelAdmin):
 
 
 @admin.register(VerificationCode)
-class VerificationCodeAdmin(admin.ModelAdmin):
+class VerificationCodeAdmin(ModelAdmin):
     list_display = ("user", "code", "created_at", "expired_at")
     search_fields = ("user__name", "code")
 
 
 @admin.register(LoginCode)
-class LoginCodeAdmin(admin.ModelAdmin):
+class LoginCodeAdmin(ModelAdmin):
     list_display = ("user", "code", "created_at", "expired_at")
     search_fields = ("user__name", "code")
