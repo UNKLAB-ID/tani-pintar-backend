@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from rest_framework import permissions
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
@@ -111,11 +112,16 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
         Save product update.
         Vendor validation and ownership handled by permissions.
         """
+        product = self.get_object()
+        if product.user != self.request.user:
+            msg = "You can only update your own products."
+            raise permissions.PermissionDenied(msg)
+
         serializer.save()
 
     def perform_destroy(self, instance):
-        """
-        Delete product.
-        Vendor validation and ownership handled by permissions.
-        """
+        """Ensure users can only delete their own products."""
+        if instance.user != self.request.user:
+            msg = "You can only delete your own products."
+            raise permissions.PermissionDenied(msg)
         instance.delete()
