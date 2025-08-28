@@ -1,4 +1,6 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
+from unfold.admin import TabularInline
 
 from .models import Post
 from .models import PostComment
@@ -10,14 +12,14 @@ from .models import PostView
 from .models import Report
 
 
-class PostImageInline(admin.TabularInline):
+class PostImageInline(TabularInline):
     model = PostImage
     extra = 0
     fields = ("image",)
 
 
 @admin.register(Post)
-class PostAdmin(admin.ModelAdmin):
+class PostAdmin(ModelAdmin):
     list_display = (
         "slug",
         "user",
@@ -62,7 +64,7 @@ class PostAdmin(admin.ModelAdmin):
 
 
 @admin.register(PostImage)
-class PostImageAdmin(admin.ModelAdmin):
+class PostImageAdmin(ModelAdmin):
     list_display = ("id", "post", "created_at")
     readonly_fields = ("created_at",)
     ordering = ("-created_at",)
@@ -73,7 +75,7 @@ class PostImageAdmin(admin.ModelAdmin):
 
 
 @admin.register(PostComment)
-class PostCommentAdmin(admin.ModelAdmin):
+class PostCommentAdmin(ModelAdmin):
     list_display = ("id", "user", "post", "created_at")
     search_fields = ("user__username", "post__content", "content")
     list_filter = ("created_at", "updated_at")
@@ -86,12 +88,12 @@ class PostCommentAdmin(admin.ModelAdmin):
 
 
 @admin.register(PostView)
-class PostViewAdmin(admin.ModelAdmin):
+class PostViewAdmin(ModelAdmin):
     list_display = ("post", "user")
 
 
 @admin.register(PostLike)
-class PostLikeAdmin(admin.ModelAdmin):
+class PostLikeAdmin(ModelAdmin):
     list_display = ("user", "post", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "post__content")
@@ -105,7 +107,7 @@ class PostLikeAdmin(admin.ModelAdmin):
 
 
 @admin.register(PostCommentLike)
-class PostCommentLikeAdmin(admin.ModelAdmin):
+class PostCommentLikeAdmin(ModelAdmin):
     """
     Admin interface for managing PostCommentLike instances.
 
@@ -177,7 +179,7 @@ class PostCommentLikeAdmin(admin.ModelAdmin):
 
 
 @admin.register(PostSaved)
-class PostSavedAdmin(admin.ModelAdmin):
+class PostSavedAdmin(ModelAdmin):
     list_display = ("user", "post", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "post__content")
@@ -191,7 +193,7 @@ class PostSavedAdmin(admin.ModelAdmin):
 
 
 @admin.register(Report)
-class ReportAdmin(admin.ModelAdmin):
+class ReportAdmin(ModelAdmin):
     """
     Admin interface for managing reports.
 

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
+from unfold.admin import TabularInline
 
 from .models import Cart
 from .models import Product
@@ -10,7 +12,7 @@ from .models import UnitOfMeasure
 
 
 @admin.register(ProductCategory)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(ModelAdmin):
     """
     Enhanced admin interface for ProductCategory model.
     This admin interface provides comprehensive management of categories
@@ -45,7 +47,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductSubCategory)
-class SubCategoryAdmin(admin.ModelAdmin):
+class SubCategoryAdmin(ModelAdmin):
     """
     Enhanced admin interface for ProductSubCategory model.
     This admin interface provides comprehensive management of subcategories
@@ -113,7 +115,7 @@ class SubCategoryAdmin(admin.ModelAdmin):
         return queryset.select_related("category")
 
 
-class ProductImageInline(admin.TabularInline):
+class ProductImageInline(TabularInline):
     """
     Inline admin interface for ProductImage model.
     This allows managing product images directly from the Product admin page.
@@ -127,7 +129,7 @@ class ProductImageInline(admin.TabularInline):
     ordering = ["created_at"]
 
 
-class ProductPriceInline(admin.TabularInline):
+class ProductPriceInline(TabularInline):
     """
     Inline admin for ProductPrice model.
     Allows managing product prices directly from the Product admin.
@@ -139,7 +141,7 @@ class ProductPriceInline(admin.TabularInline):
 
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(ModelAdmin):
     """
     Enhanced admin interface for Product model.
     This admin interface provides comprehensive management of products
@@ -250,7 +252,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductImage)
-class ProductImageAdmin(admin.ModelAdmin):
+class ProductImageAdmin(ModelAdmin):
     """
     Admin interface for ProductImage model.
     This provides direct management of product images.
@@ -275,7 +277,7 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 
 @admin.register(Cart)
-class CartAdmin(admin.ModelAdmin):
+class CartAdmin(ModelAdmin):
     """
     Admin interface for Cart model.
     Allows full CRUD operations for managing user cart items.
@@ -306,7 +308,7 @@ class CartAdmin(admin.ModelAdmin):
 
 
 @admin.register(UnitOfMeasure)
-class UnitOfMeasureAdmin(admin.ModelAdmin):
+class UnitOfMeasureAdmin(ModelAdmin):
     """
     Admin interface for UnitOfMeasure model.
     Manages master data for units of measurement.
@@ -333,7 +335,7 @@ class UnitOfMeasureAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductPrice)
-class ProductPriceAdmin(admin.ModelAdmin):
+class ProductPriceAdmin(ModelAdmin):
     """
     Admin interface for ProductPrice model.
     Manages product pricing with UOM.
