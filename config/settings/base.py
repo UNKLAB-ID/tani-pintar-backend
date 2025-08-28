@@ -380,6 +380,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     "SCHEMA_PATH_PREFIX": "/api/",
 }
+# django-unfold
+# ------------------------------------------------------------------------------
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 
