@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.db.models import Q
+from unfold.admin import ModelAdmin
 
 from location.models import City
 from location.models import Country
@@ -8,20 +9,20 @@ from location.models import Province
 
 
 @admin.register(Country)
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(ModelAdmin):
     list_display = ("name", "code")
     search_fields = ("name", "code")
 
 
 @admin.register(Province)
-class ProvinceAdmin(admin.ModelAdmin):
+class ProvinceAdmin(ModelAdmin):
     list_display = ("name", "country")
     search_fields = ("name",)
     list_filter = ("country",)
 
 
 @admin.register(City)
-class CityAdmin(admin.ModelAdmin):
+class CityAdmin(ModelAdmin):
     list_display = ("name", "province")
     search_fields = ("name",)
     list_filter = ("province",)
@@ -36,7 +37,7 @@ class CityAdmin(admin.ModelAdmin):
 
 
 @admin.register(District)
-class DistrictAdmin(admin.ModelAdmin):
+class DistrictAdmin(ModelAdmin):
     list_display = ("name", "city")
     search_fields = ("name",)
     list_filter = ("city",)
