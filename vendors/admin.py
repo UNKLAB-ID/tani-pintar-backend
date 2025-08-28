@@ -1,10 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from vendors.models import Vendor
 
 
 @admin.register(Vendor)
-class VendorAdmin(admin.ModelAdmin):
+class VendorAdmin(ModelAdmin):
     list_display = [
         "name",
         "vendor_type",
