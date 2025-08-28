@@ -4,7 +4,9 @@ from .models import Cart
 from .models import Product
 from .models import ProductCategory
 from .models import ProductImage
+from .models import ProductPrice
 from .models import ProductSubCategory
+from .models import UnitOfMeasure
 
 
 @admin.register(ProductCategory)
@@ -125,6 +127,17 @@ class ProductImageInline(admin.TabularInline):
     ordering = ["created_at"]
 
 
+class ProductPriceInline(admin.TabularInline):
+    """
+    Inline admin for ProductPrice model.
+    Allows managing product prices directly from the Product admin.
+    """
+
+    model = ProductPrice
+    extra = 1
+    fields = ["unit_of_measure", "price"]
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """
@@ -204,7 +217,7 @@ class ProductAdmin(admin.ModelAdmin):
         ),
     )
 
-    inlines = [ProductImageInline]
+    inlines = [ProductImageInline, ProductPriceInline]
 
     actions = ["approve_products", "reject_products"]
 
@@ -290,3 +303,60 @@ class CartAdmin(admin.ModelAdmin):
         "updated_at",
     ]
     raw_id_fields = ["user", "product"]
+
+
+@admin.register(UnitOfMeasure)
+class UnitOfMeasureAdmin(admin.ModelAdmin):
+    """
+    Admin interface for UnitOfMeasure model.
+    Manages master data for units of measurement.
+    """
+
+    list_display = [
+        "name",
+        "description",
+        "created_at",
+        "updated_at",
+    ]
+    list_filter = [
+        "created_at",
+    ]
+    search_fields = [
+        "name",
+        "description",
+    ]
+    readonly_fields = [
+        "id",
+        "created_at",
+        "updated_at",
+    ]
+
+
+@admin.register(ProductPrice)
+class ProductPriceAdmin(admin.ModelAdmin):
+    """
+    Admin interface for ProductPrice model.
+    Manages product pricing with UOM.
+    """
+
+    list_display = [
+        "product",
+        "unit_of_measure",
+        "price",
+        "created_at",
+        "updated_at",
+    ]
+    list_filter = [
+        "unit_of_measure",
+        "created_at",
+    ]
+    search_fields = [
+        "product__name",
+        "unit_of_measure__name",
+    ]
+    readonly_fields = [
+        "id",
+        "created_at",
+        "updated_at",
+    ]
+    raw_id_fields = ["product", "unit_of_measure"]

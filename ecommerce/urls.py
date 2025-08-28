@@ -8,6 +8,8 @@ from .views.products import ProductDetailView
 from .views.products import ProductListCreateView
 from .views.subcategories import SubCategoryDetailView
 from .views.subcategories import SubCategoryListView
+from .views.uom import UnitOfMeasureDetailView
+from .views.uom import UnitOfMeasureListView
 
 urlpatterns = [
     # Cart URLs
@@ -37,6 +39,17 @@ urlpatterns = [
         "products/<uuid:pk>/",
         ProductDetailView.as_view(),
         name="product-detail",
+    ),
+    # UOM URLs
+    path(
+        "uom/",
+        UnitOfMeasureListView.as_view(),
+        name="uom-list",
+    ),
+    path(
+        "uom/<uuid:pk>/",
+        UnitOfMeasureDetailView.as_view(),
+        name="uom-detail",
     ),
 ]
 

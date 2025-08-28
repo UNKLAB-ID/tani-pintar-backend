@@ -6,6 +6,8 @@ from .products import ProductDetailView
 from .products import ProductListCreateView
 from .subcategories import SubCategoryDetailView
 from .subcategories import SubCategoryListView
+from .uom import UnitOfMeasureDetailView
+from .uom import UnitOfMeasureListView
 
 __all__ = [
     "CartItemView",
@@ -16,4 +18,6 @@ __all__ = [
     "ProductListCreateView",
     "SubCategoryDetailView",
     "SubCategoryListView",
+    "UnitOfMeasureDetailView",
+    "UnitOfMeasureListView",
 ]
