@@ -4,7 +4,7 @@ from core.users.models import User
 from ecommerce.models import Product
 from ecommerce.models import ProductImage
 from ecommerce.serializers.categories import CategorySimpleSerializer
-from ecommerce.serializers.pricing import ProductPriceListSerializer
+from ecommerce.serializers.uom import ProductPriceListSerializer
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):

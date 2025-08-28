@@ -4,12 +4,12 @@ from .views.cart import CartItemView
 from .views.cart import CartListCreateView
 from .views.categories import CategoryDetailView
 from .views.categories import CategoryListView
-from .views.pricing import UnitOfMeasureDetailView
-from .views.pricing import UnitOfMeasureListView
 from .views.products import ProductDetailView
 from .views.products import ProductListCreateView
 from .views.subcategories import SubCategoryDetailView
 from .views.subcategories import SubCategoryListView
+from .views.uom import UnitOfMeasureDetailView
+from .views.uom import UnitOfMeasureListView
 
 urlpatterns = [
     # Cart URLs

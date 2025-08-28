@@ -4,14 +4,14 @@ from .cart import CartListSerializer
 from .cart import CartUpdateSerializer
 from .categories import CategoryDetailSerializer
 from .categories import CategoryListSerializer
-from .pricing import CreateProductPriceSerializer
-from .pricing import ProductPriceListSerializer
-from .pricing import UnitOfMeasureDetailSerializer
-from .pricing import UnitOfMeasureListSerializer
-from .pricing import UpdateProductPriceSerializer
 from .products import ProductImageListSerializer
 from .products import ProductListSerializer
 from .subcategories import SubCategoryGetDetailSerializer
+from .uom import CreateProductPriceSerializer
+from .uom import ProductPriceListSerializer
+from .uom import UnitOfMeasureDetailSerializer
+from .uom import UnitOfMeasureListSerializer
+from .uom import UpdateProductPriceSerializer
 
 __all__ = [
     "CartCreateSerializer",

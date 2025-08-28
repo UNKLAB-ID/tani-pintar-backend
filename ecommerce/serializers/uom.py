@@ -15,7 +15,6 @@ class UnitOfMeasureListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "description",
         ]
         read_only_fields = fields
 

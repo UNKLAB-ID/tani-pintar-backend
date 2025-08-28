@@ -3,8 +3,8 @@ from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveAPIView
 
 from ecommerce.models import UnitOfMeasure
-from ecommerce.serializers.pricing import UnitOfMeasureDetailSerializer
-from ecommerce.serializers.pricing import UnitOfMeasureListSerializer
+from ecommerce.serializers.uom import UnitOfMeasureDetailSerializer
+from ecommerce.serializers.uom import UnitOfMeasureListSerializer
 
 
 class UnitOfMeasureListView(ListAPIView):
