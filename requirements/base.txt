@@ -30,7 +30,7 @@ drf-spectacular==0.28.0  # https://github.com/tfranzel/drf-spectacular
 django-health-check==3.20.0  # https://github.com/revsys/django-health-check
 
 # OpenAI
-openai==1.100.2  # https://pypi.org/project/openai/
+openai==1.102.0  # https://pypi.org/project/openai/
 
 # Custom
 pytest-cov==6.2.1
