@@ -12,4 +12,4 @@ django-anymail==13.0.1  # https://github.com/anymail/django-anymail
 
 # Storages
 django-storages==1.14.6
-boto3==1.40.19
+boto3==1.40.21
