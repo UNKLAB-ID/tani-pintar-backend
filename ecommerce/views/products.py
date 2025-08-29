@@ -7,6 +7,7 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 from ecommerce.models import Product
 from ecommerce.paginations import ProductCursorPagination
+from ecommerce.permissions import IsVendorOrReadOnly
 from ecommerce.serializers.products import CreateProductSerializer
 from ecommerce.serializers.products import ProductDetailSerializer
 from ecommerce.serializers.products import ProductListSerializer
@@ -17,11 +18,11 @@ class ProductListCreateView(ListCreateAPIView):
     """
     View for listing and creating products.
     GET: List products with filtering, search and cursor pagination
-    POST: Create new product
+    POST: Create new product (requires approved vendor status)
     """
 
     queryset = Product.objects.all().order_by("-created_at")
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsVendorOrReadOnly]
     pagination_class = ProductCursorPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["category", "status", "user", "approval_status"]
@@ -66,12 +67,12 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
     """
     View for retrieving, updating, and deleting individual products.
     GET: Retrieve product details
-    PUT/PATCH: Update product
-    DELETE: Delete product
+    PUT/PATCH: Update product (requires approved vendor status and ownership)
+    DELETE: Delete product (requires approved vendor status and ownership)
     """
 
     queryset = Product.objects.all()
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsVendorOrReadOnly]
     lookup_field = "uuid"
     lookup_url_kwarg = "pk"
 
@@ -103,15 +104,19 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
             return queryset.filter(approval_status=Product.APPROVAL_APPROVED)
 
         # For modification operations, return all
-        # (permissions handled in perform methods)
+        # (permissions handled by IsVendorOrReadOnly permission class)
         return queryset
 
     def perform_update(self, serializer):
-        """Ensure users can only update their own products."""
+        """
+        Save product update.
+        Vendor validation and ownership handled by permissions.
+        """
         product = self.get_object()
         if product.user != self.request.user:
             msg = "You can only update your own products."
             raise permissions.PermissionDenied(msg)
+
         serializer.save()
 
     def perform_destroy(self, instance):
@@ -119,3 +124,4 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
         if instance.user != self.request.user:
             msg = "You can only delete your own products."
             raise permissions.PermissionDenied(msg)
+        instance.delete()
