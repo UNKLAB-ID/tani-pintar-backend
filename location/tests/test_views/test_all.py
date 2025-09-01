@@ -56,3 +56,16 @@ class CityViewTests(BaseLocationTest):
             reverse("location:city-detail", kwargs={"pk": self.city.pk}),
         )
         assert response.status_code == status.HTTP_200_OK
+
+
+class DistrictViewTests(BaseLocationTest):
+    def test_district_list_view(self):
+        response = self.client.get(reverse("location:districts"))
+        assert response.status_code == status.HTTP_200_OK
+        self.assertContains(response, "Test District")
+
+    def test_district_detail_view(self):
+        response = self.client.get(
+            reverse("location:district-detail", kwargs={"pk": self.district.pk}),
+        )
+        assert response.status_code == status.HTTP_200_OK
