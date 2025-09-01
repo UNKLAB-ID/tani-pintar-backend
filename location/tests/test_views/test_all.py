@@ -8,10 +8,8 @@ from location.models import District
 from location.models import Province
 
 
-
 class BaseLocationTest(TestCase):
-    def setUp(self): 
-        
+    def setUp(self):
         self.country = Country.objects.create(name="Test Country", code="TC")
         self.province = Province.objects.create(
             name="Test Province",
