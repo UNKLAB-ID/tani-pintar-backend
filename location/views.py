@@ -8,9 +8,11 @@ from rest_framework.permissions import AllowAny
 
 from location.models import City
 from location.models import Country
+from location.models import District
 from location.models import Province
 from location.serializers import CitySerializer
 from location.serializers import CountrySerializer
+from location.serializers import DistrictSerializer
 from location.serializers import ProvinceSerializer
 
 
@@ -76,3 +78,29 @@ class CityListAPIView(BaseLocationListAPIView):
 class CityDetailAPIView(BaseLocationDetailAPIView):
     serializer_class = CitySerializer
     queryset = City.objects.all()
+
+
+class DistrictListAPIView(BaseLocationListAPIView):
+    serializer_class = DistrictSerializer
+    queryset = (
+        District.objects.all()
+        .order_by("-name")
+        .prefetch_related("city")
+        .prefetch_related("city__province")
+        .prefetch_related("city__province__country")
+    )
+    search_fields = ["name"]
+    filterset_fields = [
+        "name",
+        "city__name",
+        "city__id",
+        "city__province__name",
+        "city__province__id",
+        "city__province__country__name",
+        "city__province__country__id",
+    ]
+
+
+class DistrictDetailAPIView(BaseLocationDetailAPIView):
+    serializer_class = DistrictSerializer
+    queryset = District.objects.all()

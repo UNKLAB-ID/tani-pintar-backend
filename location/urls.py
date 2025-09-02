@@ -4,6 +4,8 @@ from location.views import CityDetailAPIView
 from location.views import CityListAPIView
 from location.views import CountryDetailAPIView
 from location.views import CountryListAPIView
+from location.views import DistrictDetailAPIView
+from location.views import DistrictListAPIView
 from location.views import ProvinceDetailAPIView
 from location.views import ProvinceListAPIView
 
@@ -22,6 +24,8 @@ urlpatterns = [
     ),
     path("cities/", CityListAPIView.as_view(), name="cities"),
     path("cities/<pk>/", CityDetailAPIView.as_view(), name="city-detail"),
+    path("districts/", DistrictListAPIView.as_view(), name="districts"),
+    path("districts/<pk>/", DistrictDetailAPIView.as_view(), name="district-detail"),
 ]
 
 app_name = "location"
