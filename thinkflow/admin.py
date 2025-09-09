@@ -1,10 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from .models import PlantDisease
 
 
 @admin.register(PlantDisease)
-class PlantDiseaseAdmin(admin.ModelAdmin):
+class PlantDiseaseAdmin(ModelAdmin):
     list_display = (
         "uuid",
         "user",
