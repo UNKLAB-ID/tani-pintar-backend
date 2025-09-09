@@ -21,13 +21,7 @@ class ProvinceFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("name", "country")
 
     country = factory.SubFactory(CountryFactory)
-
-    @factory.lazy_attribute
-    def name(self):
-        provinces = Province.objects.filter(country=self.country)
-        if provinces.exists():
-            return factory.random.randgen.choice(provinces).name
-        return f"{self.country.name} Province"  # deterministic fallback
+    name = factory.Sequence(lambda n: f"Province_{n}")  # Guaranteed unique names
 
 
 class CityFactory(factory.django.DjangoModelFactory):
@@ -35,14 +29,12 @@ class CityFactory(factory.django.DjangoModelFactory):
         model = City
         django_get_or_create = ("name", "province")
 
-    province = factory.SubFactory(ProvinceFactory)
-
     @factory.lazy_attribute
-    def name(self):
-        cities = City.objects.filter(province=self.province)
-        if cities.exists():
-            return factory.random.randgen.choice(cities).name
-        return f"{self.province.name} City"  # fallback that matches province
+    def province(self):
+        # This will be overridden when province is passed as parameter
+        return ProvinceFactory()
+
+    name = factory.Sequence(lambda n: f"City_{n}")  # Guaranteed unique names
 
 
 class DistrictFactory(factory.django.DjangoModelFactory):
@@ -50,11 +42,9 @@ class DistrictFactory(factory.django.DjangoModelFactory):
         model = District
         django_get_or_create = ("name", "city")
 
-    city = factory.SubFactory(CityFactory)
-
     @factory.lazy_attribute
-    def name(self):
-        districts = District.objects.filter(city=self.city)
-        if districts.exists():
-            return factory.random.randgen.choice(districts).name
-        return f"{self.city.name} District"  # fallback that matches city
+    def city(self):
+        # This will be overridden when city is passed as parameter
+        return CityFactory()
+
+    name = factory.Sequence(lambda n: f"District_{n}")  # Guaranteed unique names
