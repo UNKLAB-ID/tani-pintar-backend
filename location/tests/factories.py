@@ -20,18 +20,14 @@ class ProvinceFactory(factory.django.DjangoModelFactory):
         model = Province
         django_get_or_create = ("name", "country")
 
+    country = factory.SubFactory(CountryFactory)
+
     @factory.lazy_attribute
     def name(self):
-        indonesia = Country.objects.get_or_create(
-            code="ID",
-            defaults={"name": "Indonesia"},
-        )[0]
-        provinces = Province.objects.filter(country=indonesia)
+        provinces = Province.objects.filter(country=self.country)
         if provinces.exists():
             return factory.random.randgen.choice(provinces).name
-        return "Jawa Barat"  # fallback
-
-    country = factory.SubFactory(CountryFactory)
+        return f"{self.country.name} Province"  # deterministic fallback
 
 
 class CityFactory(factory.django.DjangoModelFactory):
@@ -39,19 +35,14 @@ class CityFactory(factory.django.DjangoModelFactory):
         model = City
         django_get_or_create = ("name", "province")
 
-    @factory.lazy_attribute
-    def name(self):
-        cities = City.objects.all()
-        if cities.exists():
-            return factory.random.randgen.choice(cities).name
-        return "Jakarta Utara"  # fallback
+    province = factory.SubFactory(ProvinceFactory)
 
     @factory.lazy_attribute
-    def province(self):
-        cities = City.objects.all()
+    def name(self):
+        cities = City.objects.filter(province=self.province)
         if cities.exists():
-            return factory.random.randgen.choice(cities).province
-        return ProvinceFactory()
+            return factory.random.randgen.choice(cities).name
+        return f"{self.province.name} City"  # fallback that matches province
 
 
 class DistrictFactory(factory.django.DjangoModelFactory):
@@ -59,16 +50,11 @@ class DistrictFactory(factory.django.DjangoModelFactory):
         model = District
         django_get_or_create = ("name", "city")
 
-    @factory.lazy_attribute
-    def name(self):
-        districts = District.objects.all()
-        if districts.exists():
-            return factory.random.randgen.choice(districts).name
-        return "Kemayoran"  # fallback
+    city = factory.SubFactory(CityFactory)
 
     @factory.lazy_attribute
-    def city(self):
-        districts = District.objects.all()
+    def name(self):
+        districts = District.objects.filter(city=self.city)
         if districts.exists():
-            return factory.random.randgen.choice(districts).city
-        return CityFactory()
+            return factory.random.randgen.choice(districts).name
+        return f"{self.city.name} District"  # fallback that matches city
