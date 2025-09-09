@@ -1,21 +1,18 @@
 import factory
-from faker import Faker
 
 from location.models import City
 from location.models import Country
 from location.models import District
 from location.models import Province
 
-fake = Faker()
-
 
 class CountryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Country
-        django_get_or_create = ("name",)
+        django_get_or_create = ("code",)
 
-    name = factory.Faker("country")
-    code = factory.LazyAttribute(lambda obj: obj.name[:2].upper())
+    name = "Indonesia"
+    code = "ID"
 
 
 class ProvinceFactory(factory.django.DjangoModelFactory):
@@ -23,7 +20,17 @@ class ProvinceFactory(factory.django.DjangoModelFactory):
         model = Province
         django_get_or_create = ("name", "country")
 
-    name = factory.Faker("state")
+    @factory.lazy_attribute
+    def name(self):
+        indonesia = Country.objects.get_or_create(
+            code="ID",
+            defaults={"name": "Indonesia"},
+        )[0]
+        provinces = Province.objects.filter(country=indonesia)
+        if provinces.exists():
+            return factory.random.randgen.choice(provinces).name
+        return "Jawa Barat"  # fallback
+
     country = factory.SubFactory(CountryFactory)
 
 
@@ -32,8 +39,19 @@ class CityFactory(factory.django.DjangoModelFactory):
         model = City
         django_get_or_create = ("name", "province")
 
-    name = factory.Faker("city")
-    province = factory.SubFactory(ProvinceFactory)
+    @factory.lazy_attribute
+    def name(self):
+        cities = City.objects.all()
+        if cities.exists():
+            return factory.random.randgen.choice(cities).name
+        return "Jakarta Utara"  # fallback
+
+    @factory.lazy_attribute
+    def province(self):
+        cities = City.objects.all()
+        if cities.exists():
+            return factory.random.randgen.choice(cities).province
+        return ProvinceFactory()
 
 
 class DistrictFactory(factory.django.DjangoModelFactory):
@@ -41,5 +59,16 @@ class DistrictFactory(factory.django.DjangoModelFactory):
         model = District
         django_get_or_create = ("name", "city")
 
-    name = factory.Faker("city_suffix")
-    city = factory.SubFactory(CityFactory)
+    @factory.lazy_attribute
+    def name(self):
+        districts = District.objects.all()
+        if districts.exists():
+            return factory.random.randgen.choice(districts).name
+        return "Kemayoran"  # fallback
+
+    @factory.lazy_attribute
+    def city(self):
+        districts = District.objects.all()
+        if districts.exists():
+            return factory.random.randgen.choice(districts).city
+        return CityFactory()
