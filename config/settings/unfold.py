@@ -19,7 +19,7 @@ UNFOLD = {
     #     "light": lambda request: "/static/images/tani-pintar-logo-light.svg",  # noqa: E501, ERA001
     #     "dark": lambda request: "/static/images/tani-pintar-logo-dark.svg",  # noqa: E501, ERA001
     # },
-    "SITE_SYMBOL": "eco",  # Icon from Material Design Icons
+    "SITE_SYMBOL": "agriculture",  # Icon from Material Design Icons
     # Color scheme - Greenish theme matching #FDFDFD background
     "COLORS": {
         "font": {
@@ -55,7 +55,7 @@ UNFOLD = {
                 "items": [
                     {
                         "title": "Overview",
-                        "icon": "dashboard",
+                        "icon": "agriculture",
                         "link": "/admin/",
                     },
                 ],
@@ -82,7 +82,7 @@ UNFOLD = {
                 "items": [
                     {
                         "title": "User Profiles",
-                        "icon": "person",
+                        "icon": "badge",
                         "link": "/admin/accounts/profile/",
                     },
                     {
@@ -170,7 +170,7 @@ UNFOLD = {
                 "items": [
                     {
                         "title": "Disease Detection",
-                        "icon": "biotech",
+                        "icon": "local_florist",
                         "link": "/admin/thinkflow/",
                     },
                 ],
@@ -191,7 +191,7 @@ UNFOLD = {
                     },
                     {
                         "title": "Products",
-                        "icon": "inventory",
+                        "icon": "grass",
                         "link": "/admin/ecommerce/product/",
                     },
                     {
@@ -222,7 +222,7 @@ UNFOLD = {
                 "items": [
                     {
                         "title": "Vendors",
-                        "icon": "store",
+                        "icon": "storefront",
                         "link": "/admin/vendors/vendor/",
                     },
                 ],
