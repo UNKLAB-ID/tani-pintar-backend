@@ -1,21 +1,18 @@
 import factory
-from faker import Faker
 
 from location.models import City
 from location.models import Country
 from location.models import District
 from location.models import Province
 
-fake = Faker()
-
 
 class CountryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Country
-        django_get_or_create = ("name",)
+        django_get_or_create = ("code",)
 
-    name = factory.Faker("country")
-    code = factory.LazyAttribute(lambda obj: obj.name[:2].upper())
+    name = "Indonesia"
+    code = "ID"
 
 
 class ProvinceFactory(factory.django.DjangoModelFactory):
@@ -23,8 +20,8 @@ class ProvinceFactory(factory.django.DjangoModelFactory):
         model = Province
         django_get_or_create = ("name", "country")
 
-    name = factory.Faker("state")
     country = factory.SubFactory(CountryFactory)
+    name = factory.Sequence(lambda n: f"Province_{n}")  # Guaranteed unique names
 
 
 class CityFactory(factory.django.DjangoModelFactory):
@@ -32,8 +29,12 @@ class CityFactory(factory.django.DjangoModelFactory):
         model = City
         django_get_or_create = ("name", "province")
 
-    name = factory.Faker("city")
-    province = factory.SubFactory(ProvinceFactory)
+    @factory.lazy_attribute
+    def province(self):
+        # This will be overridden when province is passed as parameter
+        return ProvinceFactory()
+
+    name = factory.Sequence(lambda n: f"City_{n}")  # Guaranteed unique names
 
 
 class DistrictFactory(factory.django.DjangoModelFactory):
@@ -41,5 +42,9 @@ class DistrictFactory(factory.django.DjangoModelFactory):
         model = District
         django_get_or_create = ("name", "city")
 
-    name = factory.Faker("city_suffix")
-    city = factory.SubFactory(CityFactory)
+    @factory.lazy_attribute
+    def city(self):
+        # This will be overridden when city is passed as parameter
+        return CityFactory()
+
+    name = factory.Sequence(lambda n: f"District_{n}")  # Guaranteed unique names

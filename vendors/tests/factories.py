@@ -17,6 +17,11 @@ class VendorFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     vendor_type = Vendor.TYPE_INDIVIDUAL
     name = factory.Faker("company")
+    full_name = factory.Faker("name")  # Required for individual vendors
+    id_card_photo = factory.django.ImageField(  # Required for individual vendors
+        filename="id_card.jpg",
+        size=1024,
+    )
     phone_number = factory.Faker("phone_number", locale="id_ID")
     review_status = Vendor.PENDING
     review_notes = ""
