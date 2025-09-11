@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from core.users.models import User
@@ -160,3 +161,41 @@ class Vendor(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.get_vendor_type_display()})"
+
+    def clean(self):
+        super().clean()
+
+        if self.vendor_type == self.TYPE_INDIVIDUAL:
+            self._validate_individual_fields()
+        elif self.vendor_type == self.TYPE_COMPANY:
+            self._validate_company_fields()
+
+    def _validate_individual_fields(self):
+        """Validate required fields for individual vendors."""
+        errors = {}
+        if not self.full_name:
+            errors["full_name"] = "Full name is required for individual vendors."
+        if not self.id_card_photo:
+            errors["id_card_photo"] = (
+                "ID card photo is required for individual vendors."
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def _validate_company_fields(self):
+        """Validate required fields for company vendors."""
+        errors = {}
+        if not self.business_number:
+            errors["business_number"] = (
+                "Business number is required for company vendors."
+            )
+        if not self.business_nib_file:
+            errors["business_nib_file"] = "NIB file is required for company vendors."
+        if not self.npwp_number:
+            errors["npwp_number"] = "NPWP number is required for company vendors."
+        if not self.npwp_file:
+            errors["npwp_file"] = "NPWP file is required for company vendors."
+
+        if errors:
+            raise ValidationError(errors)
