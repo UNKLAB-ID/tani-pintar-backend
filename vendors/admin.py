@@ -37,15 +37,10 @@ class VendorAdmin(ModelAdmin):
             _("Basic Information"),
             {
                 "fields": (
-                    "user",
-                    "name",
-                    "vendor_type",
-                    "phone_number",
-                    "logo",
-                    "review_status",
-                    "review_notes",
-                    "created_at",
-                    "updated_at",
+                    ("user", "name"),
+                    ("vendor_type", "phone_number"),
+                    ("review_notes", "review_status"),
+                    ("created_at", "updated_at"),
                 ),
                 "classes": ["tab"],
             },
@@ -54,13 +49,10 @@ class VendorAdmin(ModelAdmin):
             _("Location & Address"),
             {
                 "fields": (
-                    "province",
-                    "city",
+                    ("province", "city"),
                     "district",
-                    "address_detail",
-                    "postal_code",
-                    "latitude",
-                    "longitude",
+                    ("address_detail", "postal_code"),
+                    ("latitude", "longitude"),
                 ),
                 "classes": ["tab"],
             },
@@ -68,7 +60,10 @@ class VendorAdmin(ModelAdmin):
         (
             _("Personal Vendor"),
             {
-                "fields": ("full_name", "id_card_photo"),
+                "fields": (
+                    "full_name",
+                    ("id_card_photo", "logo"),
+                ),
                 "classes": ["tab"],
             },
         ),
@@ -76,10 +71,8 @@ class VendorAdmin(ModelAdmin):
             _("Company Vendor"),
             {
                 "fields": (
-                    "business_number",
-                    "business_nib_file",
-                    "npwp_number",
-                    "npwp_file",
+                    ("business_number", "npwp_number"),
+                    ("business_nib_file", "npwp_file"),
                 ),
                 "classes": ["tab"],
             },
