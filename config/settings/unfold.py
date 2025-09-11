@@ -19,7 +19,11 @@ UNFOLD = {
     #     "light": lambda request: "/static/images/tani-pintar-logo-light.svg",  # noqa: E501, ERA001
     #     "dark": lambda request: "/static/images/tani-pintar-logo-dark.svg",  # noqa: E501, ERA001
     # },
-    "SITE_SYMBOL": "agriculture",  # Icon from Material Design Icons
+    "SITE_SYMBOL": "eco",  # Icon from Material Design Icons
+    # Login page image
+    "LOGIN": {
+        "image": lambda request: "/static/images/favicons/login.svg",
+    },
     # Color scheme - Greenish theme matching #FDFDFD background
     "COLORS": {
         "font": {
@@ -82,13 +86,23 @@ UNFOLD = {
                 "items": [
                     {
                         "title": "User Profiles",
-                        "icon": "badge",
+                        "icon": "eco",
                         "link": "/admin/accounts/profile/",
                     },
                     {
+                        "title": "Follow Relationships",
+                        "icon": "nature_people",
+                        "link": "/admin/accounts/follow/",
+                    },
+                    {
                         "title": "Verification Codes",
-                        "icon": "verified_user",
+                        "icon": "verified",
                         "link": "/admin/accounts/verificationcode/",
+                    },
+                    {
+                        "title": "Login Codes",
+                        "icon": "local_florist",
+                        "link": "/admin/accounts/logincode/",
                     },
                 ],
             },
