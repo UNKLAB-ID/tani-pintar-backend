@@ -20,6 +20,12 @@ class ProvinceSerializer(ModelSerializer):
         fields = "__all__"
 
 
+class ProvinceOnlySerializer(ModelSerializer):
+    class Meta:
+        model = Province
+        fields = ["id", "name"]
+
+
 class CitySerializer(ModelSerializer):
     province = ProvinceSerializer()
 
@@ -28,9 +34,21 @@ class CitySerializer(ModelSerializer):
         fields = "__all__"
 
 
+class CityOnlyserializer(ModelSerializer):
+    class Meta:
+        model = City
+        fields = ["id", "name"]
+
+
 class DistrictSerializer(ModelSerializer):
     city = CitySerializer()
 
     class Meta:
         model = District
         fields = "__all__"
+
+
+class DistrictOnlySerializer(ModelSerializer):
+    class Meta:
+        model = District
+        fields = ["id", "name"]

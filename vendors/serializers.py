@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
 from core.users.serializers import UserDetailSerializer
-from location.serializers import CitySerializer
-from location.serializers import DistrictSerializer
-from location.serializers import ProvinceSerializer
+from location.serializers import CityOnlyserializer
+from location.serializers import DistrictOnlySerializer
+from location.serializers import ProvinceOnlySerializer
 from vendors.models import Vendor
 
 
@@ -236,8 +236,9 @@ class VendorListSerializer(serializers.ModelSerializer):
         source="get_review_status_display",
         read_only=True,
     )
-    province = ProvinceSerializer(read_only=True)
-    city = CitySerializer(read_only=True)
+    province = ProvinceOnlySerializer(read_only=True)
+    city = CityOnlyserializer(read_only=True)
+    district = DistrictOnlySerializer(read_only=True)
 
     class Meta:
         model = Vendor
@@ -250,6 +251,7 @@ class VendorListSerializer(serializers.ModelSerializer):
             "review_status_display",
             "province",
             "city",
+            "district",
             "logo",
             "created_at",
         ]
@@ -265,9 +267,9 @@ class VendorDetailSerializer(serializers.ModelSerializer):
         source="get_review_status_display",
         read_only=True,
     )
-    province = ProvinceSerializer(read_only=True)
-    city = CitySerializer(read_only=True)
-    district = DistrictSerializer(read_only=True)
+    province = ProvinceOnlySerializer(read_only=True)
+    city = CityOnlyserializer(read_only=True)
+    district = DistrictOnlySerializer(read_only=True)
 
     # Add fields that might not exist in model but are expected in tests
     address = serializers.SerializerMethodField()
