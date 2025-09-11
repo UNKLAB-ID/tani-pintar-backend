@@ -86,9 +86,19 @@ UNFOLD = {
                         "link": "/admin/accounts/profile/",
                     },
                     {
+                        "title": "Follow Relationships",
+                        "icon": "group_add",
+                        "link": "/admin/accounts/follow/",
+                    },
+                    {
                         "title": "Verification Codes",
                         "icon": "verified_user",
                         "link": "/admin/accounts/verificationcode/",
+                    },
+                    {
+                        "title": "Login Codes",
+                        "icon": "login",
+                        "link": "/admin/accounts/logincode/",
                     },
                 ],
             },
