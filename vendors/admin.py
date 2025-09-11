@@ -10,12 +10,24 @@ class VendorAdmin(ModelAdmin):
         "name",
         "vendor_type",
         "user",
+        "phone_number",
         "review_status",
+        "province",
+        "city",
         "created_at",
-        "updated_at",
     ]
-    list_filter = ["vendor_type", "review_status", "created_at"]
-    search_fields = ["name", "user__email", "user__username"]
+    list_filter = ["vendor_type", "review_status", "province", "city", "created_at"]
+    search_fields = [
+        "name",
+        "user__email",
+        "user__username",
+        "phone_number",
+        "full_name",
+        "business_number",
+        "province__name",
+        "city__name",
+        "district__name",
+    ]
     readonly_fields = ["created_at", "updated_at"]
     autocomplete_fields = ["user", "province", "city", "district"]
 
@@ -36,7 +48,12 @@ class VendorAdmin(ModelAdmin):
         (
             "Company Vendor Fields",
             {
-                "fields": ("business_name", "business_number", "business_nib", "npwp"),
+                "fields": (
+                    "business_number",
+                    "business_nib_file",
+                    "npwp_number",
+                    "npwp_file",
+                ),
                 "classes": ("collapse",),
             },
         ),
@@ -44,14 +61,13 @@ class VendorAdmin(ModelAdmin):
             "Location Information",
             {
                 "fields": (
-                    "address",
                     "province",
                     "city",
                     "district",
-                    "latitude",
-                    "longitude",
                     "address_detail",
                     "postal_code",
+                    "latitude",
+                    "longitude",
                 ),
                 "classes": ("collapse",),
             },
