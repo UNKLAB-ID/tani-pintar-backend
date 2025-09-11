@@ -83,6 +83,7 @@ class Vendor(models.Model):
     )
     npwp_file = models.FileField(
         max_length=255,
+        blank=True,
         help_text="NPWP (Taxpayer Registration Number) file",
     )
 

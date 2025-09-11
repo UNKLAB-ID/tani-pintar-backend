@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 from unfold.admin import ModelAdmin
 
 from vendors.models import Vendor
@@ -33,32 +34,24 @@ class VendorAdmin(ModelAdmin):
 
     fieldsets = (
         (
-            "Basic Information",
-            {
-                "fields": ("user", "name", "vendor_type", "phone_number", "logo"),
-            },
-        ),
-        (
-            "Individual Vendor Fields",
-            {
-                "fields": ("full_name", "id_card_photo"),
-                "classes": ("collapse",),
-            },
-        ),
-        (
-            "Company Vendor Fields",
+            _("Basic Information"),
             {
                 "fields": (
-                    "business_number",
-                    "business_nib_file",
-                    "npwp_number",
-                    "npwp_file",
+                    "user",
+                    "name",
+                    "vendor_type",
+                    "phone_number",
+                    "logo",
+                    "review_status",
+                    "review_notes",
+                    "created_at",
+                    "updated_at",
                 ),
-                "classes": ("collapse",),
+                "classes": ["tab"],
             },
         ),
         (
-            "Location Information",
+            _("Location & Address"),
             {
                 "fields": (
                     "province",
@@ -69,20 +62,26 @@ class VendorAdmin(ModelAdmin):
                     "latitude",
                     "longitude",
                 ),
-                "classes": ("collapse",),
+                "classes": ["tab"],
             },
         ),
         (
-            "Review Information",
+            _("Personal Vendor"),
             {
-                "fields": ("review_status", "review_notes"),
+                "fields": ("full_name", "id_card_photo"),
+                "classes": ["tab"],
             },
         ),
         (
-            "Timestamps",
+            _("Company Vendor"),
             {
-                "fields": ("created_at", "updated_at"),
-                "classes": ("collapse",),
+                "fields": (
+                    "business_number",
+                    "business_nib_file",
+                    "npwp_number",
+                    "npwp_file",
+                ),
+                "classes": ["tab"],
             },
         ),
     )
