@@ -228,17 +228,9 @@ class UpdateCompanyVendorSerializer(serializers.ModelSerializer):
 
 
 class VendorListSerializer(serializers.ModelSerializer):
-    vendor_type_display = serializers.CharField(
-        source="get_vendor_type_display",
-        read_only=True,
-    )
-    review_status_display = serializers.CharField(
-        source="get_review_status_display",
-        read_only=True,
-    )
-    province = ProvinceOnlySerializer(read_only=True)
-    city = CityOnlyserializer(read_only=True)
-    district = DistrictOnlySerializer(read_only=True)
+    # province = ProvinceOnlySerializer(read_only=True)  # noqa: ERA001
+    # city = CityOnlyserializer(read_only=True)  # noqa: ERA001
+    # district = DistrictOnlySerializer(read_only=True)  # noqa: ERA001
 
     class Meta:
         model = Vendor
@@ -246,9 +238,7 @@ class VendorListSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "vendor_type",
-            "vendor_type_display",
             "review_status",
-            "review_status_display",
             "province",
             "city",
             "district",

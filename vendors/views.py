@@ -27,7 +27,7 @@ class VendorListAPIView(ListAPIView):
 
     authentication_classes = [JWTAuthentication]
     permission_classes = [AllowAny]
-    queryset = Vendor.objects.filter(review_status=Vendor.STATUS_APPROVED)
+    queryset = Vendor.objects.all()
     serializer_class = VendorListSerializer
     pagination_class = VendorCursorPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -35,38 +35,6 @@ class VendorListAPIView(ListAPIView):
     search_fields = ["name", "full_name", "business_name"]
     ordering_fields = ["name", "created_at"]
     ordering = ["-created_at"]
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-
-        # Custom filtering for review_status display values
-        review_status_param = self.request.query_params.get("review_status")
-        if review_status_param:
-            # Handle both raw values and display values
-            status_mapping = {
-                "Pending": Vendor.STATUS_PENDING,
-                "Approved": Vendor.STATUS_APPROVED,
-                "Rejected": Vendor.STATUS_REJECTED,
-                "Resubmission": Vendor.STATUS_RESUBMISSION,
-            }
-            if review_status_param in status_mapping:
-                queryset = queryset.filter(
-                    review_status=status_mapping[review_status_param],
-                )
-
-        # Custom filtering for vendor_type display values
-        vendor_type_param = self.request.query_params.get("vendor_type")
-        if vendor_type_param:
-            vendor_type_mapping = {
-                "individual": Vendor.TYPE_INDIVIDUAL,
-                "company": Vendor.TYPE_COMPANY,
-            }
-            if vendor_type_param.lower() in vendor_type_mapping:
-                queryset = queryset.filter(
-                    vendor_type=vendor_type_mapping[vendor_type_param.lower()],
-                )
-
-        return queryset
 
 
 class CreateIndividualVendorAPIView(CreateAPIView):
