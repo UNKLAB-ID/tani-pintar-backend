@@ -12,7 +12,7 @@ from vendors.models import Vendor
 # Custom Filters
 # ------------------------------------------------------------------------------
 class VendorTypeDropdownFilter(DropdownFilter):
-    title = _("Vendor Type")
+    title = _("Type")
     parameter_name = "vendor_type"
 
     def lookups(self, request, model_admin):
@@ -21,6 +21,20 @@ class VendorTypeDropdownFilter(DropdownFilter):
     def queryset(self, request, queryset):
         if self.value() not in EMPTY_VALUES:
             return queryset.filter(vendor_type=self.value())
+
+        return queryset
+
+
+class VendorReviewStatusDropdownFilter(DropdownFilter):
+    title = _("Review Status")
+    parameter_name = "vendor_review_status"
+
+    def lookups(self, request, model_admin):
+        return Vendor.REVIEW_STATUS_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value() not in EMPTY_VALUES:
+            return queryset.filter(review_status=self.value())
 
         return queryset
 
@@ -37,7 +51,7 @@ class VendorAdmin(SimpleHistoryAdmin, ModelAdmin):
         "city",
         "created_at",
     ]
-    list_filter = [VendorTypeDropdownFilter]
+    list_filter = [VendorTypeDropdownFilter, VendorReviewStatusDropdownFilter]
     list_filter_submit = True
     search_fields = [
         "name",
