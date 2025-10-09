@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
+from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
@@ -7,7 +8,7 @@ from vendors.models import Vendor
 
 
 @admin.register(Vendor)
-class VendorAdmin(ModelAdmin):
+class VendorAdmin(SimpleHistoryAdmin, ModelAdmin):
     list_display = [
         "name",
         "display_vendor_type",

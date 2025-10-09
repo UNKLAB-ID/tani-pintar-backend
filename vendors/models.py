@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 from core.users.models import User
 from location.models import City
@@ -151,6 +152,8 @@ class Vendor(models.Model):
         auto_now=True,
         help_text="When the vendor record was last updated",
     )
+
+    history = HistoricalRecords()
 
     class Meta:
         indexes = [
