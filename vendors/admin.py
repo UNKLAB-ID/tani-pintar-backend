@@ -78,3 +78,23 @@ class VendorAdmin(ModelAdmin):
             },
         ),
     )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.review_status in [
+            Vendor.STATUS_APPROVED,
+            Vendor.STATUS_REJECTED,
+            Vendor.STATUS_RESUBMISSION,
+        ]:
+            return False
+
+        return super().has_delete_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        if obj and obj.review_status in [
+            Vendor.STATUS_APPROVED,
+            Vendor.STATUS_REJECTED,
+            Vendor.STATUS_RESUBMISSION,
+        ]:
+            return False
+
+        return super().has_change_permission(request, obj)

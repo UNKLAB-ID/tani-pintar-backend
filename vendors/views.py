@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
@@ -44,6 +45,25 @@ class CreateIndividualVendorAPIView(CreateAPIView):
 
     permission_classes = [IsAuthenticated]
     serializer_class = CreateIndividualVendorSerializer
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+
+        # Validate that user does not already have a pending or approved vendor
+        if Vendor.objects.filter(
+            user=user,
+            review_status=Vendor.STATUS_PENDING,
+        ).exists():
+            msg = "User already has a pending vendor application."
+            raise ValidationError({"detail": msg})
+        if Vendor.objects.filter(
+            user=user,
+            review_status=Vendor.STATUS_APPROVED,
+        ).exists():
+            msg = "User is already an approved vendor."
+            raise ValidationError({"detail": msg})
+
+        return super().create(request, *args, **kwargs)
 
 
 class CreateCompanyVendorAPIView(CreateAPIView):
