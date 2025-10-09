@@ -1,54 +1,37 @@
 from rest_framework import serializers
 
 from core.users.serializers import UserDetailSerializer
+from location.models import City
+from location.models import District
+from location.models import Province
 from location.serializers import CityOnlyserializer
 from location.serializers import DistrictOnlySerializer
 from location.serializers import ProvinceOnlySerializer
 from vendors.models import Vendor
 
 
-class CreateIndividualVendorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vendor
-        fields = [
-            "name",
-            "vendor_type",
-            "phone_number",
-            "full_name",
-            "id_card_photo",
-            "logo",
-            "province",
-            "city",
-            "district",
-            "latitude",
-            "longitude",
-            "address_detail",
-            "postal_code",
-        ]
-        extra_kwargs = {
-            "vendor_type": {"default": Vendor.TYPE_INDIVIDUAL},
-        }
+class CreateIndividualVendorSerializer(serializers.Serializer):
+    vendor_type = serializers.CharField(default=Vendor.TYPE_INDIVIDUAL, read_only=True)
+    full_name = serializers.CharField(max_length=255)
+    phone_number = serializers.CharField(max_length=20)
+    id_card_photo = serializers.ImageField()
+    name = serializers.CharField(max_length=255)
+    logo = serializers.ImageField(required=False)
+
+    # Address fields
+    province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all())
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    district = serializers.PrimaryKeyRelatedField(queryset=District.objects.all())
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    address_detail = serializers.CharField(max_length=255)
+    postal_code = serializers.CharField(max_length=20)
 
     def create(self, validated_data):
         request = self.context.get("request")
         validated_data["user"] = request.user
         validated_data["vendor_type"] = Vendor.TYPE_INDIVIDUAL
-        return super().create(validated_data)
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        if attrs.get("vendor_type") == Vendor.TYPE_INDIVIDUAL:
-            if not attrs.get("full_name"):
-                raise serializers.ValidationError(
-                    {"full_name": "Full name is required for individual vendors."},
-                )
-            if not attrs.get("id_card_photo"):
-                raise serializers.ValidationError(
-                    {
-                        "id_card_photo": "ID card photo is required for individual vendors.",  # noqa: E501
-                    },
-                )
-        return attrs
+        return Vendor.objects.create(**validated_data)
 
 
 class CreateCompanyVendorSerializer(serializers.ModelSerializer):
