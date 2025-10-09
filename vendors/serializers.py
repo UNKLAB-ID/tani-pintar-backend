@@ -10,7 +10,24 @@ from location.serializers import ProvinceOnlySerializer
 from vendors.models import Vendor
 
 
-class CreateIndividualVendorSerializer(serializers.Serializer):
+class BaseVendorSerializer(serializers.Serializer):
+    """Base serializer with common vendor validation methods."""
+
+    def validate_no_pending_vendor(self):
+        """Check if current user already has a pending vendor application."""
+        request = self.context.get("request")
+        if request and request.user:
+            if Vendor.objects.filter(
+                user=request.user,
+                review_status=Vendor.STATUS_PENDING,
+            ).exists():
+                msg = "You already have a pending vendor application. Please wait for it to be reviewed."  # noqa: E501
+                raise serializers.ValidationError(
+                    msg,
+                )
+
+
+class CreateIndividualVendorSerializer(BaseVendorSerializer):
     vendor_type = serializers.CharField(default=Vendor.TYPE_INDIVIDUAL, read_only=True)
     full_name = serializers.CharField(max_length=255)
     phone_number = serializers.CharField(max_length=20)
@@ -27,6 +44,10 @@ class CreateIndividualVendorSerializer(serializers.Serializer):
     address_detail = serializers.CharField(max_length=255)
     postal_code = serializers.CharField(max_length=20)
 
+    def validate(self, attrs):
+        self.validate_no_pending_vendor()
+        return attrs
+
     def create(self, validated_data):
         request = self.context.get("request")
         validated_data["user"] = request.user
@@ -34,7 +55,7 @@ class CreateIndividualVendorSerializer(serializers.Serializer):
         return Vendor.objects.create(**validated_data)
 
 
-class CreateCompanyVendorSerializer(serializers.ModelSerializer):
+class CreateCompanyVendorSerializer(BaseVendorSerializer, serializers.ModelSerializer):
     business_nib = serializers.FileField(source="business_nib_file", write_only=True)
     npwp = serializers.CharField(source="npwp_number", write_only=True)
     npwp_file = serializers.FileField(write_only=True)
@@ -72,6 +93,10 @@ class CreateCompanyVendorSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
+
+        # Check if user already has a pending vendor application
+        self.validate_no_pending_vendor()
+
         if attrs.get("vendor_type") == Vendor.TYPE_COMPANY:
             if not attrs.get("business_number"):
                 raise serializers.ValidationError(
