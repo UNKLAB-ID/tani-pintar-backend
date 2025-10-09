@@ -1,10 +1,28 @@
 from django.contrib import admin
+from django.core.validators import EMPTY_VALUES
 from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import DropdownFilter
 from unfold.decorators import display
 
 from vendors.models import Vendor
+
+
+# Custom Filters
+# ------------------------------------------------------------------------------
+class VendorTypeDropdownFilter(DropdownFilter):
+    title = _("Vendor Type")
+    parameter_name = "vendor_type"
+
+    def lookups(self, request, model_admin):
+        return Vendor.TYPE_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value() not in EMPTY_VALUES:
+            return queryset.filter(vendor_type=self.value())
+
+        return queryset
 
 
 @admin.register(Vendor)
@@ -19,7 +37,8 @@ class VendorAdmin(SimpleHistoryAdmin, ModelAdmin):
         "city",
         "created_at",
     ]
-    list_filter = ["vendor_type", "review_status", "province", "city", "created_at"]
+    list_filter = [VendorTypeDropdownFilter]
+    list_filter_submit = True
     search_fields = [
         "name",
         "user__email",
