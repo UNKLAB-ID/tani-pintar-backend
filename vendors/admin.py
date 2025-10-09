@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from unfold.admin import ModelAdmin
+from unfold.decorators import display
 
 from vendors.models import Vendor
 
@@ -9,10 +10,10 @@ from vendors.models import Vendor
 class VendorAdmin(ModelAdmin):
     list_display = [
         "name",
-        "vendor_type",
+        "display_vendor_type",
         "user",
         "phone_number",
-        "review_status",
+        "display_review_status",
         "province",
         "city",
         "created_at",
@@ -31,6 +32,7 @@ class VendorAdmin(ModelAdmin):
     ]
     readonly_fields = ["created_at", "updated_at"]
     autocomplete_fields = ["user", "province", "city", "district"]
+    ordering = ["-created_at"]
 
     fieldsets = (
         (
@@ -78,6 +80,33 @@ class VendorAdmin(ModelAdmin):
             },
         ),
     )
+
+    # List View Custom Field
+    # ------------------------------------------------------------------------------
+    @display(
+        description=_("Review Status"),
+        label={
+            Vendor.STATUS_PENDING: "warning",
+            Vendor.STATUS_APPROVED: "success",
+            Vendor.STATUS_REJECTED: "danger",
+            Vendor.STATUS_RESUBMISSION: "",
+        },
+    )
+    def display_review_status(self, obj):
+        return obj.review_status
+
+    @display(
+        description=_("Vendor Type"),
+        label={
+            Vendor.TYPE_INDIVIDUAL: "info",
+            Vendor.TYPE_COMPANY: "success",
+        },
+    )
+    def display_vendor_type(self, obj):
+        return obj.vendor_type
+
+    # Permission
+    # ------------------------------------------------------------------------------
 
     def has_delete_permission(self, request, obj=None):
         if obj and obj.review_status in [
