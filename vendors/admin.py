@@ -3,6 +3,7 @@ from django.core.validators import EMPTY_VALUES
 from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import AutocompleteSelectMultipleFilter
 from unfold.contrib.filters.admin import DropdownFilter
 from unfold.decorators import display
 
@@ -49,9 +50,16 @@ class VendorAdmin(SimpleHistoryAdmin, ModelAdmin):
         "display_review_status",
         "province",
         "city",
+        "district",
         "created_at",
     ]
-    list_filter = [VendorTypeDropdownFilter, VendorReviewStatusDropdownFilter]
+    list_filter = (
+        VendorTypeDropdownFilter,
+        VendorReviewStatusDropdownFilter,
+        ["province", AutocompleteSelectMultipleFilter],
+        ["city", AutocompleteSelectMultipleFilter],
+        ["district", AutocompleteSelectMultipleFilter],
+    )
     list_filter_submit = True
     search_fields = [
         "name",

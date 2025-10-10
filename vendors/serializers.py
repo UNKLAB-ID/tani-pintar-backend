@@ -34,65 +34,29 @@ class CreateIndividualVendorSerializer(serializers.Serializer):
         return Vendor.objects.create(**validated_data)
 
 
-class CreateCompanyVendorSerializer(serializers.ModelSerializer):
-    business_nib = serializers.FileField(source="business_nib_file", write_only=True)
-    npwp = serializers.CharField(source="npwp_number", write_only=True)
-    npwp_file = serializers.FileField(write_only=True)
-    business_name = serializers.CharField(write_only=True, required=False)
+class CreateCompanyVendorSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    business_number = serializers.CharField(max_length=255)
+    business_nib_file = serializers.FileField()
+    phone_number = serializers.CharField(max_length=20)
 
-    class Meta:
-        model = Vendor
-        fields = [
-            "name",
-            "vendor_type",
-            "phone_number",
-            "business_name",
-            "business_number",
-            "business_nib",
-            "npwp",
-            "npwp_file",
-            "logo",
-            "province",
-            "city",
-            "district",
-            "latitude",
-            "longitude",
-            "address_detail",
-            "postal_code",
-        ]
-        extra_kwargs = {
-            "vendor_type": {"default": Vendor.TYPE_COMPANY},
-        }
+    # Address fields
+    province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all())
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    district = serializers.PrimaryKeyRelatedField(queryset=District.objects.all())
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    address_detail = serializers.CharField(max_length=255)
+    postal_code = serializers.CharField(max_length=20)
+
+    npwp_number = serializers.CharField(max_length=255)
+    npwp_file = serializers.FileField()
 
     def create(self, validated_data):
         request = self.context.get("request")
         validated_data["user"] = request.user
         validated_data["vendor_type"] = Vendor.TYPE_COMPANY
-        return super().create(validated_data)
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-
-        if attrs.get("vendor_type") == Vendor.TYPE_COMPANY:
-            if not attrs.get("business_number"):
-                raise serializers.ValidationError(
-                    {
-                        "business_number": "Business number is required for company vendors.",  # noqa: E501
-                    },
-                )
-            if not attrs.get("business_nib_file"):
-                raise serializers.ValidationError(
-                    {"business_nib": "NIB file is required for company vendors."},
-                )
-            if not attrs.get("npwp_number"):
-                raise serializers.ValidationError(
-                    {"npwp": "NPWP number is required for company vendors."},
-                )
-            if not attrs.get("npwp_file"):
-                raise serializers.ValidationError(
-                    {"npwp_file": "NPWP file is required for company vendors."},
-                )
-        return attrs
+        return Vendor.objects.create(**validated_data)
 
 
 class UpdateIndividualVendorSerializer(serializers.ModelSerializer):
