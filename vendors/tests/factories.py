@@ -30,8 +30,8 @@ class VendorFactory(factory.django.DjangoModelFactory):
     province = factory.SubFactory(ProvinceFactory)
     city = factory.SubFactory(CityFactory, province=factory.SelfAttribute("..province"))
     district = factory.SubFactory(DistrictFactory, city=factory.SelfAttribute("..city"))
-    latitude = factory.Faker("latitude")
-    longitude = factory.Faker("longitude")
+    latitude = factory.LazyFunction(lambda: round(fake.latitude(), 6))
+    longitude = factory.LazyFunction(lambda: round(fake.longitude(), 6))
     address_detail = factory.Faker("street_address")
     postal_code = factory.Faker("postcode")
 
