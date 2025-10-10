@@ -187,6 +187,7 @@ class VendorListSerializer(serializers.ModelSerializer):
     province = ProvinceOnlySerializer(read_only=True)
     city = CityOnlyserializer(read_only=True)
     district = DistrictOnlySerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Vendor
@@ -200,6 +201,7 @@ class VendorListSerializer(serializers.ModelSerializer):
             "district",
             "logo",
             "created_at",
+            "user",
         ]
 
 

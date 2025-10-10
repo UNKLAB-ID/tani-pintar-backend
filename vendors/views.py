@@ -31,6 +31,8 @@ class VendorListAPIView(ListAPIView):
     queryset = Vendor.objects.filter(
         review_status=Vendor.STATUS_APPROVED,
     ).select_related(
+        "user",
+        "user__profile",
         "province",
         "city",
         "district",
@@ -39,7 +41,7 @@ class VendorListAPIView(ListAPIView):
     pagination_class = VendorCursorPagination
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["vendor_type", "review_status", "province", "city"]
+    filterset_fields = ["vendor_type", "review_status", "province", "city", "district"]
     search_fields = ["name", "full_name", "business_name"]
     ordering_fields = ["name", "created_at"]
     ordering = ["-created_at"]
