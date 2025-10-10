@@ -11,6 +11,10 @@ from vendors.models import Vendor
 
 
 class CreateIndividualVendorSerializer(serializers.Serializer):
+    """
+    Serializer for creating individual vendors.
+    """
+
     vendor_type = serializers.CharField(default=Vendor.TYPE_INDIVIDUAL, read_only=True)
     full_name = serializers.CharField(max_length=255)
     phone_number = serializers.CharField(max_length=20)
@@ -35,6 +39,10 @@ class CreateIndividualVendorSerializer(serializers.Serializer):
 
 
 class CreateCompanyVendorSerializer(serializers.Serializer):
+    """
+    Serializer for creating company vendors.
+    """
+
     name = serializers.CharField(max_length=255)
     business_number = serializers.CharField(max_length=255)
     business_nib_file = serializers.FileField()

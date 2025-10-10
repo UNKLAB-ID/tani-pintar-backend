@@ -28,9 +28,10 @@ class VendorListAPIView(ListAPIView):
 
     authentication_classes = [JWTAuthentication]
     permission_classes = [AllowAny]
-    queryset = Vendor.objects.all()
+    queryset = Vendor.objects.filter(review_status=Vendor.STATUS_APPROVED)
     serializer_class = VendorListSerializer
     pagination_class = VendorCursorPagination
+
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["vendor_type", "review_status", "province", "city"]
     search_fields = ["name", "full_name", "business_name"]

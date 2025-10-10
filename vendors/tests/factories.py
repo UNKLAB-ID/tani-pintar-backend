@@ -23,7 +23,7 @@ class VendorFactory(factory.django.DjangoModelFactory):
         size=1024,
     )
     phone_number = factory.Faker("phone_number", locale="id_ID")
-    review_status = Vendor.PENDING
+    review_status = Vendor.STATUS_PENDING
     review_notes = ""
 
     # Location fields with proper relationships
@@ -32,7 +32,6 @@ class VendorFactory(factory.django.DjangoModelFactory):
     district = factory.SubFactory(DistrictFactory, city=factory.SelfAttribute("..city"))
     latitude = factory.Faker("latitude")
     longitude = factory.Faker("longitude")
-    address = factory.Faker("address")
     address_detail = factory.Faker("street_address")
     postal_code = factory.Faker("postcode")
 
@@ -52,21 +51,22 @@ class IndividualVendorFactory(VendorFactory):
     )
 
     # Clear company fields
-    business_name = ""
     business_number = ""
-    business_nib = None
-    npwp = ""
+    business_nib_file = None
+    npwp_number = ""
+    npwp_file = None
 
 
 class CompanyVendorFactory(VendorFactory):
     vendor_type = Vendor.TYPE_COMPANY
-    business_name = factory.Faker("company")
     business_number = factory.LazyFunction(lambda: fake.uuid4()[:15])
-    business_nib = factory.django.ImageField(
-        filename="business_nib.jpg",
-        size=1024,
+    business_nib_file = factory.django.FileField(
+        filename="business_nib.pdf",
     )
-    npwp = factory.LazyFunction(lambda: fake.uuid4()[:15])
+    npwp_number = factory.LazyFunction(lambda: fake.uuid4()[:15])
+    npwp_file = factory.django.FileField(
+        filename="npwp.pdf",
+    )
 
     # Clear individual fields
     full_name = ""
