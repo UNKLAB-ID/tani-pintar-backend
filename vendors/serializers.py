@@ -184,9 +184,9 @@ class UpdateCompanyVendorSerializer(serializers.ModelSerializer):
 
 
 class VendorListSerializer(serializers.ModelSerializer):
-    # province = ProvinceOnlySerializer(read_only=True)  # noqa: ERA001
-    # city = CityOnlyserializer(read_only=True)  # noqa: ERA001
-    # district = DistrictOnlySerializer(read_only=True)  # noqa: ERA001
+    province = ProvinceOnlySerializer(read_only=True)
+    city = CityOnlyserializer(read_only=True)
+    district = DistrictOnlySerializer(read_only=True)
 
     class Meta:
         model = Vendor
