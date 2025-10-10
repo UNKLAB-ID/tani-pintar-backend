@@ -1,23 +1,193 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from location.serializers import CitySerializer
-from location.serializers import DistrictSerializer
-from location.serializers import ProvinceSerializer
+from core.users.serializers import UserDetailSerializer
+from location.models import City
+from location.models import District
+from location.models import Province
+from location.serializers import CityOnlyserializer
+from location.serializers import DistrictOnlySerializer
+from location.serializers import ProvinceOnlySerializer
 from vendors.models import Vendor
 
 
+class CreateIndividualVendorSerializer(serializers.Serializer):
+    """
+    Serializer for creating individual vendors.
+    """
+
+    vendor_type = serializers.CharField(default=Vendor.TYPE_INDIVIDUAL, read_only=True)
+    full_name = serializers.CharField(max_length=255)
+    phone_number = serializers.CharField(max_length=20)
+    id_card_photo = serializers.ImageField()
+    name = serializers.CharField(max_length=255)
+    logo = serializers.ImageField(required=False)
+
+    # Address fields
+    province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all())
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    district = serializers.PrimaryKeyRelatedField(queryset=District.objects.all())
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    address_detail = serializers.CharField(max_length=255)
+    postal_code = serializers.CharField(max_length=20)
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data["user"] = request.user
+        validated_data["vendor_type"] = Vendor.TYPE_INDIVIDUAL
+        return Vendor.objects.create(**validated_data)
+
+
+class CreateCompanyVendorSerializer(serializers.Serializer):
+    """
+    Serializer for creating company vendors.
+    """
+
+    name = serializers.CharField(max_length=255)
+    business_number = serializers.CharField(max_length=255)
+    business_nib_file = serializers.FileField()
+    phone_number = serializers.CharField(max_length=20)
+
+    # Address fields
+    province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all())
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    district = serializers.PrimaryKeyRelatedField(queryset=District.objects.all())
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    address_detail = serializers.CharField(max_length=255)
+    postal_code = serializers.CharField(max_length=20)
+
+    npwp_number = serializers.CharField(max_length=255)
+    npwp_file = serializers.FileField()
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        validated_data["user"] = request.user
+        validated_data["vendor_type"] = Vendor.TYPE_COMPANY
+        return Vendor.objects.create(**validated_data)
+
+
+class UpdateIndividualVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendor
+        fields = [
+            "name",
+            "phone_number",
+            "full_name",
+            "id_card_photo",
+            "logo",
+            "province",
+            "city",
+            "district",
+            "latitude",
+            "longitude",
+            "address_detail",
+            "postal_code",
+        ]
+        extra_kwargs = {
+            "full_name": {"required": False},
+            "id_card_photo": {"required": False},
+        }
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        instance = self.instance
+        if instance and instance.vendor_type == Vendor.TYPE_INDIVIDUAL:
+            # Check if we're trying to clear required fields
+            if (
+                "full_name" in attrs
+                and not attrs["full_name"]
+                and not instance.full_name
+            ):
+                raise serializers.ValidationError(
+                    {"full_name": "Full name is required for individual vendors."},
+                )
+            if (
+                "id_card_photo" in attrs
+                and not attrs["id_card_photo"]
+                and not instance.id_card_photo
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "id_card_photo": "ID card photo is required for individual vendors.",  # noqa: E501
+                    },
+                )
+        return attrs
+
+
+class UpdateCompanyVendorSerializer(serializers.ModelSerializer):
+    business_nib = serializers.FileField(source="business_nib_file", required=False)
+    npwp = serializers.CharField(source="npwp_number", required=False)
+    npwp_file = serializers.FileField(required=False)
+    business_name = serializers.CharField(required=False)
+
+    class Meta:
+        model = Vendor
+        fields = [
+            "name",
+            "phone_number",
+            "business_name",
+            "business_number",
+            "business_nib",
+            "npwp",
+            "npwp_file",
+            "logo",
+            "province",
+            "city",
+            "district",
+            "latitude",
+            "longitude",
+            "address_detail",
+            "postal_code",
+        ]
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        instance = self.instance
+        if instance and instance.vendor_type == Vendor.TYPE_COMPANY:
+            # Check if we're trying to clear required fields
+            if (
+                "business_number" in attrs
+                and not attrs["business_number"]
+                and not instance.business_number
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "business_number": "Business number is required for company vendors.",  # noqa: E501
+                    },
+                )
+            if (
+                "business_nib_file" in attrs
+                and not attrs["business_nib_file"]
+                and not instance.business_nib_file
+            ):
+                raise serializers.ValidationError(
+                    {"business_nib": "NIB file is required for company vendors."},
+                )
+            if (
+                "npwp_number" in attrs
+                and not attrs["npwp_number"]
+                and not instance.npwp_number
+            ):
+                raise serializers.ValidationError(
+                    {"npwp": "NPWP number is required for company vendors."},
+                )
+            if (
+                "npwp_file" in attrs
+                and not attrs["npwp_file"]
+                and not instance.npwp_file
+            ):
+                raise serializers.ValidationError(
+                    {"npwp_file": "NPWP file is required for company vendors."},
+                )
+        return attrs
+
+
 class VendorListSerializer(serializers.ModelSerializer):
-    vendor_type_display = serializers.CharField(
-        source="get_vendor_type_display",
-        read_only=True,
-    )
-    review_status_display = serializers.CharField(
-        source="get_review_status_display",
-        read_only=True,
-    )
-    province = ProvinceSerializer(read_only=True)
-    city = CitySerializer(read_only=True)
+    province = ProvinceOnlySerializer(read_only=True)
+    city = CityOnlyserializer(read_only=True)
+    district = DistrictOnlySerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Vendor
@@ -25,242 +195,40 @@ class VendorListSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "vendor_type",
-            "vendor_type_display",
             "review_status",
-            "review_status_display",
             "province",
             "city",
+            "district",
             "logo",
             "created_at",
+            "user",
         ]
 
 
 class VendorDetailSerializer(serializers.ModelSerializer):
-    vendor_type_display = serializers.CharField(
-        source="get_vendor_type_display",
-        read_only=True,
-    )
-    review_status_display = serializers.CharField(
-        source="get_review_status_display",
-        read_only=True,
-    )
-    province = ProvinceSerializer(read_only=True)
-    city = CitySerializer(read_only=True)
-    district = DistrictSerializer(read_only=True)
-    user = serializers.StringRelatedField(read_only=True)
+    province = ProvinceOnlySerializer(read_only=True)
+    city = CityOnlyserializer(read_only=True)
+    district = DistrictOnlySerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Vendor
         fields = [
             "id",
-            "user",
-            "name",
             "vendor_type",
-            "vendor_type_display",
-            "phone_number",
-            "address",
-            "logo",
-            "full_name",
-            "id_card_photo",
-            "business_name",
-            "business_number",
-            "business_nib",
-            "npwp",
-            "province",
-            "city",
-            "district",
-            "latitude",
-            "longitude",
-            "address_detail",
-            "postal_code",
+            "name",
             "review_status",
-            "review_status_display",
-            "review_notes",
+            "phone_number",
+            "full_name",
+            "business_number",
+            "logo",
+            "province",
+            "city",
+            "district",
+            "latitude",
+            "longitude",
+            "address_detail",
+            "postal_code",
             "created_at",
-            "updated_at",
+            "user",
         ]
-
-
-class VendorCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vendor
-        fields = [
-            "name",
-            "vendor_type",
-            "phone_number",
-            "address",
-            "logo",
-            "full_name",
-            "id_card_photo",
-            "business_name",
-            "business_number",
-            "business_nib",
-            "npwp",
-            "province",
-            "city",
-            "district",
-            "latitude",
-            "longitude",
-            "address_detail",
-            "postal_code",
-        ]
-
-    def validate(self, attrs):  # noqa: C901
-        vendor_type = attrs.get("vendor_type")
-
-        if vendor_type == Vendor.TYPE_INDIVIDUAL:
-            if not attrs.get("full_name"):
-                raise serializers.ValidationError(
-                    {"full_name": "Full name is required for individual vendors."},
-                )
-            if not attrs.get("id_card_photo"):
-                raise serializers.ValidationError(
-                    {
-                        "id_card_photo": "ID card photo is required for individual vendors.",  # noqa: E501
-                    },
-                )
-
-        elif vendor_type == Vendor.TYPE_COMPANY:
-            if not attrs.get("business_name"):
-                raise serializers.ValidationError(
-                    {"business_name": "Business name is required for company vendors."},
-                )
-            if not attrs.get("business_number"):
-                raise serializers.ValidationError(
-                    {
-                        "business_number": "Business number is required for company vendors.",  # noqa: E501
-                    },
-                )
-            if not attrs.get("business_nib"):
-                raise serializers.ValidationError(
-                    {
-                        "business_nib": "Business NIB document is required for company vendors.",  # noqa: E501
-                    },
-                )
-            if not attrs.get("npwp"):
-                raise serializers.ValidationError(
-                    {"npwp": "NPWP is required for company vendors."},
-                )
-
-        # Validate location hierarchy
-        city = attrs.get("city")
-        province = attrs.get("province")
-        district = attrs.get("district")
-
-        if city and province and city.province != province:
-            raise serializers.ValidationError(
-                {"city": "City must belong to the selected province."},
-            )
-
-        if district and city and district.city != city:
-            raise serializers.ValidationError(
-                {"district": "District must belong to the selected city."},
-            )
-
-        return attrs
-
-    def create(self, validated_data):
-        validated_data["user"] = self.context["request"].user
-        try:
-            vendor = Vendor.objects.create(**validated_data)
-            vendor.full_clean()
-            return vendor  # noqa: TRY300
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message_dict)  # noqa: B904
-
-
-class VendorUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vendor
-        fields = [
-            "name",
-            "phone_number",
-            "address",
-            "logo",
-            "full_name",
-            "id_card_photo",
-            "business_name",
-            "business_number",
-            "business_nib",
-            "npwp",
-            "province",
-            "city",
-            "district",
-            "latitude",
-            "longitude",
-            "address_detail",
-            "postal_code",
-        ]
-
-    def validate(self, attrs):  # noqa: C901
-        instance = self.instance
-        vendor_type = instance.vendor_type
-
-        if vendor_type == Vendor.TYPE_INDIVIDUAL:
-            full_name = attrs.get("full_name", instance.full_name)
-            id_card_photo = attrs.get("id_card_photo", instance.id_card_photo)
-
-            if not full_name:
-                raise serializers.ValidationError(
-                    {"full_name": "Full name is required for individual vendors."},
-                )
-            if not id_card_photo:
-                raise serializers.ValidationError(
-                    {
-                        "id_card_photo": "ID card photo is required for individual vendors.",  # noqa: E501
-                    },
-                )
-
-        elif vendor_type == Vendor.TYPE_COMPANY:
-            business_name = attrs.get("business_name", instance.business_name)
-            business_number = attrs.get("business_number", instance.business_number)
-            business_nib = attrs.get("business_nib", instance.business_nib)
-            npwp = attrs.get("npwp", instance.npwp)
-
-            if not business_name:
-                raise serializers.ValidationError(
-                    {"business_name": "Business name is required for company vendors."},
-                )
-            if not business_number:
-                raise serializers.ValidationError(
-                    {
-                        "business_number": "Business number is required for company vendors.",  # noqa: E501
-                    },
-                )
-            if not business_nib:
-                raise serializers.ValidationError(
-                    {
-                        "business_nib": "Business NIB document is required for company vendors.",  # noqa: E501
-                    },
-                )
-            if not npwp:
-                raise serializers.ValidationError(
-                    {"npwp": "NPWP is required for company vendors."},
-                )
-
-        # Validate location hierarchy
-        city = attrs.get("city", instance.city)
-        province = attrs.get("province", instance.province)
-        district = attrs.get("district", instance.district)
-
-        if city and province and city.province != province:
-            raise serializers.ValidationError(
-                {"city": "City must belong to the selected province."},
-            )
-
-        if district and city and district.city != city:
-            raise serializers.ValidationError(
-                {"district": "District must belong to the selected city."},
-            )
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        try:
-            for attr, value in validated_data.items():
-                setattr(instance, attr, value)
-            instance.full_clean()
-            instance.save()
-            return instance  # noqa: TRY300
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message_dict)  # noqa: B904

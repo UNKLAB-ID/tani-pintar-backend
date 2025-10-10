@@ -71,7 +71,9 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
     # "django.contrib.humanize", # Handy template tags
     "unfold",
+    "unfold.contrib.filters",
     "django.contrib.admin",
+    "unfold.contrib.simple_history",
     "django.forms",
 ]
 THIRD_PARTY_APPS = [
@@ -99,6 +101,7 @@ THIRD_PARTY_APPS = [
     # "health_check.contrib.psutil",
     # "health_check.contrib.s3boto3_storage",
     "health_check.contrib.redis",
+    "simple_history",
 ]
 
 LOCAL_APPS = [
@@ -168,6 +171,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "simple_history.middleware.HistoryRequestMiddleware",
 ]
 
 # STATIC
