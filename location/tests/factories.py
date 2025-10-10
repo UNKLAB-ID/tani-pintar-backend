@@ -7,44 +7,48 @@ from location.models import Province
 
 
 class CountryFactory(factory.django.DjangoModelFactory):
+    """Factory that returns a random existing Country from fixtures."""
+
     class Meta:
         model = Country
-        django_get_or_create = ("code",)
 
-    name = "Indonesia"
-    code = "ID"
+    @classmethod
+    def _create(cls, *_args, **_kwargs):
+        """Return random existing country instead of creating new one."""
+        return Country.objects.order_by("?").first()
 
 
 class ProvinceFactory(factory.django.DjangoModelFactory):
+    """Factory that returns a random existing Province from fixtures."""
+
     class Meta:
         model = Province
-        django_get_or_create = ("name", "country")
 
-    country = factory.SubFactory(CountryFactory)
-    name = factory.Sequence(lambda n: f"Province_{n}")  # Guaranteed unique names
+    @classmethod
+    def _create(cls, *_args, **_kwargs):
+        """Return random existing province instead of creating new one."""
+        return Province.objects.order_by("?").first()
 
 
 class CityFactory(factory.django.DjangoModelFactory):
+    """Factory that returns a random existing City from fixtures."""
+
     class Meta:
         model = City
-        django_get_or_create = ("name", "province")
 
-    @factory.lazy_attribute
-    def province(self):
-        # This will be overridden when province is passed as parameter
-        return ProvinceFactory()
-
-    name = factory.Sequence(lambda n: f"City_{n}")  # Guaranteed unique names
+    @classmethod
+    def _create(cls, *_args, **_kwargs):
+        """Return random existing city instead of creating new one."""
+        return City.objects.order_by("?").first()
 
 
 class DistrictFactory(factory.django.DjangoModelFactory):
+    """Factory that returns a random existing District from fixtures."""
+
     class Meta:
         model = District
-        django_get_or_create = ("name", "city")
 
-    @factory.lazy_attribute
-    def city(self):
-        # This will be overridden when city is passed as parameter
-        return CityFactory()
-
-    name = factory.Sequence(lambda n: f"District_{n}")  # Guaranteed unique names
+    @classmethod
+    def _create(cls, *_args, **_kwargs):
+        """Return random existing district instead of creating new one."""
+        return District.objects.order_by("?").first()
