@@ -206,41 +206,22 @@ class VendorListSerializer(serializers.ModelSerializer):
 
 
 class VendorDetailSerializer(serializers.ModelSerializer):
-    user = UserDetailSerializer(read_only=True)
-    vendor_type_display = serializers.CharField(
-        source="get_vendor_type_display",
-        read_only=True,
-    )
-    review_status_display = serializers.CharField(
-        source="get_review_status_display",
-        read_only=True,
-    )
     province = ProvinceOnlySerializer(read_only=True)
     city = CityOnlyserializer(read_only=True)
     district = DistrictOnlySerializer(read_only=True)
-
-    # Add fields that might not exist in model but are expected in tests
-    address = serializers.SerializerMethodField()
-    business_name = serializers.SerializerMethodField()
-    npwp = serializers.SerializerMethodField()
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Vendor
         fields = [
             "id",
-            "user",
-            "name",
             "vendor_type",
-            "vendor_type_display",
+            "name",
+            "review_status",
             "phone_number",
-            "address",
-            "logo",
             "full_name",
-            "id_card_photo",
-            "business_name",
             "business_number",
-            "business_nib_file",
-            "npwp",
+            "logo",
             "province",
             "city",
             "district",
@@ -248,18 +229,6 @@ class VendorDetailSerializer(serializers.ModelSerializer):
             "longitude",
             "address_detail",
             "postal_code",
-            "review_status",
-            "review_status_display",
-            "review_notes",
             "created_at",
-            "updated_at",
+            "user",
         ]
-
-    def get_address(self, obj):
-        return getattr(obj, "address", obj.address_detail or "")
-
-    def get_business_name(self, obj):
-        return getattr(obj, "business_name", "")
-
-    def get_npwp(self, obj):
-        return getattr(obj, "npwp_number", "")
