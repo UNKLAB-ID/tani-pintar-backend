@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import NotFound
 from rest_framework.exceptions import ValidationError
@@ -116,6 +118,10 @@ class VendorDetailAPIView(RetrieveUpdateAPIView):
         "city",
         "district",
     )
+
+    @method_decorator(cache_page(30))  # Cache page for 30 seconds
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
