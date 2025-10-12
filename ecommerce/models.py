@@ -2,6 +2,7 @@ import uuid
 
 from django.db import models
 from django.utils.text import slugify
+from simple_history.models import HistoricalRecords
 
 from core.users.models import User
 
@@ -325,6 +326,8 @@ class UnitOfMeasure(models.Model):
         auto_now=True,
         help_text="When the UOM was last updated",
     )
+
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Unit of Measure"

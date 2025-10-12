@@ -4,6 +4,7 @@ from factory.django import DjangoModelFactory
 
 from ecommerce.models import ProductCategory
 from ecommerce.models import ProductSubCategory
+from ecommerce.models import UnitOfMeasure
 
 
 class ProductCategoryFactory(DjangoModelFactory):
@@ -26,3 +27,30 @@ class ProductSubCategoryFactory(DjangoModelFactory):
 
     class Meta:
         model = ProductSubCategory
+
+
+class UnitOfMeasureFactory(DjangoModelFactory):
+    name = factory.Iterator(
+        [
+            "kilogram",
+            "gram",
+            "liter",
+            "milliliter",
+            "piece",
+            "dozen",
+            "box",
+            "bag",
+            "bottle",
+            "can",
+            "meter",
+            "centimeter",
+            "ton",
+            "quintal",
+            "pack",
+        ],
+    )
+    description = Faker("text", max_nb_chars=200)
+
+    class Meta:
+        model = UnitOfMeasure
+        django_get_or_create = ["name"]
