@@ -3,7 +3,13 @@ from celery import shared_task
 from django.conf import settings
 
 
-@shared_task
+@shared_task(
+    autoretry_for=(requests.RequestException,),
+    retry_kwargs={"max_retries": 3},
+    retry_backoff=True,
+    retry_backoff_max=600,
+    retry_jitter=False,
+)
 def send_vendor_discord_notification(
     vendor_id,
     notification_type="created",
@@ -16,6 +22,8 @@ def send_vendor_discord_notification(
     notification with vendor details. The notification content varies
     based on the event type (creation, status change, etc.).
 
+    Automatically retries up to 3 times on network failures with exponential backoff.
+
     Args:
         vendor_id: The ID of the vendor to send notification for.
         notification_type: Type of notification - "created" or "status_changed".
@@ -23,6 +31,9 @@ def send_vendor_discord_notification(
 
     Returns:
         bool: True if notification was sent successfully, False otherwise.
+
+    Raises:
+        requests.RequestException: If all retry attempts fail.
     """
     from vendors.models import Vendor
 
