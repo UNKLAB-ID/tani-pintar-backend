@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
 from unfold.admin import TabularInline
 
@@ -308,7 +309,7 @@ class CartAdmin(ModelAdmin):
 
 
 @admin.register(UnitOfMeasure)
-class UnitOfMeasureAdmin(ModelAdmin):
+class UnitOfMeasureAdmin(ModelAdmin, SimpleHistoryAdmin):
     """
     Admin interface for UnitOfMeasure model.
     Manages master data for units of measurement.
@@ -332,6 +333,28 @@ class UnitOfMeasureAdmin(ModelAdmin):
         "created_at",
         "updated_at",
     ]
+    ordering = ["name"]
+    fieldsets = (
+        (
+            "Basic Information",
+            {
+                "fields": (
+                    "name",
+                    "description",
+                ),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "id",
+                    ("created_at", "updated_at"),
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
 
 
 @admin.register(ProductPrice)
