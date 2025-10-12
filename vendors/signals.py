@@ -54,26 +54,39 @@ def trigger_vendor_notification(
     # If update_fields is None, all fields may have changed
     # If update_fields is set and contains 'review_status', status changed
     if update_fields is None or "review_status" in update_fields:
-        # Use django-simple-history to get the previous state
-        # history.first() returns the most recent historical record
-        historical_instance = instance.history.first()
+        try:
+            # Use django-simple-history to get the previous state
+            # history.all()[0] is the current state (just saved by simple-history)
+            # history.all()[1] is the previous state (what we need)
+            history_records = list(instance.history.all()[:2])
 
-        if (
-            historical_instance
-            and historical_instance.review_status != instance.review_status
-        ):
-            old_status = historical_instance.review_status
-            logger.debug(
-                "Review status changed for vendor %s: %s -> %s",
-                instance.id,
-                old_status,
-                instance.review_status,
-            )
-            # Capture old_status in lambda closure
-            transaction.on_commit(
-                lambda old=old_status: send_vendor_discord_notification.delay(
+            if len(history_records) >= 2:  # noqa: PLR2004
+                previous_instance = history_records[1]
+                if previous_instance.review_status != instance.review_status:
+                    old_status = previous_instance.review_status
+                    logger.debug(
+                        "Review status changed for vendor %s: %s -> %s",
+                        instance.id,
+                        old_status,
+                        instance.review_status,
+                    )
+                    # Capture old_status in lambda closure
+                    transaction.on_commit(
+                        lambda old=old_status: send_vendor_discord_notification.delay(
+                            instance.id,
+                            "status_changed",
+                            old,
+                        ),
+                    )
+            else:
+                logger.debug(
+                    "Insufficient history records for vendor %s, skipping status change notification",  # noqa: E501
                     instance.id,
-                    "status_changed",
-                    old,
-                ),
+                )
+        except Exception as e:  # noqa: BLE001
+            logger.warning(
+                "Failed to check vendor %s status change history: %s",
+                instance.id,
+                e,
+                exc_info=True,
             )
