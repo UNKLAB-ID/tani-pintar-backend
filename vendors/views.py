@@ -44,7 +44,7 @@ class VendorListAPIView(ListAPIView):
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["vendor_type", "review_status", "province", "city", "district"]
-    search_fields = ["name", "full_name", "business_name"]
+    search_fields = ["name", "full_name"]
     ordering_fields = ["name", "created_at"]
     ordering = ["-created_at"]
 
