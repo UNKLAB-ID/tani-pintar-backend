@@ -64,6 +64,7 @@ class ProductCategory(models.Model):
         auto_now=True,
         help_text="When the category was last updated",
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Categorys"

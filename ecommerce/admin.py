@@ -13,7 +13,7 @@ from .models import UnitOfMeasure
 
 
 @admin.register(ProductCategory)
-class CategoryAdmin(ModelAdmin):
+class CategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
     """
     Enhanced admin interface for ProductCategory model.
     This admin interface provides comprehensive management of categories
@@ -45,6 +45,37 @@ class CategoryAdmin(ModelAdmin):
         "updated_at",
     ]
     ordering = ["name"]
+    fieldsets = (
+        (
+            "Basic Information",
+            {
+                "fields": (
+                    "name",
+                    "slug",
+                    "description",
+                ),
+            },
+        ),
+        (
+            "Status & Settings",
+            {
+                "fields": (
+                    "is_active",
+                    "is_featured",
+                ),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "id",
+                    ("created_at", "updated_at"),
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
 
 
 @admin.register(ProductSubCategory)
