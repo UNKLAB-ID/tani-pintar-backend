@@ -84,7 +84,7 @@ class ProductFactory(DjangoModelFactory):
         if not create:
             return
 
-        if extracted:
+        if extracted is not None:
             for _ in range(extracted):
                 ProductImageFactory(product=self, **kwargs)
         else:
@@ -97,7 +97,7 @@ class ProductFactory(DjangoModelFactory):
         if not create:
             return
 
-        if extracted:
+        if extracted is not None:
             for _ in range(extracted):
                 ProductPriceFactory(product=self, **kwargs)
         else:
