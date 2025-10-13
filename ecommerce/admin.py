@@ -46,7 +46,7 @@ class ProductPriceInline(TabularInline):
 
 
 @admin.register(ProductCategory)
-class CategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
+class CategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Enhanced admin interface for ProductCategory model.
     This admin interface provides comprehensive management of categories
@@ -187,7 +187,7 @@ class SubCategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
 
 
 @admin.register(Product)
-class ProductAdmin(ModelAdmin, SimpleHistoryAdmin):
+class ProductAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Enhanced admin interface for Product model.
     This admin interface provides comprehensive management of products
@@ -368,7 +368,7 @@ class CartAdmin(ModelAdmin):
 
 
 @admin.register(UnitOfMeasure)
-class UnitOfMeasureAdmin(ModelAdmin, SimpleHistoryAdmin):
+class UnitOfMeasureAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Admin interface for UnitOfMeasure model.
     Manages master data for units of measurement.
