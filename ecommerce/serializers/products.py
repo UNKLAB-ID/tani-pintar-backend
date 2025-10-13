@@ -58,48 +58,26 @@ class CreateProductSerializer(serializers.ModelSerializer):
     Handles product creation with main image field.
     """
 
-    user = UserSimpleSerializer(read_only=True)
-    category = CategorySimpleSerializer(read_only=True)
-
     class Meta:
         model = Product
         fields = [
-            "uuid",
-            "user",
-            "category",
-            "name",
-            "description",
             "image",
+            "name",
+            "category",
+            "description",
+            # - Product Detail
+            # kondisi produk
+            # harga satuan produk
             "available_stock",
-            "status",
-            "approval_status",
-            "created_at",
-        ]
-        read_only_fields = [
-            "uuid",
-            "slug",
-            "approval_status",
-            "created_at",
+            # - Delivery Info
+            # ekspedisi pengiriman
+            # berat produk
+            # dimensi produk
         ]
 
-    def validate_available_stock(self, value):
-        """Validate that stock is non-negative."""
-        if value < 0:
-            msg = "Stock cannot be negative."
-            raise serializers.ValidationError(msg)
-        return value
-
-    def create(self, validated_data):
-        """
-        Create product with user from request context.
-        """
-        # Set the user from request
-        request = self.context.get("request")
-        if request and request.user:
-            validated_data["user"] = request.user
-
-        # Create the product
-        return Product.objects.create(**validated_data)
+        extra_kwargs = {
+            "available_stock": {"required": True},
+        }
 
 
 class UpdateProductSerializer(serializers.ModelSerializer):
