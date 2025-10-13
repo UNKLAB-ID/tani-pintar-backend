@@ -226,29 +226,18 @@ class ProductAdmin(ModelAdmin, SimpleHistoryAdmin):
             "Basic Information",
             {
                 "fields": (
-                    "user",
-                    "category",
-                    "name",
-                    "slug",
+                    ("name", "approval_status"),
+                    ("user", "category"),
                     "description",
                     "image",
+                    "slug",
                 ),
             },
         ),
         (
             "Inventory & Status",
             {
-                "fields": (
-                    "available_stock",
-                    "status",
-                ),
-            },
-        ),
-        (
-            "Admin Controls",
-            {
-                "fields": ("approval_status",),
-                "classes": ("collapse",),
+                "fields": (("status", "available_stock"),),
             },
         ),
         (
