@@ -64,6 +64,7 @@ class ProductCategory(models.Model):
         auto_now=True,
         help_text="When the category was last updated",
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Categorys"
@@ -146,6 +147,7 @@ class ProductSubCategory(models.Model):
         auto_now=True,
         help_text="When the subcategory was last updated",
     )
+    history = HistoricalRecords()
 
     # Custom manager
     class Meta:
@@ -268,6 +270,7 @@ class Product(models.Model):
         auto_now=True,
         help_text="When the product was last updated",
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Product"
@@ -381,6 +384,7 @@ class ProductPrice(models.Model):
         auto_now=True,
         help_text="When the price was last updated",
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Product Price"

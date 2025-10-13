@@ -1,7 +1,10 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
 from unfold.admin import TabularInline
+from unfold.contrib.filters.admin import AutocompleteSelectMultipleFilter
+from unfold.decorators import display
 
 from .models import Cart
 from .models import Product
@@ -11,9 +14,39 @@ from .models import ProductPrice
 from .models import ProductSubCategory
 from .models import UnitOfMeasure
 
+# Inlines
+# ------------------------------------------------------------------------------
+
+
+class ProductImageInline(TabularInline):
+    """
+    Inline admin interface for ProductImage model.
+    This allows managing product images directly from the Product admin page.
+    """
+
+    model = ProductImage
+    fields = ["image", "caption"]
+    ordering = ["created_at"]
+    tab = True
+    verbose_name = "Image"
+    verbose_name_plural = "Images"
+
+
+class ProductPriceInline(TabularInline):
+    """
+    Inline admin for ProductPrice model.
+    Allows managing product prices directly from the Product admin.
+    """
+
+    model = ProductPrice
+    tab = True
+    fields = ["unit_of_measure", "price"]
+    verbose_name = "Price"
+    verbose_name_plural = "Prices"
+
 
 @admin.register(ProductCategory)
-class CategoryAdmin(ModelAdmin):
+class CategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Enhanced admin interface for ProductCategory model.
     This admin interface provides comprehensive management of categories
@@ -45,10 +78,41 @@ class CategoryAdmin(ModelAdmin):
         "updated_at",
     ]
     ordering = ["name"]
+    fieldsets = (
+        (
+            "Basic Information",
+            {
+                "fields": (
+                    "name",
+                    "slug",
+                    "description",
+                ),
+            },
+        ),
+        (
+            "Status & Settings",
+            {
+                "fields": (
+                    "is_active",
+                    "is_featured",
+                ),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "id",
+                    ("created_at", "updated_at"),
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
 
 
 @admin.register(ProductSubCategory)
-class SubCategoryAdmin(ModelAdmin):
+class SubCategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Enhanced admin interface for ProductSubCategory model.
     This admin interface provides comprehensive management of subcategories
@@ -65,10 +129,11 @@ class SubCategoryAdmin(ModelAdmin):
     ]
     list_filter = [
         "is_active",
-        "category",
+        ["category", AutocompleteSelectMultipleFilter],
         "created_at",
         "updated_at",
     ]
+    list_filter_submit = True
     search_fields = [
         "name",
         "description",
@@ -85,6 +150,7 @@ class SubCategoryAdmin(ModelAdmin):
     ]
     autocomplete_fields = ["category"]
     ordering = ["category__name", "name"]
+    compressed_fields = True
     fieldsets = (
         (
             "Basic Information",
@@ -116,33 +182,12 @@ class SubCategoryAdmin(ModelAdmin):
         return queryset.select_related("category")
 
 
-class ProductImageInline(TabularInline):
-    """
-    Inline admin interface for ProductImage model.
-    This allows managing product images directly from the Product admin page.
-    """
-
-    model = ProductImage
-    extra = 1
-    max_num = 10
-    min_num = 0
-    fields = ["image", "caption"]
-    ordering = ["created_at"]
-
-
-class ProductPriceInline(TabularInline):
-    """
-    Inline admin for ProductPrice model.
-    Allows managing product prices directly from the Product admin.
-    """
-
-    model = ProductPrice
-    extra = 1
-    fields = ["unit_of_measure", "price"]
+# Product Admin
+# ------------------------------------------------------------------------------
 
 
 @admin.register(Product)
-class ProductAdmin(ModelAdmin):
+class ProductAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Enhanced admin interface for Product model.
     This admin interface provides comprehensive management of products
@@ -152,19 +197,19 @@ class ProductAdmin(ModelAdmin):
     list_display = [
         "name",
         "user",
-        "category",
+        "display_category",
         "available_stock",
-        "status",
-        "approval_status",
+        "display_status",
+        "display_approval_status",
         "created_at",
     ]
     list_filter = [
+        ["user", AutocompleteSelectMultipleFilter],
+        ["category", AutocompleteSelectMultipleFilter],
         "status",
         "approval_status",
-        "category",
-        "created_at",
-        "updated_at",
     ]
+    list_filter_submit = True
     search_fields = [
         "name",
         "description",
@@ -176,45 +221,31 @@ class ProductAdmin(ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    raw_id_fields = ["user"]
+    autocomplete_fields = ["user", "category"]
 
     fieldsets = (
         (
             "Basic Information",
             {
                 "fields": (
-                    "user",
-                    "category",
-                    "name",
-                    "slug",
+                    ("name", "approval_status"),
+                    ("user", "category"),
                     "description",
                     "image",
+                    "slug",
                 ),
             },
         ),
         (
             "Inventory & Status",
             {
-                "fields": (
-                    "available_stock",
-                    "status",
-                ),
-            },
-        ),
-        (
-            "Admin Controls",
-            {
-                "fields": ("approval_status",),
-                "classes": ("collapse",),
+                "fields": (("status", "available_stock"),),
             },
         ),
         (
             "Timestamps",
             {
-                "fields": (
-                    "created_at",
-                    "updated_at",
-                ),
+                "fields": (("created_at", "updated_at"),),
                 "classes": ("collapse",),
             },
         ),
@@ -223,6 +254,34 @@ class ProductAdmin(ModelAdmin):
     inlines = [ProductImageInline, ProductPriceInline]
 
     actions = ["approve_products", "reject_products"]
+
+    @display(description=_("Category"), label=True)
+    def display_category(self, instance):
+        return instance.category.name if instance.category else "-"
+
+    @display(
+        description=_("Status"),
+        ordering="status",
+        label={
+            Product.STATUS_ACTIVE: "success",
+            Product.STATUS_DRAFT: "warning",
+            Product.STATUS_INACTIVE: "danger",
+        },
+    )
+    def display_status(self, obj):
+        return obj.status
+
+    @display(
+        description=_("Status"),
+        ordering="status",
+        label={
+            Product.APPROVAL_APPROVED: "success",
+            Product.APPROVAL_PENDING: "warning",
+            Product.APPROVAL_REJECTED: "danger",
+        },
+    )
+    def display_approval_status(self, obj):
+        return obj.approval_status
 
     @admin.action(
         description="Approve selected products",
@@ -265,8 +324,10 @@ class ProductImageAdmin(ModelAdmin):
         "created_at",
     ]
     list_filter = [
+        ["product", AutocompleteSelectMultipleFilter],
         "created_at",
     ]
+    list_filter_submit = True
     search_fields = [
         "product__name",
         "caption",
@@ -274,7 +335,8 @@ class ProductImageAdmin(ModelAdmin):
     readonly_fields = [
         "created_at",
     ]
-    raw_id_fields = ["product"]
+    autocomplete_fields = ["product"]
+    ordering = ["-created_at"]
 
 
 @admin.register(Cart)
@@ -309,7 +371,7 @@ class CartAdmin(ModelAdmin):
 
 
 @admin.register(UnitOfMeasure)
-class UnitOfMeasureAdmin(ModelAdmin, SimpleHistoryAdmin):
+class UnitOfMeasureAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Admin interface for UnitOfMeasure model.
     Manages master data for units of measurement.
@@ -358,7 +420,7 @@ class UnitOfMeasureAdmin(ModelAdmin, SimpleHistoryAdmin):
 
 
 @admin.register(ProductPrice)
-class ProductPriceAdmin(ModelAdmin):
+class ProductPriceAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Admin interface for ProductPrice model.
     Manages product pricing with UOM.
@@ -384,4 +446,24 @@ class ProductPriceAdmin(ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    raw_id_fields = ["product", "unit_of_measure"]
+    autocomplete_fields = ["product", "unit_of_measure"]
+    fieldsets = (
+        (
+            "Pricing Information",
+            {
+                "fields": (
+                    "product",
+                    ("unit_of_measure", "price"),
+                ),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "id",
+                    ("created_at", "updated_at"),
+                ),
+            },
+        ),
+    )
