@@ -2,6 +2,7 @@ from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
 from unfold.admin import TabularInline
+from unfold.contrib.filters.admin import AutocompleteSelectMultipleFilter
 
 from .models import Cart
 from .models import Product
@@ -79,7 +80,7 @@ class CategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
 
 
 @admin.register(ProductSubCategory)
-class SubCategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
+class SubCategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Enhanced admin interface for ProductSubCategory model.
     This admin interface provides comprehensive management of subcategories
@@ -96,10 +97,11 @@ class SubCategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
     ]
     list_filter = [
         "is_active",
-        "category",
+        ["category", AutocompleteSelectMultipleFilter],
         "created_at",
         "updated_at",
     ]
+    list_filter_submit = True
     search_fields = [
         "name",
         "description",
@@ -116,6 +118,7 @@ class SubCategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
     ]
     autocomplete_fields = ["category"]
     ordering = ["category__name", "name"]
+    compressed_fields = True
     fieldsets = (
         (
             "Basic Information",
