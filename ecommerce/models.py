@@ -147,6 +147,7 @@ class ProductSubCategory(models.Model):
         auto_now=True,
         help_text="When the subcategory was last updated",
     )
+    history = HistoricalRecords()
 
     # Custom manager
     class Meta:

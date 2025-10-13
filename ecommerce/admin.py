@@ -79,7 +79,7 @@ class CategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
 
 
 @admin.register(ProductSubCategory)
-class SubCategoryAdmin(ModelAdmin):
+class SubCategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
     """
     Enhanced admin interface for ProductSubCategory model.
     This admin interface provides comprehensive management of subcategories
