@@ -384,6 +384,7 @@ class ProductPrice(models.Model):
         auto_now=True,
         help_text="When the price was last updated",
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Product Price"

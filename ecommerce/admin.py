@@ -420,7 +420,7 @@ class UnitOfMeasureAdmin(SimpleHistoryAdmin, ModelAdmin):
 
 
 @admin.register(ProductPrice)
-class ProductPriceAdmin(ModelAdmin):
+class ProductPriceAdmin(SimpleHistoryAdmin, ModelAdmin):
     """
     Admin interface for ProductPrice model.
     Manages product pricing with UOM.
@@ -446,4 +446,24 @@ class ProductPriceAdmin(ModelAdmin):
         "created_at",
         "updated_at",
     ]
-    raw_id_fields = ["product", "unit_of_measure"]
+    autocomplete_fields = ["product", "unit_of_measure"]
+    fieldsets = (
+        (
+            "Pricing Information",
+            {
+                "fields": (
+                    "product",
+                    ("unit_of_measure", "price"),
+                ),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "id",
+                    ("created_at", "updated_at"),
+                ),
+            },
+        ),
+    )
