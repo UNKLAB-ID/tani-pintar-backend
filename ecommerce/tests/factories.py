@@ -8,6 +8,7 @@ from factory.django import ImageField
 from ecommerce.models import Product
 from ecommerce.models import ProductCategory
 from ecommerce.models import ProductImage
+from ecommerce.models import ProductPrice
 from ecommerce.models import ProductSubCategory
 from ecommerce.models import UnitOfMeasure
 from vendors.models import Vendor
@@ -91,6 +92,19 @@ class ProductFactory(DjangoModelFactory):
             for _ in range(num_images):
                 ProductImageFactory(product=self)
 
+    @factory.post_generation
+    def prices(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for _ in range(extracted):
+                ProductPriceFactory(product=self, **kwargs)
+        else:
+            num_prices = random.randint(1, 3)  # noqa: S311
+            for _ in range(num_prices):
+                ProductPriceFactory(product=self)
+
 
 class ProductImageFactory(DjangoModelFactory):
     product = factory.SubFactory(ProductFactory)
@@ -99,3 +113,19 @@ class ProductImageFactory(DjangoModelFactory):
 
     class Meta:
         model = ProductImage
+
+
+class ProductPriceFactory(DjangoModelFactory):
+    product = factory.SubFactory(ProductFactory)
+    unit_of_measure = factory.SubFactory(UnitOfMeasureFactory)
+    price = Faker(
+        "pydecimal",
+        left_digits=5,
+        right_digits=2,
+        positive=True,
+        min_value=1,
+        max_value=10000,
+    )
+
+    class Meta:
+        model = ProductPrice
