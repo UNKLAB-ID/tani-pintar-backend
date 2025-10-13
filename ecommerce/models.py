@@ -270,6 +270,7 @@ class Product(models.Model):
         auto_now=True,
         help_text="When the product was last updated",
     )
+    history = HistoricalRecords()
 
     class Meta:
         verbose_name = "Product"

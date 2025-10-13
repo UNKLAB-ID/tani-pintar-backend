@@ -12,6 +12,26 @@ from .models import ProductPrice
 from .models import ProductSubCategory
 from .models import UnitOfMeasure
 
+# Inlines
+# ------------------------------------------------------------------------------
+
+
+class ProductImageInline(TabularInline):
+    """
+    Inline admin interface for ProductImage model.
+    This allows managing product images directly from the Product admin page.
+    """
+
+    model = ProductImage
+    extra = 1
+    max_num = 10
+    min_num = 0
+    fields = ["image", "caption"]
+    ordering = ["created_at"]
+    tab = True
+    verbose_name = "Image"
+    verbose_name_plural = "Images"
+
 
 @admin.register(ProductCategory)
 class CategoryAdmin(ModelAdmin, SimpleHistoryAdmin):
@@ -150,20 +170,6 @@ class SubCategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
         return queryset.select_related("category")
 
 
-class ProductImageInline(TabularInline):
-    """
-    Inline admin interface for ProductImage model.
-    This allows managing product images directly from the Product admin page.
-    """
-
-    model = ProductImage
-    extra = 1
-    max_num = 10
-    min_num = 0
-    fields = ["image", "caption"]
-    ordering = ["created_at"]
-
-
 class ProductPriceInline(TabularInline):
     """
     Inline admin for ProductPrice model.
@@ -175,8 +181,12 @@ class ProductPriceInline(TabularInline):
     fields = ["unit_of_measure", "price"]
 
 
+# Product Admin
+# ------------------------------------------------------------------------------
+
+
 @admin.register(Product)
-class ProductAdmin(ModelAdmin):
+class ProductAdmin(ModelAdmin, SimpleHistoryAdmin):
     """
     Enhanced admin interface for Product model.
     This admin interface provides comprehensive management of products
