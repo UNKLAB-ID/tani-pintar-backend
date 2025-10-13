@@ -239,7 +239,7 @@ class ProductAdmin(SimpleHistoryAdmin, ModelAdmin):
         (
             "Inventory & Status",
             {
-                "fields": (("status", "available_stock"),),
+                "fields": ("condition", ("status", "available_stock")),
             },
         ),
         (

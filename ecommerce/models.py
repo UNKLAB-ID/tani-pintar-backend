@@ -212,6 +212,13 @@ class Product(models.Model):
         (APPROVAL_REJECTED, "Rejected"),
     ]
 
+    CONDITION_NEW = "SECOND"
+    CONDITION_SECOND = "SECOND"
+    CONDITION_CHOICES = [
+        (CONDITION_NEW, "New"),
+        (CONDITION_SECOND, "Second"),
+    ]
+
     uuid = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -245,6 +252,12 @@ class Product(models.Model):
     )
     description = models.TextField(
         help_text="Detailed description of the product",
+    )
+    condition = models.CharField(
+        max_length=10,
+        choices=CONDITION_CHOICES,
+        default=CONDITION_NEW,
+        help_text="Condition of the product (new or second-hand)",
     )
     available_stock = models.PositiveIntegerField(
         default=0,
