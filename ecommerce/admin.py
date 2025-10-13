@@ -1,8 +1,10 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin
 from unfold.admin import TabularInline
 from unfold.contrib.filters.admin import AutocompleteSelectMultipleFilter
+from unfold.decorators import display
 
 from .models import Cart
 from .models import Product
@@ -195,19 +197,19 @@ class ProductAdmin(ModelAdmin, SimpleHistoryAdmin):
     list_display = [
         "name",
         "user",
-        "category",
+        "display_category",
         "available_stock",
-        "status",
-        "approval_status",
+        "display_status",
+        "display_approval_status",
         "created_at",
     ]
     list_filter = [
+        ["user", AutocompleteSelectMultipleFilter],
+        ["category", AutocompleteSelectMultipleFilter],
         "status",
         "approval_status",
-        "category",
-        "created_at",
-        "updated_at",
     ]
+    list_filter_submit = True
     search_fields = [
         "name",
         "description",
@@ -243,10 +245,7 @@ class ProductAdmin(ModelAdmin, SimpleHistoryAdmin):
         (
             "Timestamps",
             {
-                "fields": (
-                    "created_at",
-                    "updated_at",
-                ),
+                "fields": (("created_at", "updated_at"),),
                 "classes": ("collapse",),
             },
         ),
@@ -255,6 +254,34 @@ class ProductAdmin(ModelAdmin, SimpleHistoryAdmin):
     inlines = [ProductImageInline, ProductPriceInline]
 
     actions = ["approve_products", "reject_products"]
+
+    @display(description=_("Category"), label=True)
+    def display_category(self, instance):
+        return instance.category.name if instance.category else "-"
+
+    @display(
+        description=_("Status"),
+        ordering="status",
+        label={
+            Product.STATUS_ACTIVE: "success",
+            Product.STATUS_DRAFT: "warning",
+            Product.STATUS_INACTIVE: "danger",
+        },
+    )
+    def display_status(self, obj):
+        return obj.status
+
+    @display(
+        description=_("Status"),
+        ordering="status",
+        label={
+            Product.APPROVAL_APPROVED: "success",
+            Product.APPROVAL_PENDING: "warning",
+            Product.APPROVAL_REJECTED: "danger",
+        },
+    )
+    def display_approval_status(self, obj):
+        return obj.approval_status
 
     @admin.action(
         description="Approve selected products",
