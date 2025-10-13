@@ -1,3 +1,5 @@
+import random
+
 import factory
 from factory import Faker
 from factory.django import DjangoModelFactory
@@ -5,6 +7,7 @@ from factory.django import ImageField
 
 from ecommerce.models import Product
 from ecommerce.models import ProductCategory
+from ecommerce.models import ProductImage
 from ecommerce.models import ProductSubCategory
 from ecommerce.models import UnitOfMeasure
 from vendors.models import Vendor
@@ -64,7 +67,7 @@ class ProductFactory(DjangoModelFactory):
     vendor = factory.SubFactory(VendorFactory, review_status=Vendor.STATUS_APPROVED)
     user = factory.LazyAttribute(lambda o: o.vendor.user)
     category = factory.SubFactory(ProductCategoryFactory)
-    image = ImageField(filename="product_image.jpg")
+    image = ImageField(color=factory.Faker("color_name"))
     name = Faker("word")
     description = Faker("text", max_nb_chars=500)
     available_stock = Faker("random_int", min=0, max=1000)
@@ -74,3 +77,25 @@ class ProductFactory(DjangoModelFactory):
     class Meta:
         model = Product
         exclude = ["vendor"]
+
+    @factory.post_generation
+    def images(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for _ in range(extracted):
+                ProductImageFactory(product=self, **kwargs)
+        else:
+            num_images = random.randint(1, 5)  # noqa: S311
+            for _ in range(num_images):
+                ProductImageFactory(product=self)
+
+
+class ProductImageFactory(DjangoModelFactory):
+    product = factory.SubFactory(ProductFactory)
+    image = ImageField(color=factory.Faker("color_name"))
+    caption = Faker("sentence", nb_words=6)
+
+    class Meta:
+        model = ProductImage

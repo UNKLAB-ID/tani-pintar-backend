@@ -324,8 +324,10 @@ class ProductImageAdmin(ModelAdmin):
         "created_at",
     ]
     list_filter = [
+        ["product", AutocompleteSelectMultipleFilter],
         "created_at",
     ]
+    list_filter_submit = True
     search_fields = [
         "product__name",
         "caption",
@@ -333,7 +335,8 @@ class ProductImageAdmin(ModelAdmin):
     readonly_fields = [
         "created_at",
     ]
-    raw_id_fields = ["product"]
+    autocomplete_fields = ["product"]
+    ordering = ["-created_at"]
 
 
 @admin.register(Cart)
