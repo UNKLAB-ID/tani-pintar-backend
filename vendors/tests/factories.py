@@ -1,7 +1,8 @@
 import factory
 from faker import Faker
 
-from core.users.tests.factories import UserFactory
+from accounts.models import Profile
+from accounts.tests.factories import ProfileFactory
 from location.tests.factories import CityFactory
 from location.tests.factories import DistrictFactory
 from location.tests.factories import ProvinceFactory
@@ -13,8 +14,10 @@ fake = Faker()
 class VendorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Vendor
+        exclude = ["profile"]
 
-    user = factory.SubFactory(UserFactory)
+    profile = factory.SubFactory(ProfileFactory, profile_type=Profile.VENDOR)
+    user = factory.LazyAttribute(lambda o: o.profile.user)
     vendor_type = Vendor.TYPE_INDIVIDUAL
     name = factory.Faker("company")
     full_name = factory.Faker("name")  # Required for individual vendors
