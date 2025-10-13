@@ -23,14 +23,24 @@ class ProductImageInline(TabularInline):
     """
 
     model = ProductImage
-    extra = 1
-    max_num = 10
-    min_num = 0
     fields = ["image", "caption"]
     ordering = ["created_at"]
     tab = True
     verbose_name = "Image"
     verbose_name_plural = "Images"
+
+
+class ProductPriceInline(TabularInline):
+    """
+    Inline admin for ProductPrice model.
+    Allows managing product prices directly from the Product admin.
+    """
+
+    model = ProductPrice
+    tab = True
+    fields = ["unit_of_measure", "price"]
+    verbose_name = "Price"
+    verbose_name_plural = "Prices"
 
 
 @admin.register(ProductCategory)
@@ -168,17 +178,6 @@ class SubCategoryAdmin(SimpleHistoryAdmin, ModelAdmin):
         """Optimize queries with select_related."""
         queryset = super().get_queryset(request)
         return queryset.select_related("category")
-
-
-class ProductPriceInline(TabularInline):
-    """
-    Inline admin for ProductPrice model.
-    Allows managing product prices directly from the Product admin.
-    """
-
-    model = ProductPrice
-    extra = 1
-    fields = ["unit_of_measure", "price"]
 
 
 # Product Admin
