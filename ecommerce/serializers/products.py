@@ -102,6 +102,7 @@ class CreateProductSerializer(serializers.Serializer):
         required=False,
         help_text="List of additional images for the product",
     )
+    status = serializers.CharField(max_length=20, required=True)
 
     def validate_condition(self, value):
         if not value:
@@ -123,6 +124,18 @@ class CreateProductSerializer(serializers.Serializer):
         weight_unit_choices = [unit for unit, _ in Product.WEIGHT_CHOICES]
         if value not in weight_unit_choices:
             msg = f"Invalid weight unit: {value}. Valid choices are: {weight_unit_choices}"  # noqa: E501
+            raise serializers.ValidationError(msg)
+
+        return value
+
+    def validate_status(self, value):
+        if not value:
+            msg = "Status cannot be empty."
+            raise serializers.ValidationError(msg)
+
+        status_choices = [status for status, _ in Product.STATUS_CHOICES]
+        if value not in status_choices:
+            msg = f"Invalid status: {value}. Valid choices are: {status_choices}"
             raise serializers.ValidationError(msg)
 
         return value
