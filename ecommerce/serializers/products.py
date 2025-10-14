@@ -76,6 +76,24 @@ class CreateProductSerializer(serializers.Serializer):
         min_value=0.0,
     )
     weight_unit = serializers.CharField(max_length=10, required=True)
+    width = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    height = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    length = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
 
     def validate_condition(self, value):
         if not value:

@@ -243,6 +243,7 @@ class ProductAdmin(SimpleHistoryAdmin, ModelAdmin):
                     "condition",
                     ("status", "available_stock"),
                     ("weight", "weight_unit"),
+                    ("width", "height", "length"),
                 ),
             },
         ),

@@ -281,6 +281,24 @@ class Product(models.Model):
         default=WEIGHT_GRAM,
         help_text="Unit of weight (gram or kilogram)",
     )
+    height = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text="Height of the product (in cm)",
+    )
+    length = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text="Length of the product (in cm)",
+    )
+    width = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text="Width of the product (in cm)",
+    )
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
