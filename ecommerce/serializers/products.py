@@ -75,6 +75,9 @@ class CreateProductSerializer(serializers.Serializer):
         required=True,
         min_value=0.0,
     )
+    is_cod_allowed = serializers.BooleanField(
+        required=True,
+    )
     weight_unit = serializers.CharField(max_length=10, required=True)
     width = serializers.DecimalField(
         max_digits=10,

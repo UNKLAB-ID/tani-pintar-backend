@@ -311,6 +311,10 @@ class Product(models.Model):
         default=APPROVAL_PENDING,
         help_text="Approval status of the product by admin",
     )
+    is_cod_allowed = models.BooleanField(
+        default=False,
+        help_text="Whether Cash on Delivery (COD) is allowed for this product",
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="When the product was created",
