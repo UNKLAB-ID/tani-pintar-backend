@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from core.users.models import User
 from ecommerce.models import Product
+from ecommerce.models import ProductCategory
 from ecommerce.models import ProductImage
 from ecommerce.serializers.categories import CategorySimpleSerializer
 from ecommerce.serializers.uom import ProductPriceListSerializer
@@ -52,54 +53,103 @@ class ProductImageListSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
-class CreateProductSerializer(serializers.ModelSerializer):
+class CreateProductSerializer(serializers.Serializer):
     """
     Serializer for creating new products.
     Handles product creation with main image field.
     """
 
-    user = UserSimpleSerializer(read_only=True)
-    category = CategorySimpleSerializer(read_only=True)
+    image = serializers.ImageField(required=True)
+    name = serializers.CharField(max_length=255, required=True)
+    category = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=ProductCategory.objects.all(),
+    )
+    description = serializers.CharField(required=True)
+    condition = serializers.CharField(max_length=50, required=True)
+    # harga satuan produk
+    available_stock = serializers.IntegerField(required=True, min_value=0)
+    weight = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    is_cod_allowed = serializers.BooleanField(
+        required=True,
+    )
+    weight_unit = serializers.CharField(max_length=10, required=True)
+    width = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    height = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    length = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        required=False,
+        help_text="List of additional images for the product",
+    )
+    status = serializers.CharField(max_length=20, required=True)
 
-    class Meta:
-        model = Product
-        fields = [
-            "uuid",
-            "user",
-            "category",
-            "name",
-            "description",
-            "image",
-            "available_stock",
-            "status",
-            "approval_status",
-            "created_at",
-        ]
-        read_only_fields = [
-            "uuid",
-            "slug",
-            "approval_status",
-            "created_at",
-        ]
-
-    def validate_available_stock(self, value):
-        """Validate that stock is non-negative."""
-        if value < 0:
-            msg = "Stock cannot be negative."
+    def validate_condition(self, value):
+        if not value:
+            msg = "Condition cannot be empty."
             raise serializers.ValidationError(msg)
+
+        condition_choices = [condition for condition, _ in Product.CONDITION_CHOICES]
+        if value not in condition_choices:
+            msg = f"Invalid condition: {value}. Valid choices are: {condition_choices}"
+            raise serializers.ValidationError(msg)
+
+        return value
+
+    def validate_weight_unit(self, value):
+        if not value:
+            msg = "Weight unit cannot be empty."
+            raise serializers.ValidationError(msg)
+
+        weight_unit_choices = [unit for unit, _ in Product.WEIGHT_CHOICES]
+        if value not in weight_unit_choices:
+            msg = f"Invalid weight unit: {value}. Valid choices are: {weight_unit_choices}"  # noqa: E501
+            raise serializers.ValidationError(msg)
+
+        return value
+
+    def validate_status(self, value):
+        if not value:
+            msg = "Status cannot be empty."
+            raise serializers.ValidationError(msg)
+
+        status_choices = [status for status, _ in Product.STATUS_CHOICES]
+        if value not in status_choices:
+            msg = f"Invalid status: {value}. Valid choices are: {status_choices}"
+            raise serializers.ValidationError(msg)
+
         return value
 
     def create(self, validated_data):
-        """
-        Create product with user from request context.
-        """
-        # Set the user from request
-        request = self.context.get("request")
-        if request and request.user:
-            validated_data["user"] = request.user
+        images = validated_data.pop("images", [])
+        product = Product.objects.create(**validated_data)
 
-        # Create the product
-        return Product.objects.create(**validated_data)
+        product_images = [
+            ProductImage(product=product, image=image) for image in images
+        ]
+
+        ProductImage.objects.bulk_create(product_images)
+        return product
 
 
 class UpdateProductSerializer(serializers.ModelSerializer):
@@ -147,9 +197,16 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "image",
+            "condition",
             "available_stock",
+            "weight",
+            "weight_unit",
+            "height",
+            "length",
+            "width",
             "status",
             "approval_status",
+            "is_cod_allowed",
             "created_at",
             "updated_at",
             "images",

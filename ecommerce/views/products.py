@@ -2,8 +2,10 @@ from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework import permissions
+from rest_framework import status
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.response import Response
 
 from ecommerce.models import Product
 from ecommerce.paginations import ProductCursorPagination
@@ -58,9 +60,16 @@ class ProductListCreateView(ListCreateAPIView):
         # Anonymous users only see approved products
         return queryset.filter(approval_status=Product.APPROVAL_APPROVED)
 
-    def perform_create(self, serializer):
-        """Set the product user to the current user."""
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        product = serializer.save(user=request.user)
+
+        return Response(
+            ProductDetailSerializer(product).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ProductDetailView(RetrieveUpdateDestroyAPIView):

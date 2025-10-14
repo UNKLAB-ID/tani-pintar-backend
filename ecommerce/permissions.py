@@ -48,4 +48,4 @@ class IsVendorOrReadOnly(permissions.BasePermission):
         except Vendor.DoesNotExist:
             return False
         else:
-            return vendor.review_status == Vendor.APPROVED
+            return vendor.review_status == Vendor.STATUS_APPROVED

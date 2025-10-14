@@ -212,6 +212,20 @@ class Product(models.Model):
         (APPROVAL_REJECTED, "Rejected"),
     ]
 
+    CONDITION_NEW = "NEW"
+    CONDITION_SECOND = "SECOND"
+    CONDITION_CHOICES = [
+        (CONDITION_NEW, "New"),
+        (CONDITION_SECOND, "Second"),
+    ]
+
+    WEIGHT_GRAM = "GRAM"
+    WEIGHT_KG = "KG"
+    WEIGHT_CHOICES = [
+        (WEIGHT_GRAM, "Gram"),
+        (WEIGHT_KG, "Kilogram"),
+    ]
+
     uuid = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -246,9 +260,44 @@ class Product(models.Model):
     description = models.TextField(
         help_text="Detailed description of the product",
     )
+    condition = models.CharField(
+        max_length=10,
+        choices=CONDITION_CHOICES,
+        default=CONDITION_NEW,
+        help_text="Condition of the product (new or second-hand)",
+    )
     available_stock = models.PositiveIntegerField(
         default=0,
         help_text="Available stock quantity",
+    )
+    weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+    )
+    weight_unit = models.CharField(
+        max_length=10,
+        choices=WEIGHT_CHOICES,
+        default=WEIGHT_GRAM,
+        help_text="Unit of weight (gram or kilogram)",
+    )
+    height = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text="Height of the product (in cm)",
+    )
+    length = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text="Length of the product (in cm)",
+    )
+    width = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        help_text="Width of the product (in cm)",
     )
     status = models.CharField(
         max_length=10,
@@ -261,6 +310,10 @@ class Product(models.Model):
         choices=APPROVAL_CHOICES,
         default=APPROVAL_PENDING,
         help_text="Approval status of the product by admin",
+    )
+    is_cod_allowed = models.BooleanField(
+        default=False,
+        help_text="Whether Cash on Delivery (COD) is allowed for this product",
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
