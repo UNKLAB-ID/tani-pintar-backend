@@ -1,5 +1,8 @@
+from io import BytesIO
+
 import pytest
 from django.urls import reverse
+from PIL import Image as PILImage
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
@@ -366,9 +369,16 @@ class ProductDetailAPITest(APITestCase):
             "slug",
             "description",
             "image",
+            "condition",
             "available_stock",
+            "weight",
+            "weight_unit",
+            "height",
+            "length",
+            "width",
             "status",
             "approval_status",
+            "is_cod_allowed",
             "created_at",
             "updated_at",
             "images",
@@ -627,3 +637,800 @@ class ProductAPIEdgeCaseTest:
         assert response.status_code == status.HTTP_200_OK
         assert "slug" in response.data
         assert response.data["slug"] == product.slug
+
+
+class ProductCreateAPITest(APITestCase):
+    """Test suite for Product Creation API endpoint."""
+
+    fixtures = ["initial_data.json"]
+
+    def setUp(self):
+        """Set up test data for product creation tests."""
+        self.url = reverse("ecommerce:product-list-create")
+        self.category = ProductCategoryFactory(name="Electronics", is_active=True)
+        self.user = UserFactory()
+
+        # Valid product data
+        self.valid_product_data = {
+            "name": "Test Laptop",
+            "category": str(self.category.id),
+            "description": "A high-quality test laptop for development",
+            "condition": Product.CONDITION_NEW,
+            "available_stock": 10,
+            "weight": "2.50",
+            "weight_unit": Product.WEIGHT_KG,
+            "height": "2.50",
+            "length": "35.00",
+            "width": "25.00",
+            "status": Product.STATUS_ACTIVE,
+            "is_cod_allowed": True,
+        }
+
+    # ==================== Authentication & Permission Tests ====================
+
+    def test_anonymous_user_cannot_create_product(self):
+        """Test anonymous users cannot create products."""
+        client = APIClient()
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+        ]
+
+    def test_authenticated_user_without_vendor_cannot_create(self):
+        """Test authenticated users without vendor profile cannot create products."""
+        client = APIClient()
+        user_without_vendor = UserFactory()
+        client.force_authenticate(user=user_without_vendor)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_user_with_pending_vendor_cannot_create(self):
+        """Test users with pending vendor status cannot create products."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(
+            user=self.user,
+            review_status=Vendor.STATUS_PENDING,
+        )
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_user_with_rejected_vendor_cannot_create(self):
+        """Test users with rejected vendor status cannot create products."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(
+            user=self.user,
+            review_status=Vendor.STATUS_REJECTED,
+        )
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_approved_vendor_can_create_product(self):
+        """Test approved vendors can successfully create products."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(
+            user=self.user,
+            review_status=Vendor.STATUS_APPROVED,
+        )
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+
+    # ==================== Valid Product Creation Tests ====================
+
+    def test_create_product_with_all_required_fields(self):
+        """Test successful product creation with all required fields."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+
+        expected_stock = 10
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["name"] == "Test Laptop"
+        assert response.data["user"]["id"] == self.user.id
+        assert response.data["category"]["id"] == str(self.category.id)
+        assert response.data["condition"] == Product.CONDITION_NEW
+        assert response.data["available_stock"] == expected_stock
+        assert response.data["weight"] == "2.50"
+        assert response.data["weight_unit"] == Product.WEIGHT_KG
+        assert response.data["is_cod_allowed"] is True
+
+    def test_create_product_assigns_to_authenticated_user(self):
+        """Test that created product is assigned to the authenticated user."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["user"]["id"] == self.user.id
+
+        # Verify in database
+        product = Product.objects.get(uuid=response.data["uuid"])
+        assert product.user == self.user
+
+    def test_create_product_auto_generates_slug(self):
+        """Test that product slug is automatically generated from name."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert "slug" in response.data
+        assert response.data["slug"] == "test-laptop"
+
+    def test_create_product_response_structure(self):
+        """Test created product response has correct structure."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # Verify response matches ProductDetailSerializer structure
+        expected_fields = {
+            "uuid",
+            "user",
+            "category",
+            "name",
+            "slug",
+            "description",
+            "image",
+            "condition",
+            "available_stock",
+            "weight",
+            "weight_unit",
+            "height",
+            "length",
+            "width",
+            "status",
+            "approval_status",
+            "is_cod_allowed",
+            "created_at",
+            "updated_at",
+            "images",
+            "prices",
+        }
+        assert set(response.data.keys()) == expected_fields
+
+    def test_create_product_sets_default_approval_pending(self):
+        """Test newly created product has pending approval status by default."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["approval_status"] == Product.APPROVAL_PENDING
+
+    # ==================== Field Validation Tests ====================
+
+    def test_create_product_missing_required_image(self):
+        """Test product creation fails without required image."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        data = self.valid_product_data.copy()
+        # Don't include image
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "image" in response.data
+
+    def test_create_product_missing_required_name(self):
+        """Test product creation fails without required name."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        del data["name"]
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "name" in response.data
+
+    def test_create_product_missing_required_category(self):
+        """Test product creation fails without required category."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        del data["category"]
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "category" in response.data
+
+    def test_create_product_with_invalid_category(self):
+        """Test product creation fails with non-existent category."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["category"] = "99999999-9999-9999-9999-999999999999"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "category" in response.data
+
+    def test_create_product_with_invalid_condition(self):
+        """Test product creation fails with invalid condition value."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["condition"] = "INVALID_CONDITION"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "condition" in response.data
+
+    def test_create_product_with_invalid_weight_unit(self):
+        """Test product creation fails with invalid weight_unit value."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["weight_unit"] = "POUNDS"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "weight_unit" in response.data
+
+    def test_create_product_with_invalid_status(self):
+        """Test product creation fails with invalid status value."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["status"] = "INVALID_STATUS"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "status" in response.data
+
+    def test_create_product_with_negative_stock(self):
+        """Test product creation fails with negative stock."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["available_stock"] = -5
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "available_stock" in response.data
+
+    def test_create_product_with_negative_weight(self):
+        """Test product creation fails with negative weight."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["weight"] = "-2.50"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "weight" in response.data
+
+    def test_create_product_with_negative_dimensions(self):
+        """Test product creation fails with negative dimensions."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["height"] = "-10.00"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "height" in response.data
+
+    # ==================== Image Handling Tests ====================
+
+    def test_create_product_with_additional_images(self):
+        """Test product creation with additional images."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create main image
+        main_image = BytesIO()
+        img = PILImage.new("RGB", (100, 100), color="red")
+        img.save(main_image, "JPEG")
+        main_image.seek(0)
+        main_image.name = "main.jpg"
+
+        # Create additional images
+        additional_image1 = BytesIO()
+        img1 = PILImage.new("RGB", (100, 100), color="blue")
+        img1.save(additional_image1, "JPEG")
+        additional_image1.seek(0)
+        additional_image1.name = "additional1.jpg"
+
+        additional_image2 = BytesIO()
+        img2 = PILImage.new("RGB", (100, 100), color="green")
+        img2.save(additional_image2, "JPEG")
+        additional_image2.seek(0)
+        additional_image2.name = "additional2.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = main_image
+        data["images"] = [additional_image1, additional_image2]
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert len(response.data["images"]) == 2  # noqa: PLR2004
+
+    def test_create_product_without_additional_images(self):
+        """Test product creation without additional images works."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        # Don't include additional images
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert len(response.data["images"]) == 0
+
+    def test_create_product_images_stored_in_database(self):
+        """Test that additional images are properly stored in ProductImage model."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create main image
+        main_image = BytesIO()
+        img = PILImage.new("RGB", (100, 100), color="red")
+        img.save(main_image, "JPEG")
+        main_image.seek(0)
+        main_image.name = "main.jpg"
+
+        # Create additional image
+        additional_image = BytesIO()
+        img1 = PILImage.new("RGB", (100, 100), color="blue")
+        img1.save(additional_image, "JPEG")
+        additional_image.seek(0)
+        additional_image.name = "additional.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = main_image
+        data["images"] = [additional_image]
+
+        response = client.post(self.url, data, format="multipart")
+
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # Verify in database
+        product = Product.objects.get(uuid=response.data["uuid"])
+        assert product.images.count() == 1
+
+    # ==================== Edge Cases ====================
+
+    def test_create_product_with_very_long_name(self):
+        """Test product creation with maximum length name."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["name"] = "A" * 200  # Max length is 255, this should be valid
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_create_product_with_special_characters_in_name(self):
+        """Test product creation with special characters in name."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["name"] = "Product #1 @ $100 & More!"
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert "slug" in response.data
+
+    def test_create_product_with_duplicate_name(self):
+        """
+        Test creating products with duplicate names.
+
+        Products with duplicate names should succeed with different slugs.
+        """
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create first product
+        image_file1 = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file1, "JPEG")
+        image_file1.seek(0)
+        image_file1.name = "test1.jpg"
+
+        data1 = self.valid_product_data.copy()
+        data1["image"] = image_file1
+
+        response1 = client.post(self.url, data1, format="multipart")
+        assert response1.status_code == status.HTTP_201_CREATED
+
+        # Create second product with same name
+        image_file2 = BytesIO()
+        image2 = PILImage.new("RGB", (100, 100), color="blue")
+        image2.save(image_file2, "JPEG")
+        image_file2.seek(0)
+        image_file2.name = "test2.jpg"
+
+        data2 = self.valid_product_data.copy()
+        data2["image"] = image_file2
+
+        response2 = client.post(self.url, data2, format="multipart")
+        assert response2.status_code == status.HTTP_201_CREATED
+
+        # Verify slugs are different
+        assert response1.data["slug"] != response2.data["slug"]
+
+    def test_create_product_with_zero_stock(self):
+        """Test product creation with zero stock is allowed."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["available_stock"] = 0
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["available_stock"] == 0
+
+    def test_create_product_with_cod_disabled(self):
+        """Test product creation with COD disabled."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["is_cod_allowed"] = False
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["is_cod_allowed"] is False
+
+    def test_create_product_with_draft_status(self):
+        """Test product creation with draft status."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["status"] = Product.STATUS_DRAFT
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["status"] == Product.STATUS_DRAFT
+
+    def test_create_product_with_second_hand_condition(self):
+        """Test product creation with second-hand condition."""
+        from vendors.models import Vendor
+
+        client = APIClient()
+        VendorFactory(user=self.user, review_status=Vendor.STATUS_APPROVED)
+        client.force_authenticate(user=self.user)
+
+        # Create a fresh image for this test
+        image_file = BytesIO()
+        image = PILImage.new("RGB", (100, 100), color="red")
+        image.save(image_file, "JPEG")
+        image_file.seek(0)
+        image_file.name = "test.jpg"
+
+        data = self.valid_product_data.copy()
+        data["image"] = image_file
+        data["condition"] = Product.CONDITION_SECOND
+
+        response = client.post(self.url, data, format="multipart")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["condition"] == Product.CONDITION_SECOND
