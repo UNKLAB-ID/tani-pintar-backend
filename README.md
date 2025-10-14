@@ -2,6 +2,14 @@
 
 **Tani Pintar** is an agricultural platform connecting farmers, distributors, consumers, suppliers, agents, and vendors. Features include social media, AI plant disease detection, e-commerce, and location-based services.
 
+## Dev Server Read Only Account
+
+### https://dev.api.taniverse.id/admin/
+```bash
+guest
+hidupjokowi
+```
+
 ## 🚀 Quick Start with Docker
 
 1. **Clone and start**
