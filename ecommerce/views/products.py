@@ -63,16 +63,14 @@ class ProductListCreateView(ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save(user=request.user)
-        read_serializer = ProductDetailSerializer(
-            instance,
-            context={"request": request},
+
+        _ = Product.objects.create(
+            user=request.user,
+            **serializer.validated_data,
         )
-        headers = self.get_success_headers(read_serializer.data)
         return Response(
-            read_serializer.data,
+            {"message": "Product created successfully.", "data": 1},
             status=status.HTTP_201_CREATED,
-            headers=headers,
         )
 
 

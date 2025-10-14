@@ -212,11 +212,18 @@ class Product(models.Model):
         (APPROVAL_REJECTED, "Rejected"),
     ]
 
-    CONDITION_NEW = "SECOND"
+    CONDITION_NEW = "NEW"
     CONDITION_SECOND = "SECOND"
     CONDITION_CHOICES = [
         (CONDITION_NEW, "New"),
         (CONDITION_SECOND, "Second"),
+    ]
+
+    WEIGHT_GRAM = "GRAM"
+    WEIGHT_KG = "KG"
+    WEIGHT_CHOICES = [
+        (WEIGHT_GRAM, "Gram"),
+        (WEIGHT_KG, "Kilogram"),
     ]
 
     uuid = models.UUIDField(
@@ -262,6 +269,17 @@ class Product(models.Model):
     available_stock = models.PositiveIntegerField(
         default=0,
         help_text="Available stock quantity",
+    )
+    weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+    )
+    weight_unit = models.CharField(
+        max_length=10,
+        choices=WEIGHT_CHOICES,
+        default=WEIGHT_GRAM,
+        help_text="Unit of weight (gram or kilogram)",
     )
     status = models.CharField(
         max_length=10,

@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from core.users.models import User
 from ecommerce.models import Product
+from ecommerce.models import ProductCategory
 from ecommerce.models import ProductImage
 from ecommerce.serializers.categories import CategorySimpleSerializer
 from ecommerce.serializers.uom import ProductPriceListSerializer
@@ -52,32 +53,53 @@ class ProductImageListSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
-class CreateProductSerializer(serializers.ModelSerializer):
+class CreateProductSerializer(serializers.Serializer):
     """
     Serializer for creating new products.
     Handles product creation with main image field.
     """
 
-    class Meta:
-        model = Product
-        fields = [
-            "image",
-            "name",
-            "category",
-            "description",
-            # - Product Detail
-            # kondisi produk
-            # harga satuan produk
-            "available_stock",
-            # - Delivery Info
-            # ekspedisi pengiriman
-            # berat produk
-            # dimensi produk
-        ]
+    image = serializers.ImageField(required=True)
+    name = serializers.CharField(max_length=255, required=True)
+    category = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=ProductCategory.objects.all(),
+    )
+    description = serializers.CharField(required=True)
+    condition = serializers.CharField(max_length=50, required=True)
+    # harga satuan produk
+    available_stock = serializers.IntegerField(required=True, min_value=0)
+    weight = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        min_value=0.0,
+    )
+    weight_unit = serializers.CharField(max_length=10, required=True)
 
-        extra_kwargs = {
-            "available_stock": {"required": True},
-        }
+    def validate_condition(self, value):
+        if not value:
+            msg = "Condition cannot be empty."
+            raise serializers.ValidationError(msg)
+
+        condition_choices = [condition for condition, _ in Product.CONDITION_CHOICES]
+        if value not in condition_choices:
+            msg = f"Invalid condition: {value}. Valid choices are: {condition_choices}"
+            raise serializers.ValidationError(msg)
+
+        return value
+
+    def validate_weight_unit(self, value):
+        if not value:
+            msg = "Weight unit cannot be empty."
+            raise serializers.ValidationError(msg)
+
+        weight_unit_choices = [unit for unit, _ in Product.WEIGHT_CHOICES]
+        if value not in weight_unit_choices:
+            msg = f"Invalid weight unit: {value}. Valid choices are: {weight_unit_choices}"  # noqa: E501
+            raise serializers.ValidationError(msg)
+
+        return value
 
 
 class UpdateProductSerializer(serializers.ModelSerializer):
