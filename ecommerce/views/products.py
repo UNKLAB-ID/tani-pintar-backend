@@ -64,12 +64,10 @@ class ProductListCreateView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        _ = Product.objects.create(
-            user=request.user,
-            **serializer.validated_data,
-        )
+        product = serializer.save(user=request.user)
+
         return Response(
-            {"message": "Product created successfully.", "data": 1},
+            ProductDetailSerializer(product).data,
             status=status.HTTP_201_CREATED,
         )
 

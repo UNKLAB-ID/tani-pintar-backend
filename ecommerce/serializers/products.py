@@ -94,6 +94,11 @@ class CreateProductSerializer(serializers.Serializer):
         required=True,
         min_value=0.0,
     )
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        required=False,
+        help_text="List of additional images for the product",
+    )
 
     def validate_condition(self, value):
         if not value:
@@ -118,6 +123,17 @@ class CreateProductSerializer(serializers.Serializer):
             raise serializers.ValidationError(msg)
 
         return value
+
+    def create(self, validated_data):
+        images = validated_data.pop("images", [])
+        product = Product.objects.create(**validated_data)
+
+        product_images = [
+            ProductImage(product=product, image=image) for image in images
+        ]
+
+        ProductImage.objects.bulk_create(product_images)
+        return product
 
 
 class UpdateProductSerializer(serializers.ModelSerializer):
