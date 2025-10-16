@@ -1,23 +1,11 @@
 from rest_framework import serializers
 
-from core.users.models import User
+from core.users.serializers import UserDetailSerializer
 from ecommerce.models import Product
 from ecommerce.models import ProductCategory
 from ecommerce.models import ProductImage
 from ecommerce.serializers.categories import CategorySimpleSerializer
 from ecommerce.serializers.uom import ProductPriceListSerializer
-
-
-class UserSimpleSerializer(serializers.ModelSerializer):
-    """
-    Simple user serializer for product views.
-    Contains only essential user information.
-    """
-
-    class Meta:
-        model = User
-        fields = ["id", "username"]
-        read_only_fields = ["id", "username"]
 
 
 class ProductImageDetailSerializer(serializers.ModelSerializer):
@@ -182,7 +170,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     Includes all product information with nested images and pricing.
     """
 
-    user = UserSimpleSerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
     category = CategorySimpleSerializer(read_only=True)
     images = ProductImageDetailSerializer(many=True, read_only=True)
     prices = ProductPriceListSerializer(many=True, read_only=True)
@@ -220,7 +208,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     Only includes essential fields for better performance including basic pricing.
     """
 
-    user = UserSimpleSerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
     category = CategorySimpleSerializer(read_only=True)
     prices = ProductPriceListSerializer(many=True, read_only=True)
 
