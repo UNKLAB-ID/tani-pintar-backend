@@ -5,6 +5,8 @@ from factory import Faker
 from factory.django import DjangoModelFactory
 from factory.django import ImageField
 
+from accounts.tests.factories import ProfileFactory
+from ecommerce.models import Cart
 from ecommerce.models import Product
 from ecommerce.models import ProductCategory
 from ecommerce.models import ProductImage
@@ -129,3 +131,12 @@ class ProductPriceFactory(DjangoModelFactory):
 
     class Meta:
         model = ProductPrice
+
+
+class CartFactory(DjangoModelFactory):
+    user = factory.LazyAttribute(lambda _: ProfileFactory().user)
+    product = factory.SubFactory(ProductFactory)
+    quantity = factory.Faker("random_int", min=1, max=10)
+
+    class Meta:
+        model = Cart
