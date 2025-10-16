@@ -1,10 +1,10 @@
-from rest_framework import serializers
+from rest_framework import status
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from ecommerce.models import Cart
-from ecommerce.models import Product
 from ecommerce.paginations import CartCursorPagination
 from ecommerce.serializers.cart import CartCreateSerializer
 from ecommerce.serializers.cart import CartDetailSerializer
@@ -35,34 +35,20 @@ class CartListCreateView(ListCreateAPIView):
             "product",
         )
 
-    def perform_create(self, serializer):
-        """Set the user for the cart item."""
-        # Check if item already exists
-        product_uuid = serializer.validated_data["product_uuid"]
-        # Get the actual product from UUID (already validated in serializer)
-        product = Product.objects.get(uuid=product_uuid)
-        quantity = serializer.validated_data["quantity"]
+    def create(self, request, *args, **kwargs):
+        """
+        Override create to handle duplicate cart items.
+        If item already in cart, increment quantity instead of creating new entry.
+        """
 
-        existing_item = Cart.objects.filter(
-            user=self.request.user,
-            product=product,
-        ).first()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cart = serializer.save()
 
-        if existing_item:
-            # Update existing item quantity
-            new_quantity = existing_item.quantity + quantity
-            if new_quantity > product.available_stock:
-                available = product.available_stock
-                msg = f"Total quantity would exceed available stock ({available})."
-                raise serializers.ValidationError({"quantity": msg})
-
-            existing_item.quantity = new_quantity
-            existing_item.save()
-            # Return the existing item (this won't actually create a new one)
-            serializer.instance = existing_item
-        else:
-            # Create new item
-            serializer.save(user=self.request.user)
+        return Response(
+            CartDetailSerializer(cart, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CartItemView(RetrieveUpdateDestroyAPIView):

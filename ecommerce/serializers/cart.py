@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from accounts.serializers import SimpleProfileDetailSerializer
 from core.users.models import User
+from core.users.serializers import UserDetailSerializer
 from ecommerce.models import Cart
 from ecommerce.models import Product
 from ecommerce.serializers.products import ProductDetailSerializer
@@ -43,62 +44,70 @@ class CartListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class CartCreateSerializer(serializers.ModelSerializer):
+class CartCreateSerializer(serializers.Serializer):
     """
     Serializer for creating cart items.
     """
 
     product_uuid = serializers.UUIDField()
-
-    class Meta:
-        model = Cart
-        fields = ["product_uuid", "quantity"]
+    quantity = serializers.IntegerField()
 
     def validate_product_uuid(self, value):
         """
-        Validate that the product exists and is active/approved.
+        Validate that the product exists and is active.
         """
         try:
-            product = Product.objects.get(uuid=value)
-        except Product.DoesNotExist as exc:
-            msg = "Product with this UUID does not exist."
-            raise serializers.ValidationError(msg) from exc
-
-        if product.status != Product.STATUS_ACTIVE:
-            msg = "Product is not active."
-            raise serializers.ValidationError(msg)
-
-        if product.approval_status != Product.APPROVAL_APPROVED:
-            msg = "Product is not approved."
-            raise serializers.ValidationError(msg)
-
-        return value
+            product = Product.objects.get(
+                uuid=value,
+                approval_status=Product.APPROVAL_APPROVED,
+                status=Product.STATUS_ACTIVE,
+            )
+        except Product.DoesNotExist:
+            msg = "Product with the given UUID does not exist or is inactive."
+            raise serializers.ValidationError(msg)  # noqa: B904
+        return product
 
     def validate_quantity(self, value):
         """
-        Validate that quantity is positive.
+        Validate that quantity is positive and doesn't exceed available stock.
         """
         if value <= 0:
             msg = "Quantity must be greater than 0."
             raise serializers.ValidationError(msg)
-
         return value
 
     def create(self, validated_data):
         """
-        Create a new cart item.
+        Create or update cart item with stock validation.
         """
-        product_uuid = validated_data.pop("product_uuid")
-        product = Product.objects.get(uuid=product_uuid)
 
-        # Check stock availability
-        if validated_data["quantity"] > product.available_stock:
+        user = self.context["request"].user
+        product = Product.objects.select_for_update().get(
+            uuid=validated_data["product_uuid"].uuid,
+        )
+        quantity = validated_data["quantity"]
+
+        if quantity > product.available_stock:
             available = product.available_stock
             msg = f"Quantity exceeds available stock ({available})."
             raise serializers.ValidationError({"quantity": msg})
 
-        validated_data["product"] = product
-        return super().create(validated_data)
+        cart_item, created = Cart.objects.get_or_create(
+            user=user,
+            product=product,
+            defaults={"quantity": quantity},
+        )
+
+        if not created:
+            new_quantity = quantity
+            if new_quantity > product.available_stock:
+                available = product.available_stock
+                msg = f"Total quantity exceeds available stock ({available})."
+                raise serializers.ValidationError({"quantity": msg})
+            cart_item.quantity = new_quantity
+            cart_item.save()
+
+        return cart_item
 
 
 class CartDetailSerializer(serializers.ModelSerializer):
@@ -108,7 +117,7 @@ class CartDetailSerializer(serializers.ModelSerializer):
     """
 
     product = ProductDetailSerializer(read_only=True)
-    user = CartUserProfileSerializer(read_only=True)
+    user = UserDetailSerializer(read_only=True)
 
     class Meta:
         model = Cart
