@@ -34,3 +34,29 @@ class CartListAPITest(APITestCase):
             status.HTTP_401_UNAUTHORIZED,
             status.HTTP_403_FORBIDDEN,
         ]
+
+    def test_cart_create_authenticated(self):
+        # Create a product for the cart
+        product = self.cart_items[0].product
+        payload = {
+            "product_uuid": str(product.uuid),
+            "quantity": 2,
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["product"]["uuid"] == str(product.uuid)
+        assert response.data["quantity"] == 2  # noqa: PLR2004
+        assert str(response.data["user"]["id"]) == str(self.user.id)
+
+    def test_cart_create_unauthenticated(self):
+        product = self.cart_items[0].product
+        payload = {
+            "product_uuid": str(product.uuid),
+            "quantity": 1,
+        }
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+        ]
