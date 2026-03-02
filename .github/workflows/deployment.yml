@@ -32,6 +32,9 @@ jobs:
             dockerfile: ./compose/production/aws/Dockerfile
 
     steps:
+      - name: Lowercase image name
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v6
 
@@ -72,7 +75,7 @@ jobs:
 
     steps:
       - name: Deploy to production server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
@@ -82,7 +85,8 @@ jobs:
           script_stop: true
           script: |
             cd ${{ secrets.REPOSITORY_LOCATION }}
-            git pull origin master --force
+            git fetch origin
+            git checkout ${{ github.ref_name }}
             docker compose -f docker-compose.ghcr.yml pull
             docker compose -f docker-compose.ghcr.yml up -d
             docker compose -f docker-compose.ghcr.yml run --rm django python manage.py migrate
