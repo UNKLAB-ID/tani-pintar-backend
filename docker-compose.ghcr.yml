@@ -6,11 +6,7 @@ volumes:
 
 services:
   django: &django
-    build:
-      context: .
-      dockerfile: ./compose/production/django/Dockerfile
-
-    image: tani_pintar_production_django
+    image: ghcr.io/unklab-id/tani-pintar-backend/django:latest
     volumes:
       - tani_pintar_production_django_media:/app/core/media
     depends_on:
@@ -22,10 +18,7 @@ services:
     command: /start
 
   postgres:
-    build:
-      context: .
-      dockerfile: ./compose/production/postgres/Dockerfile
-    image: tani_pintar_production_postgres
+    image: ghcr.io/unklab-id/tani-pintar-backend/postgres:latest
     volumes:
       - tani_pintar_production_postgres_data:/var/lib/postgresql/data
       - tani_pintar_production_postgres_data_backups:/backups
@@ -34,30 +27,26 @@ services:
 
   redis:
     image: docker.io/redis:6
-
     volumes:
       - tani_pintar_production_redis_data:/data
 
   celeryworker:
     <<: *django
-    image: tani_pintar_production_celeryworker
+    image: ghcr.io/unklab-id/tani-pintar-backend/django:latest
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    image: tani_pintar_production_celerybeat
+    image: ghcr.io/unklab-id/tani-pintar-backend/django:latest
     command: /start-celerybeat
 
   flower:
     <<: *django
-    image: tani_pintar_production_flower
+    image: ghcr.io/unklab-id/tani-pintar-backend/django:latest
     command: /start-flower
 
   nginx:
-    build:
-      context: .
-      dockerfile: ./compose/production/nginx/Dockerfile
-    image: tani_pintar_production_nginx
+    image: ghcr.io/unklab-id/tani-pintar-backend/nginx:latest
     depends_on:
       - django
     volumes:
@@ -66,10 +55,7 @@ services:
       - "100.86.58.86:64000:80"
 
   awscli:
-    build:
-      context: .
-      dockerfile: ./compose/production/aws/Dockerfile
-    image: tani_pintar_production_awscli
+    image: ghcr.io/unklab-id/tani-pintar-backend/awscli:latest
     env_file:
       - ./.envs/.production/.django
     volumes:
